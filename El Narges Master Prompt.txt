@@ -1,0 +1,49 @@
+Act as an Expert System Architect, Full-Stack MERN Developer, and Web GIS Engineer. I need you to build/refactor a complete 3D Web GIS Real Estate Platform named "El Narges Portal". 
+
+Below is the complete Product Requirements Document (PRD), Architecture details, and specific technical constraints you MUST strictly follow.
+
+# 1. Project Overview
+"El Narges Portal" is an interactive 3D Web GIS platform integrating real-time transactional data (MongoDB) with spatial data (ArcGIS Feature Servers). It features an AI-powered Property Advisor that can programmatically book units via Function Calling, and real-time state synchronization using WebSockets.
+
+# 2. Tech Stack
+* Frontend: React.js (Vite), TypeScript, ArcGIS Maps SDK for JavaScript, Axios, React Router.
+* Backend: Node.js, Express.js, Socket.io, Mongoose/MongoDB.
+* AI & APIs: Google Gemini API (@google/generative-ai) for Agentic workflows, OpenWeatherMap API for live scene weather mapping, ArcGIS REST APIs (Feature Services) & Network Analysis Services.
+
+# 3. System Architecture & Core Features
+
+## A. Real-Time Dual-Database Synchronization
+* The system relies on two databases: MongoDB (transactional) and ArcGIS Feature Server (spatial).
+* When an Admin approves a booking request via the Dashboard, a 4-step programmatic workflow MUST trigger simultaneously:
+  1. Update the booking status to "Approved" in MongoDB.
+  2. Reject all other pending booking requests for the exact same `unitId`.
+  3. Update the unit document in MongoDB (change status from "Available" to "Sold").
+  4. Programmatically send a request to the ArcGIS Feature Service to update the spatial layer's status to trigger immediate map re-rendering (changing the 3D building symbology/color).
+* Broadcast these changes instantly to all connected clients using `Socket.io` to achieve zero-latency UI updates without page reloads.
+
+## B. AI Property Advisor (Agentic Workflow)
+* Integrate Google Gemini 2.5 Flash as a Smart Agent, NOT just a chatbot.
+* Implement RAG (Retrieval-Augmented Generation) by feeding the LLM only the "Available" units from MongoDB to prevent hallucination.
+* Implement Function Calling (Tools): The AI must be able to autonomously execute a `book_unit` function when the user confirms their intent to buy.
+* The AI should calculate ROI logically and filter units by budget.
+
+## C. 3D Web GIS Features
+* Render a full 3D Web Scene using ArcGIS Maps SDK.
+* Integrate Network Analysis: Include a Routing Widget (Multi-Stop Route) and Closest Facility analysis using `esriConfig.apiKey` mapped to a `VITE_ARCGIS_API_KEY` environment variable.
+* Real-time Weather: Fetch coordinates data from OpenWeatherMap. If the description returns "sand" or "dust", map it dynamically to the 3D Scene's atmosphere/weather properties.
+
+# 4. Critical Technical Constraints & Fixed Bugs
+Do NOT make these common mistakes; follow these rules strictly based on our previous debugging:
+1. Mongoose Strict Mode: In the `Unit` schema, ensure `customerName` and `customerPhone` are explicitly defined. Otherwise, booking updates will fail to save these fields.
+2. Type Casting: In the Admin Route workflow, when comparing the requested unit ID with the database, strictly use `Number(unitId)` to prevent Type Mismatches between string payloads and numerical IDs.
+3. Environment Variables: 
+   - Backend `.env` includes: `PORT=5000`, `MONGO_URI`, `GEMINI_API_KEY`, `JWT_SECRET`, `OPENWEATHER_API_KEY`.
+   - Frontend `.env` includes: `VITE_ARCGIS_API_KEY` (must use VITE_ prefix).
+4. Do not generate heavy `node_modules`. Provide `package.json` configurations for clean `npm install` setup.
+
+# 5. Output Request
+Based on the above architecture, please generate:
+1. The backend Mongoose Schemas (`Unit.js`, `BookingRequest.js`, `User.js`).
+2. The core Admin Controller logic that handles the 4-step dual-database synchronization and WebSocket firing.
+3. The AI Controller logic demonstrating the Gemini Function Calling setup for booking a unit.
+4. The Frontend React Component structure for the MapViewer integrating the ArcGIS SDK and the VITE_ API Key.

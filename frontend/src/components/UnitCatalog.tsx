@@ -112,7 +112,7 @@ const UnitCatalog = ({ view, onClose }: UnitCatalogProps) => {
 
     setIsLoading(true);
     try {
-      await axios.post('http://localhost:5000/api/bookings/request', {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/bookings/request`, {
         unitId: bookingUnit.attributes.OBJECTID,
       }, {
         headers: { 'x-auth-token': auth.token } // 👈 إرسال التوكن في الهيدر
@@ -230,7 +230,13 @@ const UnitCatalog = ({ view, onClose }: UnitCatalogProps) => {
       </div>
 
       {/* 🚀 شاشة تسجيل الدخول */}
-      {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
+      {showAuthModal && <AuthModal 
+          onClose={() => setShowAuthModal(false)} 
+          onSuccess={() => {
+              setShowAuthModal(false);
+              // submitBookingRequest(); // لو حابب تخليه يبعت الطلب تلقائي بعد ما يلوجن
+          }} 
+      />}
 
       {/* 🚀 شاشة تأكيد الحجز */}
       {bookingUnit && (

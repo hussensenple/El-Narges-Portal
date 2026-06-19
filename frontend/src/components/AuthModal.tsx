@@ -28,7 +28,7 @@ const AuthModal = ({ onClose, onSuccess }: AuthModalProps) => {
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
       const payload = isLogin ? { phone, password } : { name, phone, password };
       
-      const res = await axios.post(`http://localhost:5000${endpoint}`, payload);
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}${endpoint}`, payload);
       
       // حفظ بيانات العميل في الذاكرة
       if (auth) {

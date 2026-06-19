@@ -65,7 +65,7 @@ const WeatherWidget = ({ view, onClose }: WeatherWidgetProps) => {
     if (!view || !view.ready || !view.center) return;
     setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/weather/current?lat=${view.center.latitude}&lon=${view.center.longitude}`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/weather/current?lat=${view.center.latitude}&lon=${view.center.longitude}`);
       const data = await response.json();
       
       const newWeather = { 

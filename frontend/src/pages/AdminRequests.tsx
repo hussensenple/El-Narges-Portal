@@ -12,7 +12,7 @@ const AdminPortal = () => {
   // دالة جلب الطلبات
   const fetchRequests = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/admin/pending');
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin/pending`);
       setRequests(res.data);
     } catch (error) {
       console.error("خطأ في جلب الطلبات:", error);
@@ -24,14 +24,14 @@ const AdminPortal = () => {
     fetchRequests(); // جلب الطلبات أول ما الصفحة تفتح
 
     // الاتصال بالسيرفر
-    const socket = io('http://localhost:5000');
+    const socket = io(`${import.meta.env.VITE_API_URL}`);
     
     // أول ما نسمع إن في طلب جديد، نحدث الجدول فوراً
     socket.on('newBookingRequest', () => {
       fetchRequests(); 
     });
 
-    // تنظيف الاتصال لما الأدمن يقفل الصفحة أو يروح مسار تاني
+    // تنظيم الاتصال لما الأدمن يقفل الصفحة أو يروح مسار تاني
     return () => {
       socket.disconnect();
     };
@@ -41,7 +41,7 @@ const AdminPortal = () => {
   const handleApprove = async (id: string) => {
     if (window.confirm("هل أنت متأكد من الموافقة؟ سيتم تحديث الخريطة فوراً.")) {
       try {
-        await axios.post(`http://localhost:5000/api/admin/approve/${id}`);
+        await axios.post(`${import.meta.env.VITE_API_URL}/api/admin/approve/${id}`);
         alert("✅ Approved successfully!");
         fetchRequests(); // تحديث الجدول
       } catch (error) {
@@ -54,7 +54,7 @@ const AdminPortal = () => {
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this request? This action cannot be undone.")) {
       try {
-        await axios.delete(`http://localhost:5000/api/admin/request/${id}`);
+        await axios.delete(`${import.meta.env.VITE_API_URL}/api/admin/request/${id}`);
         alert("🗑️ Request deleted successfully!");
         fetchRequests(); // تحديث الجدول عشان الطلب يختفي
       } catch (error) {

@@ -10,14 +10,44 @@ interface AuthModalProps {
 
 const AuthModal = ({ onClose, onSuccess }: AuthModalProps) => {
   const auth = useContext(AuthContext);
-  const [isLogin, setIsLogin] = useState(true); // للتبديل بين تسجيل الدخول وإنشاء حساب
+  const [isLogin, setIsLogin] = useState(true); 
   
   const [name, setName] = useState('');
+  const [email, setEmail] = useState(''); 
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Updated state to track validation including phone
+  const [validity, setValidity] = useState({
+    name: null as boolean | null,
+    email: null as boolean | null,
+    phone: null as boolean | null,
+    password: null as boolean | null
+  });
+
+  // Strict Validation Logic (Regex)
+  const handleValidation = (field: string, value: string) => {
+    if (field === 'name') {
+      setName(value);
+      // English letters and spaces only (3 to 50 characters)
+      setValidity(prev => ({ ...prev, name: /^[a-zA-Z\s]{3,50}$/.test(value) }));
+    } else if (field === 'email') {
+      setEmail(value);
+      // Strict Gmail validation
+      setValidity(prev => ({ ...prev, email: /^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(value) }));
+    } else if (field === 'phone') {
+      setPhone(value);
+      // Egyptian mobile numbers only (11 digits, starts with 010, 011, 012, or 015)
+      setValidity(prev => ({ ...prev, phone: /^01[0125][0-9]{8}$/.test(value) }));
+    } else if (field === 'password') {
+      setPassword(value);
+      // Min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special character
+      setValidity(prev => ({ ...prev, password: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(value) }));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,16 +56,15 @@ const AuthModal = ({ onClose, onSuccess }: AuthModalProps) => {
 
     try {
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
-      const payload = isLogin ? { phone, password } : { name, phone, password };
+      const payload = isLogin ? { phone, password } : { name, email, phone, password };
       
       const res = await axios.post(`${import.meta.env.VITE_API_URL}${endpoint}`, payload);
-      
-      // حفظ بيانات العميل في الذاكرة
+
+      // 🚀 حفظ التوكن وبيانات العميل في الـ Context (واللي بدوره بيحفظها في المتصفح)
       if (auth) {
         auth.login(res.data.user, res.data.token);
       }
-      
-      // تنفيذ دالة النجاح (التي ستكمل الحجز المعلق)
+
       if (onSuccess) {
         onSuccess();
       } else {
@@ -43,11 +72,18 @@ const AuthModal = ({ onClose, onSuccess }: AuthModalProps) => {
       }
       
     } catch (err: any) {
-      setError(err.response?.data?.msg || "حدث خطأ في الاتصال بالخادم");
+      setError(err.response?.data?.msg || "Connection error occurred.");
     } finally {
       setIsLoading(false);
     }
   };
+
+  const getBorderStyle = (isValid: boolean | null) => {
+    if (isValid === null) return '1px solid #30363d';
+    return isValid ? '1px solid #2ea043' : '1px solid #f85149';
+  };
+
+  const isFormValid = isLogin ? true : (validity.name && validity.email && validity.phone && validity.password);
 
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 3000 }}>
@@ -62,19 +98,37 @@ const AuthModal = ({ onClose, onSuccess }: AuthModalProps) => {
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
           {!isLogin && (
-            <input type="text" placeholder="Full Name" value={name} onChange={e => setName(e.target.value)} required style={{ padding: '12px', borderRadius: '6px', border: '1px solid #30363d', backgroundColor: '#0d1117', color: '#fff' }} />
+            <>
+              <div>
+                <input type="text" placeholder="Full Name" value={name} onChange={e => handleValidation('name', e.target.value)} required style={{ width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '6px', backgroundColor: '#0d1117', color: '#fff', border: getBorderStyle(validity.name), outline: 'none' }} />
+                {validity.name === false && <span style={{ color: '#ff7b72', fontSize: '11px', display: 'block', marginTop: '4px' }}>Only letters and spaces (3-50 chars).</span>}
+              </div>
+
+              <div>
+                <input type="email" placeholder="Email (@gmail.com)" value={email} onChange={e => handleValidation('email', e.target.value)} required style={{ width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '6px', backgroundColor: '#0d1117', color: '#fff', border: getBorderStyle(validity.email), outline: 'none' }} />
+                {validity.email === false && <span style={{ color: '#ff7b72', fontSize: '11px', display: 'block', marginTop: '4px' }}>Must be a valid @gmail.com address.</span>}
+              </div>
+            </>
           )}
-          <input type="tel" placeholder="Phone Number (e.g. 010...)" value={phone} onChange={e => setPhone(e.target.value)} required style={{ padding: '12px', borderRadius: '6px', border: '1px solid #30363d', backgroundColor: '#0d1117', color: '#fff' }} />
-          <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required style={{ padding: '12px', borderRadius: '6px', border: '1px solid #30363d', backgroundColor: '#0d1117', color: '#fff' }} />
+
+          <div>
+            <input type="tel" placeholder="Phone Number (e.g., 010...)" value={phone} onChange={e => handleValidation('phone', e.target.value)} required style={{ width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '6px', backgroundColor: '#0d1117', color: '#fff', border: !isLogin ? getBorderStyle(validity.phone) : '1px solid #30363d', outline: 'none' }} />
+            {!isLogin && validity.phone === false && <span style={{ color: '#ff7b72', fontSize: '11px', display: 'block', marginTop: '4px' }}>Must be a valid 11-digit mobile number.</span>}
+          </div>
           
-          <button type="submit" disabled={isLoading} style={{ padding: '12px', backgroundColor: '#1f6feb', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: isLoading ? 'not-allowed' : 'pointer', marginTop: '10px' }}>
-            {isLoading ? 'جاري التحميل...' : (isLogin ? 'Login' : 'Create Account')}
+          <div>
+            <input type="password" placeholder="Password" value={password} onChange={e => handleValidation('password', e.target.value)} required style={{ width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '6px', backgroundColor: '#0d1117', color: '#fff', border: !isLogin ? getBorderStyle(validity.password) : '1px solid #30363d', outline: 'none' }} />
+            {!isLogin && validity.password === false && <span style={{ color: '#ff7b72', fontSize: '11px', display: 'block', marginTop: '4px' }}>Min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special (@$!%*?&).</span>}
+          </div>
+
+          <button type="submit" disabled={isLoading || !isFormValid} style={{ padding: '12px', backgroundColor: isFormValid ? '#1f6feb' : '#444c56', color: isFormValid ? '#fff' : '#8b949e', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: (isLoading || !isFormValid) ? 'not-allowed' : 'pointer', marginTop: '10px', transition: '0.3s' }}>
+            {isLoading ? 'Loading...' : (isLogin ? 'Login' : 'Create Account')}
           </button>
         </form>
 
         <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '13px', color: '#8b949e' }}>
           {isLogin ? "Don't have an account? " : "Already have an account? "}
-          <span onClick={() => { setIsLogin(!isLogin); setError(''); }} style={{ color: '#58a6ff', cursor: 'pointer', fontWeight: 'bold' }}>
+          <span onClick={() => { setIsLogin(!isLogin); setError(''); setValidity({name: null, email: null, phone: null, password: null}); }} style={{ color: '#58a6ff', cursor: 'pointer', fontWeight: 'bold' }}>
             {isLogin ? 'Register here' : 'Login here'}
           </span>
         </div>

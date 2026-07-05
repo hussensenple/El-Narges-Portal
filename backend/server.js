@@ -25,11 +25,12 @@ app.set('socketio', io);
 // 1. Middlewares (حراس البوابة)
 // ==========================================
 app.use(cors()); // بيسمح للـ React يكلم السيرفر من غير مشاكل أمنية
-app.use(express.json()); // بيخلي السيرفر يقدر يقرأ البيانات اللي جاية بصيغة JSON
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Routes
-const unitRoutes = require('./routes/unitRoutes');
-app.use('/api/units', unitRoutes); 
+// const unitRoutes = require('./routes/unitRoutes');
+// app.use('/api/units', unitRoutes); 
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/bookings', require('./routes/bookingRoutes'));
 app.use('/api/ai', require('./routes/aiRoutes'));

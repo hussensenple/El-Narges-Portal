@@ -96,7 +96,7 @@ const WeatherWidget = ({ view, onClose }: WeatherWidgetProps) => {
   const secBtnStyle: React.CSSProperties = { flex: '1 1 calc(50% - 8px)', padding: '12px', backgroundColor: '#21262d', color: '#c9d1d9', border: '1px solid #30363d', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' };
 
   return (
-    <div style={{ position: 'absolute', top: `${pos.y}px`, left: `${pos.x}px`, width: '320px', backgroundColor: '#0d1117', borderRadius: '14px', boxShadow: '0 20px 50px rgba(0,0,0,0.7)', display: 'flex', flexDirection: 'column', color: '#c9d1d9', fontFamily: 'sans-serif', zIndex: 1000, overflow: 'hidden' }}>
+    <div style={{ position: 'absolute', top: `-54px`, left: `-408px`, width: '320px', backgroundColor: '#0d1117', borderRadius: '14px', boxShadow: '0 20px 50px rgba(0,0,0,0.7)', display: 'flex', flexDirection: 'column', color: '#c9d1d9', fontFamily: 'sans-serif', zIndex: 1000, overflow: 'hidden' }}>
       
       <div onMouseDown={handleMouseDown} style={{ padding: '16px 20px', backgroundColor: '#161b22', borderBottom: '1px solid #30363d', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: isDragging ? 'grabbing' : 'grab' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

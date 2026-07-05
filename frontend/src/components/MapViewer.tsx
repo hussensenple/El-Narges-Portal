@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import WebScene from '@arcgis/core/WebScene';
 import SceneView from '@arcgis/core/views/SceneView';
+import LayerList from '@arcgis/core/widgets/LayerList'; // 👈 استيراد أداة الطبقات
 import '@arcgis/core/assets/esri/themes/dark/main.css';
-import WeatherWidget from './WeatherWidget'; // 👈 استدعاء ويجت الطقس
+import WeatherWidget from './WeatherWidget';
 
 interface MapViewerProps {
   onViewReady: (view: SceneView) => void;
@@ -10,18 +11,17 @@ interface MapViewerProps {
 
 const MapViewer = ({ onViewReady }: MapViewerProps) => {
   const mapDiv = useRef<HTMLDivElement>(null);
-  
-  // 🚀 1. State لحفظ نسخة الخريطة عشان نبعتها للويجت
+  const layerListDiv = useRef<HTMLDivElement>(null); // 👈 ريفيرانس لحاوية أداة الطبقات
+
   const [viewInstance, setViewInstance] = useState<SceneView | null>(null);
-  
-  // 🚀 2. State للتحكم في فتح وقفل الطقس
   const [isWeatherOpen, setIsWeatherOpen] = useState(false);
+  const [isLayersOpen, setIsLayersOpen] = useState(false); // 👈 حالة زر الطبقات
 
   useEffect(() => {
     if (mapDiv.current) {
       const webscene = new WebScene({
         portalItem: {
-          id: "b30e279e0f59437fa4260de77f0f919f" // ⚠️ الـ ID بتاعك زي ما هو
+          id: "fd0297b6f0034d63a58d42c7ffef11e3"
         }
       });
 
@@ -32,7 +32,21 @@ const MapViewer = ({ onViewReady }: MapViewerProps) => {
       });
 
       view.when(() => {
-        setViewInstance(view); // 👈 حفظ الخريطة بعد ما تحمل
+        // 🚀 إنشاء قائمة الطبقات وربطها بالـ div الخاص بنا
+        if (layerListDiv.current) {
+          new LayerList({
+            view: view,
+            container: layerListDiv.current,
+            listItemCreatedFunction: (event) => {
+              const item = event.item;
+              if (item.title === "Units") {
+                item.visible = false; // إخفاء جدول الوحدات لأنه بدون شكل هندسي
+              }
+            }
+          });
+        }
+
+        setViewInstance(view); 
         onViewReady(view);
       });
 
@@ -40,50 +54,106 @@ const MapViewer = ({ onViewReady }: MapViewerProps) => {
         if (view) view.destroy();
       };
     }
-  }, []);
+  }, []); // ✅ المصفوفة فارغة لمنع إعادة التحميل اللانهائي
 
   return (
-    // 🚀 عملنا Wrapper Relative عشان الزراير تعوم فوق الخريطة
     <div style={{ height: '100%', width: '100%', position: 'relative' }}>
       
       {/* 🗺️ حاوية الخريطة الأصلية */}
       <div ref={mapDiv} style={{ height: '100%', width: '100%' }} />
 
-      {/* 🌤️ زرار فتح الطقس (عائم فوق الخريطة) */}
-      <button 
-        onClick={() => setIsWeatherOpen(true)}
-        style={{
-          position: 'absolute',
-          top: '20px',   // 👈 تقدر تغير مكانه (مثلا تخليه bottom)
-          right: '20px', // 👈 تقدر تخليه left لو الزراير التانية هناك
-          padding: '12px 20px',
-          backgroundColor: '#161b22', // لون متناسق مع الدارك مود
-          color: '#58a6ff',
+      {/* 🚀 حاوية الأزرار والويجتس */}
+      <div style={{
+        position: 'absolute',
+        top: '80px',
+        right: '20px',
+        zIndex: 10,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-end',
+        gap: '10px'
+      }}>
+        
+        {/* 🎛️ صف الأزرار (يضم زر الطبقات وزر الطقس) */}
+        <div style={{ display: 'flex', gap: '10px' }}>
+          
+          {/* 📚 زرار قائمة الطبقات */}
+          <button 
+            onClick={() => {
+              setIsLayersOpen(!isLayersOpen);
+              if (isWeatherOpen) setIsWeatherOpen(false); // نقفل الطقس لو مفتوح عشان الشاشة متزحمش
+            }}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: isLayersOpen ? '#1f6feb' : '#161b22',
+              color: '#fff',
+              border: '1px solid #30363d',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            📚 Layers
+          </button>
+
+          {/* 🌤️ زرار الطقس */}
+          <button 
+            onClick={() => {
+              setIsWeatherOpen(!isWeatherOpen);
+              if (isLayersOpen) setIsLayersOpen(false); // نقفل الطبقات لو مفتوحة
+            }}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: isWeatherOpen ? '#1f6feb' : '#161b22',
+              color: '#fff',
+              border: '1px solid #30363d',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            🌤️ Weather
+          </button>
+        </div>
+
+        {/* 🚀 حاوية عرض ويجت الطبقات */}
+        {/* استخدمنا display none بدل الـ conditional rendering عشان الـ DOM بتاع الويجت ميتدمرش */}
+        <div style={{ 
+          display: isLayersOpen ? 'block' : 'none',
+          backgroundColor: '#161b22',
           border: '1px solid #30363d',
           borderRadius: '8px',
-          cursor: 'pointer',
-          fontWeight: 'bold',
-          boxShadow: '0 6px 16px rgba(0,0,0,0.5)',
-          zIndex: 10,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          transition: 'all 0.2s ease'
-        }}
-        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1f6feb'}
-        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#161b22'}
-      >
-        🌤️ Weather
-      </button>
+          boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+          overflow: 'hidden',
+          width: '280px',
+          maxHeight: '60vh',
+          overflowY: 'auto',
+          animation: 'fadeInDown 0.2s ease-out'
+        }}>
+          <div ref={layerListDiv} />
+        </div>
 
-      {/* 🚀 ويجت الطقس (بيظهر بس لما تدوس على الزرار) */}
-      {isWeatherOpen && (
-        <WeatherWidget 
-          view={viewInstance} 
-          onClose={() => setIsWeatherOpen(false)} 
-        />
-      )}
-      
+        {/* 🚀 ويجت الطقس */}
+        {isWeatherOpen && (
+          <div style={{ animation: 'fadeInDown 0.2s ease-out' }}>
+            <WeatherWidget 
+              view={viewInstance} 
+              onClose={() => setIsWeatherOpen(false)} 
+            />
+          </div>
+        )}
+
+      </div>
     </div>
   );
 };

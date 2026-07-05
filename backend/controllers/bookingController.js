@@ -1,30 +1,31 @@
 const BookingRequest = require('../models/BookingRequest');
 const Unit = require('../models/Unit');
-const axios = require('axios');
+// 🚀 استدعاء الدوال مرة واحدة فقط بشكل صحيح
+const { updateArcGISStatus, checkAndUpdateBuildingCompleteness } = require('../services/arcgisService');
 
 // دالة الموافقة على الطلب
 exports.approveRequest = async (req, res) => {
   try {
-    // 1. تصحيح استخراج الـ ID بتاع الطلب (بدون تحويل لرقم لأنه ObjectId)
+    // 1. استخراج الـ ID بتاع الطلب من الرابط
     const { requestId } = req.params; 
     const request = await BookingRequest.findById(requestId);
 
     if (!request) return res.status(404).json({ msg: "الطلب غير موجود" });
 
-    // 2. تحديث قاعدة البيانات MongoDB (مع تحويل الـ unitId لرقم صحيح)
+    // 2. تحديث قاعدة البيانات MongoDB
     const numericUnitId = Number(request.unitId);
 
     const updatedUnit = await Unit.findOneAndUpdate(
-      { arcgisObjectId: numericUnitId }, // 👈 التحويل السحري هنا
+      { arcgisObjectId: numericUnitId },
       { 
         status: 'Sold', 
         customerName: request.customerName, 
-        customerPhone: request.customerPhone 
+        customerPhone: request.customerPhone,
+        customerGmail: request.customerGmail 
       },
-      { new: true } // عشان يرجعلك الوحدة بعد التحديث تتأكد منها
+      { new: true }
     );
 
-    // لو ملقاش الوحدة في MongoDB يوقف العملية وميكلمش الخريطة
     if (!updatedUnit) {
       return res.status(404).json({ msg: "الوحدة غير موجودة في قاعدة بيانات MongoDB" });
     }
@@ -32,21 +33,26 @@ exports.approveRequest = async (req, res) => {
     request.status = 'Approved';
     await request.save();
 
-    // 3. 🚀 تحديث الخريطة في ArcGIS Online (The GIS Sync)
-    const ARCGIS_URL = "https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Residential1/FeatureServer/0/applyEdits";
-    
-    const updates = [{
-      attributes: {
-        OBJECTID: numericUnitId, // نستخدم الرقم الصحيح هنا كمان
-        Status: 'Sold',
-        Customer_Name: request.customerName,
-        Customer_Phone: request.customerPhone
-      }
-    }];
+    // 3. تحديث حالة الوحدة أو الشقة في ArcGIS Online
+    const success = await updateArcGISStatus(
+      numericUnitId, 
+      'Sold', 
+      request.customerName, 
+      request.customerPhone, 
+      request.customerGmail, 
+      request.sourceLayer 
+    );
 
-    await axios.post(ARCGIS_URL, `adds=[]&updates=${JSON.stringify(updates)}&deletes=[]&f=json`, {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-    });
+    if (!success) {
+      return res.status(500).json({ msg: "تم التحديث محلياً ولكن فشل التزامن مع الخريطة، يرجى مراجعة روابط ArcGIS" });
+    }
+
+    // 4. 🚀 فحص اكتمال بيع العمارة (لو الطلب كان لشقة مش فيلا)
+    // لاحظ إننا بنشيك على buildingFK اللي ضفناه في الـ schema
+    if (request.sourceLayer === 'Units' && request.buildingFK) {
+      // بتشتغل في الخلفية بدون await عشان متأخرش الـ Response للعميل
+      checkAndUpdateBuildingCompleteness(request.buildingFK); 
+    }
 
     res.json({ msg: "تمت الموافقة وتحديث قاعدة البيانات والخريطة بنجاح ✅" });
   } catch (err) {

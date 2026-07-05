@@ -6,6 +6,11 @@ import FeatureSet from '@arcgis/core/rest/support/FeatureSet';
 import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
 import Point from '@arcgis/core/geometry/Point';
 import SceneView from '@arcgis/core/views/SceneView';
+// import esriConfig from "@arcgis/core/config"; // 👈 استدعاء إعدادات Esri
+
+// 👈 ضع الـ API Key الخاص بك هنا (الذي يبدأ بـ AAPK)
+// esriConfig.apiKey = "AAPTalXA9GcZ5lZfym8hKak90bg..wGOn5mTNFbEDgQTSt91zZ3JRiK5hffTjYdmL1ERTSPKglXpsx21W9RNlgzgoJF0Jz2FSdRc_kgkQKBh7X5t02_GyVncvhTB8KHXfFs1UpjrO_P_Si65XTQXNm5Ad_12WXsc1fjlDCgbbBvTDxYSAA495unWWkWQI47Y_XAhMLQaVT-wFHLzecsgMw-jJNUuxC1NWVSjSgp6-dtfQswbqkkwKXrGQ6asF2YrQ9PLmQhL_98RwBQ..AT1_e4bvhm43";
+
 
 // 🎨 أيقونات SVG عصرية (Dark Theme)
 const Icons = {

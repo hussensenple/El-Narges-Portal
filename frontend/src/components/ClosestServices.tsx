@@ -6,23 +6,27 @@ import FeatureSet from '@arcgis/core/rest/support/FeatureSet';
 import Point from '@arcgis/core/geometry/Point';
 import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
 import SceneView from '@arcgis/core/views/SceneView';
+// import esriConfig from "@arcgis/core/config";
 
-// 🎨 أيقونات SVG عصرية (Dark Theme)
+// 🔑 ضع الـ API Key الخاص بك هنا لتفعيل الـ Routing
+// esriConfig.apiKey = "AAPTalXA9GcZ5lZfym8hKak90bg..wGOn5mTNFbEDgQTSt91zZ3JRiK5hffTjYdmL1ERTSPKglXpsx21W9RNlgzgoJF0Jz2FSdRc_kgkQKBh7X5t02_GyVncvhTB8KHXfFs1UpjrO_P_Si65XTQXNm5Ad_12WXsc1fjlDCgbbBvTDxYSAA495unWWkWQI47Y_XAhMLQaVT-wFHLzecsgMw-jJNUuxC1NWVSjSgp6-dtfQswbqkkwKXrGQ6asF2YrQ9PLmQhL_98RwBQ..AT1_e4bvhm43";
+
+// 🎨 أيقونات الخدمات
 const Icons = {
-  MapRoute: () => <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="18"></line><line x1="15" y1="6" x2="15" y2="21"></line></svg>,
   Target: () => <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>,
   Trash: () => <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>,
   School: () => <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>,
   Gym: () => <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M6 5h2v14H6z"/><path d="M16 5h2v14h-2z"/><path d="M2 8h4v8H2z"/><path d="M18 8h4v8h-4z"/><path d="M8 11h8v2H8z"/></svg>,
   Commercial: () => <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>,
+  Hospital: () => <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10h-3V7a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v3H3v11a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V10z"></path><line x1="12" y1="7" x2="12" y2="13"></line><line x1="9" y1="10" x2="15" y2="10"></line></svg>,
   Cancel: () => <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
 };
 
-interface RoutingWidgetProps {
+interface ClosestServicesProps {
   view: SceneView | null;
 }
 
-const RoutingWidget = ({ view }: RoutingWidgetProps) => {
+const ClosestServices = ({ view }: ClosestServicesProps) => {
   const [isCalculating, setIsCalculating] = useState<boolean>(false);
   const [isSelecting, setIsSelecting] = useState<boolean>(false);
   const [routeLayer, setRouteLayer] = useState<GraphicsLayer | null>(null);
@@ -30,18 +34,21 @@ const RoutingWidget = ({ view }: RoutingWidgetProps) => {
   const [routeInfo, setRouteInfo] = useState<{ [key: string]: string | null }>({
     school: null,
     gym: null,
-    commercial: null
+    commercial: null,
+    hospital: null
   });
 
   const routingServiceUrl = "https://route-api.arcgis.com/arcgis/rest/services/World/ClosestFacility/NAServer/ClosestFacility_World";
-  const TARGET_LAYERS = ["Residential", "Residential1"];
+  
+  // 🏢 الطبقات المستهدفة للضغط (نتجاهل أي طبقة أخرى مثل LandUse)
+//   const TARGET_LAYERS = ["Buildings_Global", "Villas_Global"];
 
-  // 1. إنشاء طبقة الرسم
+  // 1️⃣ إنشاء طبقة الرسم عند تهيئة الـ Component
   useEffect(() => {
     if (view && view.map) {
       const layer = new GraphicsLayer({
-        title: "Closest Facilities", 
-        elevationInfo: { mode: "relative-to-ground", offset: 4 },
+        title: "Closest Facilities Routes", 
+        elevationInfo: { mode: "relative-to-ground", offset: 6 },
         listMode: "hide"
       });
       view.map.add(layer);
@@ -55,7 +62,7 @@ const RoutingWidget = ({ view }: RoutingWidgetProps) => {
     }
   }, [view]);
 
-  // 2. تفعيل اختيار المبنى
+  // 2️⃣ تفعيل أداة الـ HitTest لاختيار المباني
   useEffect(() => {
     if (!view || !isSelecting || !routeLayer) return;
 
@@ -65,9 +72,14 @@ const RoutingWidget = ({ view }: RoutingWidgetProps) => {
       event.stopPropagation();
       const response = await view.hitTest(event);
       
-      const residentialHit = response.results.find(
-        (res: any) => res.type === "graphic" && res.graphic.layer && TARGET_LAYERS.includes(res.graphic.layer.title)
-      ) as any;
+      // نبحث في جميع النتائج عن المبنى ونتجاهل الطبقات التي تغطيه
+      // 🚀 بحث مرن: تجاهل الـ LandUse والبحث عن أي طبقة تحتوي على اسم المباني
+      const residentialHit = response.results.find((res: any) => {
+        const title = res.graphic?.layer?.title || "";
+        return res.type === "graphic" && 
+               !title.includes("LandUse") && // 👈 تجاهل تام لطبقة الـ LandUse
+               (title.includes("Buildings") || title.includes("Villas") || title.includes("WSL"));
+      }) as any;
 
       if (residentialHit) {
         setIsSelecting(false);
@@ -79,7 +91,7 @@ const RoutingWidget = ({ view }: RoutingWidgetProps) => {
 
         calculateRouteToServices(incidentPoint, view, routeLayer);
       } else {
-        console.log("Please click on a valid residential building.");
+        console.warn("⚠️ لم يتم العثور على مبنى أو فيلا في نقطة الضغط.");
       }
     });
 
@@ -89,54 +101,66 @@ const RoutingWidget = ({ view }: RoutingWidgetProps) => {
     };
   }, [view, isSelecting, routeLayer]);
 
-  // 3. حساب المسارات
+  // 3️⃣ استخراج الخدمات وحساب المسارات
   const calculateRouteToServices = async (incidentPoint: Point, currentView: SceneView, activeRouteLayer: GraphicsLayer) => {
     setIsCalculating(true);
-    setRouteInfo({ school: null, gym: null, commercial: null });
+    setRouteInfo({ school: null, gym: null, commercial: null, hospital: null });
     
+    // إعداد مجموعات الخدمات والألوان الخاصة بكل منها
     const serviceGroups: { [key: string]: { color: number[], solidColor: number[], features: Graphic[] } } = {
-      "school": { color: [21, 255, 0, 1], solidColor: [21, 255, 0], features: [] },      
-      "gym": { color: [255, 50, 50, 1], solidColor: [255, 50, 50], features: [] },        
-      "commercial": { color: [50, 200, 255, 1], solidColor: [50, 200, 255], features: [] }  
+      "school": { color: [134, 214, 100, 1], solidColor: [134, 214, 100], features: [] },      
+      "gym": { color: [248, 113, 113, 1], solidColor: [248, 113, 113], features: [] },        
+      "commercial": { color: [96, 165, 250, 1], solidColor: [96, 165, 250], features: [] },
+      "hospital": { color: [250, 204, 21, 1], solidColor: [250, 204, 21], features: [] }  
     };
-    
-    const facilityLayerName = "Multi_Services"; 
 
     if (currentView && currentView.map) {
-      for (const layer of currentView.map.layers.toArray()) {
-        if (layer.title === facilityLayerName && (layer.type === "feature" || layer.type === "scene")) {
-          const queryLayer = layer as any;
-          const query = queryLayer.createQuery();
-          query.where = "1=1"; 
-          query.outSpatialReference = currentView.spatialReference;
-          query.returnGeometry = true;
-          query.outFields = ["*"]; 
-          
-          try {
-            const featureSet = await queryLayer.queryFeatures(query);
-            
-            featureSet.features.forEach((feature: any) => {
-              let matchedType: string | null = null;
-              for (const key in feature.attributes) {
-                const val = feature.attributes[key];
-                if (val !== null && val !== undefined) {
-                  const strVal = String(val).toLowerCase().trim();
-                  if (strVal === "school") matchedType = "school";
-                  else if (strVal === "gym") matchedType = "gym";
-                  else if (strVal === "commercial" || strVal === "mall") matchedType = "commercial";
-                  if (matchedType) break; 
-                }
-              }
+      const allLayers = currentView.map?.allLayers.toArray() || [];
+      const targetFacilityLayer = allLayers.find(l => l.title === "Services_Global");
 
-              if (matchedType && serviceGroups[matchedType]) {
-                const geom = feature.geometry as any;
-                const centerPt = geom.extent ? geom.extent.center : geom;
-                serviceGroups[matchedType].features.push(new Graphic({ geometry: centerPt }));
-              }
-            });
-          } catch (error) {
-            console.error(`Error reading data from layer ${layer.title}:`, error);
-          }
+      if (targetFacilityLayer && typeof (targetFacilityLayer as any).createQuery === "function") {
+        const queryLayer = targetFacilityLayer as any;
+        const query = queryLayer.createQuery();
+        query.where = "1=1"; 
+        query.outSpatialReference = currentView.spatialReference;
+        query.returnGeometry = true;
+        query.outFields = ["*"]; 
+        
+        try {
+          const featureSet = await queryLayer.queryFeatures(query);
+          
+          // طباعة البيانات الخام في الكونسول لكشف القيم الحقيقية
+          console.log("📦 Raw Services Data:", featureSet.features.map((f: any) => f.attributes));
+
+          // تصنيف الخدمات بناءً على أرقام الـ Subtypes
+          featureSet.features.forEach((feature: any) => {
+            let matchedType: string | null = null;
+            
+            // قراءة قيمة حقل Type مباشرة
+            const typeCode = feature.attributes.Type;
+
+            // مطابقة الرقم مع نوع الخدمة
+            if (typeCode === 1) matchedType = "school";
+            else if (typeCode === 2) matchedType = "hospital";
+            else if (typeCode === 3) matchedType = "gym";
+            else if (typeCode === 4) matchedType = "commercial";
+
+            if (matchedType && serviceGroups[matchedType]) {
+              const geom = feature.geometry as any;
+              const centerPt = geom.extent ? geom.extent.center : geom;
+              serviceGroups[matchedType].features.push(new Graphic({ geometry: centerPt }));
+            }
+          });
+
+          // طباعة النتيجة للتأكد
+          console.log("✅ Services Extracted:", {
+            school: serviceGroups.school.features.length,
+            hospital: serviceGroups.hospital.features.length,
+            gym: serviceGroups.gym.features.length,
+            commercial: serviceGroups.commercial.features.length
+          });
+        } catch (error) {
+          console.error("❌ فشل في جلب بيانات طبقة الخدمات:", error);
         }
       }
     }
@@ -144,6 +168,7 @@ const RoutingWidget = ({ view }: RoutingWidgetProps) => {
     const incidents = new FeatureSet({ features: [new Graphic({ geometry: incidentPoint })] });
     activeRouteLayer.removeAll(); 
 
+    // حل المسارات لكل نوع خدمة بشكل متوازي
     const routePromises = Object.keys(serviceGroups).map(async (typeKey) => {
       const typeData = serviceGroups[typeKey];
       if (typeData.features.length === 0) return null; 
@@ -157,9 +182,9 @@ const RoutingWidget = ({ view }: RoutingWidgetProps) => {
       });
 
       try {
-        // حلينا مشكلة المتغير التالت هنا بإضافة {} كمتغير إضافي للـ TS
         const results = await closestFacility.solve(routingServiceUrl, params, {} as any);
         const features = results?.routes?.features;
+        
         if (features && features.length > 0) {
           const routeGraphic = features[0];
           
@@ -175,16 +200,18 @@ const RoutingWidget = ({ view }: RoutingWidgetProps) => {
           if (seconds > 0) timeString += ` ${seconds} sec`;
           const formattedInfo = `${meters} m | ${timeString}`;
 
+          // رسم المسار كخط ثلاثي الأبعاد
           routeGraphic.symbol = {
             type: "line-3d",
             symbolLayers: [{
               type: "path",
               profile: "circle", 
-              width: 3.5,
+              width: 4,
               material: { color: typeData.color } 
             }]
           } as any;
 
+          // رسم دبوس على موقع الخدمة
           const routeGeom = routeGraphic.geometry as any;
           const lastPath = routeGeom.paths[routeGeom.paths.length - 1];
           const endPointCoords = lastPath[lastPath.length - 1];
@@ -203,7 +230,7 @@ const RoutingWidget = ({ view }: RoutingWidgetProps) => {
               symbolLayers: [{
                 type: "object",
                 resource: { primitive: "inverted-cone" },
-                height: 35, width: 12,
+                height: 40, width: 15,
                 material: { color: typeData.solidColor }
               }]
             } as any
@@ -212,7 +239,7 @@ const RoutingWidget = ({ view }: RoutingWidgetProps) => {
           return { routeGraphic, facilityPin, typeKey, infoText: formattedInfo };
         }
       } catch (error) {
-        console.error(`Failed to calculate route for type ${typeKey}:`, error);
+        console.error(`❌ فشل حساب المسار لخدمة ${typeKey}:`, error);
       }
       return null;
     });
@@ -222,7 +249,7 @@ const RoutingWidget = ({ view }: RoutingWidgetProps) => {
       const validResults = routeResults.filter(r => r !== null);
       
       if (validResults.length > 0) {
-        const newRouteInfo: { [key: string]: string | null } = { school: null, gym: null, commercial: null };
+        const newRouteInfo: { [key: string]: string | null } = { school: null, gym: null, commercial: null, hospital: null };
         const graphicsToAdd: any[] = [];
         
         validResults.forEach(res => {
@@ -238,7 +265,7 @@ const RoutingWidget = ({ view }: RoutingWidgetProps) => {
         setRouteInfo(newRouteInfo); 
       }
     } catch (e) {
-      console.error("General error in route execution:", e);
+      console.error("❌ خطأ عام أثناء معالجة المسارات:", e);
     } finally {
       setIsCalculating(false);
     }
@@ -247,47 +274,37 @@ const RoutingWidget = ({ view }: RoutingWidgetProps) => {
   const clearRoutes = () => {
     if (routeLayer) {
       routeLayer.removeAll();
-      routeLayer.listMode = "hide";
     }
-    setRouteInfo({ school: null, gym: null, commercial: null });
+    setRouteInfo({ school: null, gym: null, commercial: null, hospital: null });
     setIsSelecting(false);
     if (view) (view as any).cursor = "default";
   };
 
   return (
-    <div className="widget-3d-routing" style={{ 
+    <div style={{ 
       backgroundColor: '#0d1117', 
       height: 'auto', 
       maxHeight: 'calc(100vh - 160px)', 
-      overflowY: 'auto', // 👈 نخلي السكرول رأسي بس لو المحتوى كبر
-      overflowX: 'hidden', // 👈 نقتل السكرول الأفقي المستفز ده
+      overflowY: 'auto', 
+      overflowX: 'hidden', 
       fontFamily: "'Inter', 'Segoe UI', Roboto, sans-serif", 
       color: '#c9d1d9',
-      borderRadius: '12px', // 👈 حواف أنعم شوية
+      borderRadius: '12px', 
       border: '1px solid #30363d', 
-      width: '340px', // 👈 عرضناها شوية عشان المحتوى يتنفس
+      width: '320px', 
       padding: '20px',
-      boxSizing: 'border-box', // 👈 السطر السحري اللي بيمنع الـ Padding إنه يبوظ العرض
-      boxShadow: '0 8px 24px rgba(0,0,0,0.4)'
+      boxSizing: 'border-box', 
+      boxShadow: '0 8px 24px rgba(0,0,0,0.6)'
     }}>
-      <style>{`
-        @keyframes pulse-anim { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(0.98); } 100% { opacity: 1; transform: scale(1); } }
-        .is-selecting { animation: pulse-anim 1.5s infinite ease-in-out; border-color: #da3633 !important; background-color: rgba(218, 54, 51, 0.1) !important; color: #ff7b72 !important; }
-        .action-btn { transition: all 0.2s ease; }
-        .action-btn:hover:not(:disabled):not(.is-selecting) { background-color: #388bfd !important; transform: translateY(-1px); }
-        .clear-btn:hover { background-color: rgba(218, 54, 51, 0.15) !important; color: #ff7b72 !important; border-color: #ff7b72 !important; }
-        .route-card { transition: transform 0.2s; }
-        .route-card:hover { transform: translateX(4px); }
-      `}</style>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', paddingBottom: '12px', borderBottom: '1px solid #30363d' }}>
-        <div style={{ color: '#58a6ff' }}><Icons.MapRoute /></div>
-        <h5 style={{ fontWeight: 800, color: '#ffffff', margin: 0, fontSize: '16px', letterSpacing: '-0.3px' }}>3D Routing Analyzer</h5>
+      
+      {/* رأس الـ Widget */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', paddingBottom: '12px', borderBottom: '1px solid #30363d' }}>
+        <h3 style={{ fontWeight: 800, color: '#ffffff', margin: 0, fontSize: '16px' }}>📍 Closest Services</h3>
       </div>
 
+      {/* أزرار التحكم */}
       <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
         <button 
-          className={`action-btn ${isSelecting ? 'is-selecting' : ''}`}
           onClick={() => {
             setIsSelecting(!isSelecting);
             if (isSelecting && view) (view as any).cursor = "default";
@@ -295,55 +312,53 @@ const RoutingWidget = ({ view }: RoutingWidgetProps) => {
           disabled={!view}
           style={{
             flex: 2, padding: '12px',
-            backgroundColor: !view ? '#21262d' : (isSelecting ? 'transparent' : '#1f6feb'),
+            backgroundColor: !view ? '#21262d' : (isSelecting ? 'transparent' : '#238636'),
             color: !view ? '#8b949e' : (isSelecting ? '#ff7b72' : '#ffffff'),
-            border: isSelecting ? '1px solid #da3633' : '1px solid transparent',
-            borderRadius: '8px', fontWeight: 600, fontSize: '13px',
-            cursor: !view ? 'not-allowed' : 'pointer',
-            display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px',
-            boxShadow: (!view || isSelecting) ? 'none' : '0 4px 12px rgba(31, 111, 235, 0.2)'
+            border: isSelecting ? '1px solid #da3633' : '1px solid #238636',
+            borderRadius: '8px', fontWeight: 600, fontSize: '13px', cursor: 'pointer',
+            display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px'
           }}
         >
-          {isSelecting ? <><Icons.Cancel /> Cancel Selection</> : <><Icons.Target /> Select Building</>}
+          {isSelecting ? <><Icons.Cancel /> Cancel</> : <><Icons.Target /> Select Unit</>}
         </button>
 
         <button 
-          className="clear-btn" onClick={clearRoutes}
+          onClick={clearRoutes}
           style={{
-            flex: 1, padding: '12px',
-            backgroundColor: '#21262d', color: '#c9d1d9', border: '1px solid #30363d',
+            flex: 1, padding: '12px', backgroundColor: '#21262d', color: '#c9d1d9', border: '1px solid #30363d',
             borderRadius: '8px', fontWeight: 600, fontSize: '13px', cursor: 'pointer', 
-            display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px',
-            transition: 'all 0.2s ease'
+            display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px'
           }}
         >
           <Icons.Trash /> Clear
         </button>
       </div>
 
+      {/* رسائل الحالة */}
       {isSelecting && (
-        <div style={{ textAlign: 'center', fontSize: '12px', color: '#ff7b72', fontWeight: 600, marginBottom: '20px', padding: '8px', backgroundColor: 'rgba(218, 54, 51, 0.1)', borderRadius: '6px', border: '1px solid rgba(218, 54, 51, 0.2)' }}>
-          Target a residential building on the map...
+        <div style={{ textAlign: 'center', fontSize: '12px', color: '#58a6ff', marginBottom: '20px', padding: '8px', backgroundColor: 'rgba(56, 139, 253, 0.1)', borderRadius: '6px' }}>
+          👉 Click on any Building or Villa...
         </div>
       )}
 
       {isCalculating && (
-        <div style={{ textAlign: 'center', fontSize: '13px', color: '#f2cc60', fontWeight: 600, marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-          <span style={{ animation: 'pulse-anim 1s infinite' }}>Finding Closest Services...</span>
+        <div style={{ textAlign: 'center', fontSize: '13px', color: '#d29922', fontWeight: 600, marginBottom: '20px' }}>
+          ⏳ Calculating routes...
         </div>
       )}
 
+      {/* كروت النتائج */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {['school', 'gym', 'commercial'].map((type) => {
-          const colors: any = { school: '#15ff00', gym: '#ff3232', commercial: '#32c8ff' };
+        {['hospital', 'school', 'commercial', 'gym'].map((type) => {
+          const colors: any = { hospital: '#eab308', school: '#22c55e', commercial: '#3b82f6', gym: '#ef4444' };
           const TypeIcon: any = Icons[type.charAt(0).toUpperCase() + type.slice(1) as keyof typeof Icons];
           return (
-            <div key={type} className="route-card" style={{ backgroundColor: '#161b22', padding: '16px', borderRadius: '10px', border: '1px solid #30363d', borderLeft: `4px solid ${colors[type]}`, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+            <div key={type} style={{ backgroundColor: '#161b22', padding: '14px', borderRadius: '8px', border: '1px solid #30363d', borderLeft: `4px solid ${colors[type]}` }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                  <div style={{ color: colors[type] }}><TypeIcon /></div>
-                 <div style={{ fontSize: '12px', color: '#8b949e', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{type}</div>
+                 <div style={{ fontSize: '12px', color: '#8b949e', fontWeight: 700, textTransform: 'uppercase' }}>{type}</div>
               </div>
-              <div style={{ fontSize: '16px', color: '#ffffff', fontWeight: 800, direction: 'ltr', textAlign: 'left', paddingLeft: '24px' }}>
+              <div style={{ fontSize: '15px', color: '#ffffff', fontWeight: 700, paddingLeft: '24px' }}>
                 {routeInfo[type] || '---'}
               </div>
             </div>
@@ -354,4 +369,4 @@ const RoutingWidget = ({ view }: RoutingWidgetProps) => {
   );
 };
 
-export default RoutingWidget;
+export default ClosestServices;

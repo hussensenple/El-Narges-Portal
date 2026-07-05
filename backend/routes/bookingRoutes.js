@@ -1,34 +1,43 @@
 const express = require('express');
 const router = express.Router();
 const BookingRequest = require('../models/BookingRequest');
-const auth = require('../middleware/authMiddleware'); // استدعاء حارس البوابة
+const User = require('../models/User'); // 👈 استيراد موديل المستخدم
+const auth = require('../middleware/authMiddleware');
 
-// راوت تقديم الطلب (محمي بالتوكن) //
 router.post('/request', auth, async (req, res) => {
   try {
-    const { unitId } = req.body;
-    const userId = req.user.id; // بنجيب الـ ID من التوكن مش من الفورم لضمان الأمان
+    const { unitId, sourceLayer, buildingFK } = req.body;
+    const userId = req.user.id; 
+
+    // 🚀 سحب بيانات المستخدم بالكامل من قاعدة البيانات مباشرة
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "المستخدم غير موجود" });
+    }
 
     const newRequest = new BookingRequest({
       userId,
       unitId,
+      sourceLayer, 
+      buildingFK,
+      customerName: user.name,     // 👈 أخذ الاسم من الداتا بيز
+      customerPhone: user.phone,   // 👈 أخذ الهاتف من الداتا بيز
+      customerGmail: user.email,   // 👈 أخذ الإيميل من الداتا بيز
       status: 'Pending'
     });
 
     await newRequest.save();
 
-    // 📢 السطرين الجداد بتوع الـ WebSockets
-    // بنسحب الـ io اللي حفظناه في ملف السيرفر الأساسي
     const io = req.app.get('socketio'); 
     if (io) {
-        // بنذيع في المايك إن في طلب حجز جديد اتعمل
         io.emit('newBookingRequest'); 
     }
 
     res.status(201).json({ msg: "تم إرسال طلب الحجز بنجاح!" });
 
   } catch (error) {
-    // 🚀 مسك إيرور التكرار (Duplicate Key Error code 11000)
+    console.error("🚨 Booking Crash Error:", error);
+
     if (error.code === 11000) {
       return res.status(400).json({ error: "عذراً، لقد قمت بتقديم طلب لهذه الوحدة مسبقاً، وهو قيد المراجعة." });
     }

@@ -1,53 +1,86 @@
 const User = require('../models/User');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt'); // مكتبة تشفير الباسورد
+const jwt = require('jsonwebtoken'); // مكتبة عمل التوكن (عشان اليوزر يفضل مسجل دخول)
 
-// تسجيل حساب جديد
-exports.register = async (req, res) => {
+// 1. دالة إنشاء حساب جديد (Register)
+const register = async (req, res) => {
   try {
-    const { name, phone, password } = req.body;
+    // بنستقبل الداتا من الـ Frontend
+    const { name, email, phone, password } = req.body;
 
-    let user = await User.findOne({ phone });
-    if (user) return res.status(400).json({ msg: 'رقم الهاتف مسجل بالفعل' });
+    // التأكد إن مفيش حد مسجل بنفس التليفون أو الإيميل قبل كده
+    const existingUser = await User.findOne({ $or: [{ phone }, { email }] });
+    if (existingUser) {
+      return res.status(400).json({ msg: 'رقم الهاتف أو البريد الإلكتروني مستخدم بالفعل!' });
+    }
 
-    user = new User({ name, phone, password });
-
-    // تشفير الباسورد
+    // تشفير الباسورد (عشان لو الداتابيز اتسربت محدش يعرف الباسوردات)
     const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-    await user.save();
-
-    // إنشاء التوكن
-    const payload = { user: { id: user.id, role: user.role, name: user.name } };
-    jwt.sign(payload, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '7d' }, (err, token) => {
-      if (err) throw err;
-      res.json({ token, user: payload.user });
+    // إنشاء مستخدم جديد
+    const newUser = new User({
+      name,
+      email,
+      phone,
+      password: hashedPassword
     });
-  } catch (err) {
-    console.error("🔴 خطأ في دالة إنشاء الحساب (Register):", err); // 👈 السطر ده هيكشف إيرور الـ 500
-    res.status(500).json({ error: 'خطأ في السيرفر' });
+
+    await newUser.save();
+
+    // إنشاء Token عشان العميل يفضل مسجل دخول
+    const token = jwt.sign(
+      { id: newUser._id }, 
+      process.env.JWT_SECRET || 'ElNargesSecretKey2026', 
+      { expiresIn: '7d' } // التوكن بيفضل شغال 7 أيام
+    );
+
+    res.status(201).json({
+      msg: 'تم إنشاء الحساب بنجاح',
+      token,
+      user: { id: newUser._id, name: newUser.name, role: newUser.role }
+    });
+
+  } catch (error) {
+    console.error("Register Error:", error);
+    res.status(500).json({ msg: 'حدث خطأ في السيرفر أثناء إنشاء الحساب' });
   }
 };
 
-// تسجيل الدخول
-exports.login = async (req, res) => {
+// 2. دالة تسجيل الدخول (Login)
+const login = async (req, res) => {
   try {
     const { phone, password } = req.body;
 
+    // بندور على العميل برقم التليفون
     const user = await User.findOne({ phone });
-    if (!user) return res.status(400).json({ msg: 'بيانات الدخول غير صحيحة' });
+    if (!user) {
+      return res.status(400).json({ msg: 'رقم الهاتف أو كلمة المرور غير صحيحة' });
+    }
 
+    // بنقارن الباسورد اللي العميل كتبه بالباسورد المتشفر في الداتابيز
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ msg: 'بيانات الدخول غير صحيحة' });
+    if (!isMatch) {
+      return res.status(400).json({ msg: 'رقم الهاتف أو كلمة المرور غير صحيحة' });
+    }
 
-    const payload = { user: { id: user.id, role: user.role, name: user.name } };
-    jwt.sign(payload, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '7d' }, (err, token) => {
-      if (err) throw err;
-      res.json({ token, user: payload.user });
+    // لو كله تمام، بنعمله التوكن
+    const token = jwt.sign(
+      { id: user._id }, 
+      process.env.JWT_SECRET || 'ElNargesSecretKey2026', 
+      { expiresIn: '7d' }
+    );
+
+    res.status(200).json({
+      msg: 'تم تسجيل الدخول بنجاح',
+      token,
+      user: { id: user._id, name: user.name, role: user.role }
     });
-  } catch (err) {
-    console.error("🔴 خطأ في دالة تسجيل الدخول (Login):", err);
-    res.status(500).json({ error: 'خطأ في السيرفر' });
+
+  } catch (error) {
+    console.error("Login Error:", error);
+    res.status(500).json({ msg: 'حدث خطأ في السيرفر أثناء تسجيل الدخول' });
   }
 };
+
+module.exports = { register, login };

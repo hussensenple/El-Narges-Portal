@@ -1,10 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const BookingRequest = require('../models/BookingRequest'); 
-const { updateArcGISStatus } = require('../services/arcgisService'); // 👈 استدعاء دالة ArcGIS
-const Unit = require('../models/Unit'); // 👈 استدعاء موديل الوحدات
+const axios = require('axios');
 
-// 1. راوت جلب كل الطلبات المعلقة (عشان نعرضها في جدول الأدمن)
+// 1. قاموس اللينكات (حط اللينكات اللي جبتها من الأونلاين هنا)
+const LAYER_URLS = {
+  "Villas_Global": "https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WSL3/FeatureServer/8", 
+  "Units": "https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WFL1/FeatureServer/37" 
+};
+
 router.get('/pending', async (req, res) => {
   try {
     const requests = await BookingRequest.find({ status: 'Pending' }).populate('userId', 'name phone');
@@ -14,7 +18,6 @@ router.get('/pending', async (req, res) => {
   }
 });
 
-// 2. راوت الموافقة على الطلب
 router.post('/approve/:requestId', async (req, res) => {
   const { requestId } = req.params;
   
@@ -22,61 +25,63 @@ router.post('/approve/:requestId', async (req, res) => {
     const approvedRequest = await BookingRequest.findById(requestId).populate('userId');
     if (!approvedRequest) return res.status(404).json({ msg: "الطلب غير موجود" });
 
-    const { unitId, userId } = approvedRequest;
+    const { unitId, sourceLayer, userId } = approvedRequest;
 
-    // أ. تحديث الطلب الحالي لـ Approved
+    // 1. تحديث الطلب في MongoDB
     approvedRequest.status = 'Approved';
     await approvedRequest.save();
 
-    // ب. رفض باقي الطلبات لنفس الوحدة
+    // 2. رفض باقي الطلبات لنفس الوحدة
     await BookingRequest.updateMany(
       { unitId, _id: { $ne: requestId } },
       { status: 'Rejected' }
     );
 
-    // ج. إرسال التحديث لـ ArcGIS Online 
-    await updateArcGISStatus(unitId, "Sold", userId.name, userId.phone); 
-
-    // 🚀 د. التعديل الجديد: تحديث حالة الوحدة لـ Sold في MongoDB مع تحويل نوع البيانات
-    const updatedUnit = await Unit.findOneAndUpdate(
-      { arcgisObjectId: Number(unitId) }, // 👈 التحويل لرقم Number() عشان يطابق الداتا بيز
-      { 
-        status: 'Sold',
-        customerName: userId.name,  // تأكد إن ده مش undefined
-        customerPhone: userId.phone // تأكد إن ده مش undefined
-      }, 
-      { new: true, runValidators: true }
-    );
-
-    // التحقق من التحديث في الـ Terminal
-    if(!updatedUnit) {
-        console.log(`⚠️ تحذير: لم يتم العثور على الوحدة رقم ${unitId} في MongoDB لتحديثها!`);
-    } else {
-        console.log(`✅ تم تحديث حالة الوحدة ${unitId} إلى Sold في MongoDB بنجاح`);
+    // 3. تحديد اللينك الصح بناءً على الطبقة
+    const featureLayerUrl = LAYER_URLS[sourceLayer];
+    if (!featureLayerUrl) {
+       return res.status(400).json({ msg: "اسم الطبقة غير معروف للسيرفر" });
     }
 
-    res.json({ msg: "تمت الموافقة وتحديث الخريطة وقاعدة البيانات بنجاح" });
+    // 4. تحديث الخريطة في ArcGIS Online باستخدام الـ GlobalID
+    const updates = [{
+      attributes: {
+        GlobalID: unitId, 
+        Status: 'Sold', // تأكد إن القيمة دي مطابقة للـ Domain عندك (لو أرقام خليها 2 مثلاً)
+        Owner_Name: userId.name,  // أسماء الحقول بناءً على هيكل بيانات الفيلات
+        Owner_Phone: userId.phone 
+      }
+    }];
+
+    // إرسال الطلب لـ Esri مع تفعيل useGlobalIds
+    const arcgisPayload = `useGlobalIds=true&adds=[]&updates=${JSON.stringify(updates)}&deletes=[]&f=json`;
+
+    const arcgisResponse = await axios.post(`${featureLayerUrl}/applyEdits`, arcgisPayload, {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    });
+
+    if (arcgisResponse.data.updateResults && arcgisResponse.data.updateResults[0].success) {
+      console.log(`✅ تم تحديث الوحدة ${unitId} في طبقة ${sourceLayer} بنجاح`);
+    } else {
+      console.log(`⚠️ فشل التحديث في الخريطة:`, arcgisResponse.data);
+    }
+
+    res.json({ msg: "تمت الموافقة وتحديث الخريطة بنجاح ✅" });
   } catch (error) {
     console.error("خطأ في عملية الموافقة:", error);
     res.status(500).json({ error: "فشل في إتمام العملية" });
   }
 });
 
-// 3. 🗑️ راوت مسح الطلب نهائياً من قاعدة البيانات
 router.delete('/request/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    
-    // بندور على الطلب بالـ ID وبنمسحه
     const deletedRequest = await BookingRequest.findByIdAndDelete(id);
-    
     if (!deletedRequest) {
       return res.status(404).json({ message: "الطلب غير موجود أصلاً" });
     }
-
     res.status(200).json({ message: "تم مسح الطلب بنجاح" });
   } catch (error) {
-    console.error("خطأ في مسح الطلب:", error);
     res.status(500).json({ message: "حدث خطأ أثناء محاولة المسح" });
   }
 });

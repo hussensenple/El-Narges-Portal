@@ -4,6 +4,8 @@ interface User {
   id: string;
   name: string;
   role: string;
+  phone: string; 
+  email: string;
 }
 
 // تعريف الدوال اللي هنستخدمها في الأبلكيشن كله

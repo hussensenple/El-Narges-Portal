@@ -1,4 +1,5 @@
 import { createContext, useState, useEffect, type ReactNode } from 'react';
+
 // تعريف شكل بيانات المستخدم
 interface User {
   id: string;
@@ -26,9 +27,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
+    
     if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
+      try {
+        setToken(storedToken);
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error("Error parsing user data from localStorage", error);
+      }
     }
   }, []);
 

@@ -1,7 +1,9 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import SceneView from '@arcgis/core/views/SceneView';
 import MapViewer from './components/MapViewer';
+import MapViewer2D from './components/MapViewer2D';
+import OwnerUnitsTab from './components/OwnerUnitsTab'; // تأكد إن المسار صح
 import UnitCatalog from './components/UnitCatalog';
 import AIAdvisor from './components/AIAdvisor';
 import AdminRequests from './pages/AdminRequests'; 
@@ -10,181 +12,248 @@ import StopsRoutingWidget from './components/StopsRoutingWidget';
 import { AuthContext } from './context/AuthContext'; 
 import AuthModal from './components/AuthModal'; 
 
+const Icons = {
+  Login: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>,
+  Logout: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f85149" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
+  Layers: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>,
+  Weather: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.34" y1="19.66" x2="5.76" y2="18.24"/><line x1="18.24" y1="5.76" x2="19.66" y2="4.32"/></svg>,
+  GisTools: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>,
+  Map2D: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>,
+  Map3D: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>,
+  Basemap: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>,
+  Catalog: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>,
+  // 👈 أيقونة جديدة خاصة بوحدات المالك
+  Home: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+};
+
 const CustomerInterface = () => {
   const [mapView, setMapView] = useState<SceneView | null>(null);
   const [isCatalogOpen, setIsCatalogOpen] = useState(false);
   const [isRoutingOpen, setIsRoutingOpen] = useState(false); 
   const [isStopsRoutingOpen, setIsStopsRoutingOpen] = useState(false); 
   const [showLoginModal, setShowLoginModal] = useState(false); 
-  
-  // حالة جديدة للتحكم في القائمة المنسدلة للأدوات
   const [isToolsMenuOpen, setIsToolsMenuOpen] = useState(false);
+  const [isOwnerUnitsOpen, setIsOwnerUnitsOpen] = useState(false); // 👈 State جديد للوحة المالك
+  
+  const [is3DView, setIs3DView] = useState(true);
+  const [isLayersOpen, setIsLayersOpen] = useState(false);
+  const [isWeatherOpen, setIsWeatherOpen] = useState(false);
+  const [isBasemapOpen, setIsBasemapOpen] = useState(false); 
 
   const auth = useContext(AuthContext); 
 
+  const handleSwitchTo3D = useCallback(() => setIs3DView(true), []);
+  const handleViewReady = useCallback((view: SceneView) => setMapView(view), []);
+
   return (
-    <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden' }}>
+    <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden', backgroundColor: '#0d1117' }}>
       
+      {/* 🚀 إدراج كود الـ CSS الخاص بالأزرار والتأثيرات */}
       <style>{`
-        .nav-btn {
-          background-color: #161b22; 
-          color: #c9d1d9;
-          border: 1px solid #30363d;
-          transition: all 0.3s ease;
+        .map-icon-btn {
+          width: 45px;
+          height: 45px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 10px;
+          cursor: pointer;
+          transition: all 0.2s ease-in-out;
+          backdrop-filter: blur(10px);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
-        .nav-btn:hover {
-          background-color: #1f6feb; 
+        
+        .map-icon-btn.inactive {
+          background-color: rgba(55, 62, 71, 0.85); 
+          color: #e6edf3;
+          border: 1px solid #444c56;
+        }
+        
+        .map-icon-btn.inactive:hover {
+          background-color: rgba(75, 83, 93, 0.95);
           color: #ffffff;
-          border-color: #1f6feb;
-          transform: translateY(-2px);
+          transform: scale(1.05);
         }
-        .nav-btn.active {
-          background-color: #da3633; 
+        
+        .map-icon-btn.active {
+          background-color: #1f6feb;
           color: #ffffff;
-          border-color: #da3633;
+          border: 1px solid #1f6feb;
         }
-        .nav-btn.active:hover {
-          background-color: #b32d2a;
-          transform: translateY(-2px);
-        }
-        @keyframes fadeInDown {
-          from { opacity: 0; transform: translateY(-10px); }
-          to { opacity: 1; transform: translateY(0); }
+        
+        .map-icon-btn.active:hover {
+          background-color: #388bfd;
+          transform: scale(1.05);
         }
       `}</style>
 
-      <MapViewer onViewReady={(view) => setMapView(view)} />
+      <div style={{ display: is3DView ? 'block' : 'none', width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }}>
+        <MapViewer 
+          onViewReady={handleViewReady} 
+          isLayersOpen={isLayersOpen}
+          isWeatherOpen={isWeatherOpen}
+          setIsWeatherOpen={setIsWeatherOpen}
+          isBasemapOpen={isBasemapOpen} 
+        />
+      </div>
 
-      <div style={{
-        position: 'absolute',
-        top: '20px',
-        right: '20px',
-        zIndex: 1000,
-        backgroundColor: 'rgba(22, 27, 34, 0.85)',
-        backdropFilter: 'blur(10px)',
-        padding: '10px 20px',
-        borderRadius: '8px',
-        border: '1px solid #30363d',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '15px',
-        color: '#fff',
-        fontFamily: 'sans-serif'
-      }}>
-        {auth?.user ? (
-          <>
-            <span style={{ fontSize: '14px' }}>مرحباً، <strong style={{ color: '#4493f8' }}>{auth.user.name}</strong></span>
-            <button 
-              onClick={() => { if(auth.logout) auth.logout(); }}
-              style={{
-                backgroundColor: 'transparent', border: '1px solid #f85149', color: '#f85149',
-                padding: '5px 10px', borderRadius: '5px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold'
-              }}
-            >
-              🔓 Logout
-            </button>
-          </>
-        ) : (
+      <div style={{ display: !is3DView ? 'block' : 'none', width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }}>
+        <MapViewer2D 
+          isLayersOpen={isLayersOpen} 
+          isBasemapOpen={isBasemapOpen} 
+          onSwitchTo3D={handleSwitchTo3D} 
+        />
+      </div>
+
+      <div style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 1000, display: 'flex', alignItems: 'center', gap: '10px' }}>
+        
+        {auth?.user && (
+          <span style={{ fontSize: '13px', color: '#fff', backgroundColor: 'rgba(22,27,34,0.85)', padding: '12px 16px', borderRadius: '10px', border: '1px solid #30363d', fontFamily: 'sans-serif', backdropFilter: 'blur(10px)' }}>
+            Welcome, <strong style={{ color: '#4493f8' }}>{auth.user.name}</strong>
+          </span>
+        )}
+
+        {/* 👈 زرار وحداتي المملوكة بيظهر بس لو اليوزر Owner */}
+        {auth?.user?.role === 'owner' && (
           <button 
-            onClick={() => setShowLoginModal(true)}
-            style={{
-              backgroundColor: '#238636', color: '#fff', border: 'none',
-              padding: '6px 15px', borderRadius: '5px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold'
-            }}
+            title="وحداتي المملوكة" 
+            onClick={() => setIsOwnerUnitsOpen(!isOwnerUnitsOpen)} 
+            className={`map-icon-btn ${isOwnerUnitsOpen ? 'active' : 'inactive'}`}
           >
-            🔐 Login / Register
+            <Icons.Home />
+          </button>
+        )}
+
+        {auth?.user ? (
+          <button title="Logout" onClick={() => auth.logout?.()} className="map-icon-btn inactive">
+            <Icons.Logout />
+          </button>
+        ) : (
+          <button title="Login" onClick={() => setShowLoginModal(true)} className={`map-icon-btn ${showLoginModal ? 'active' : 'inactive'}`}>
+            <Icons.Login />
+          </button>
+        )}
+
+        <button title="Basemap Gallery" onClick={() => { setIsBasemapOpen(!isBasemapOpen); setIsLayersOpen(false); setIsWeatherOpen(false); }} className={`map-icon-btn ${isBasemapOpen ? 'active' : 'inactive'}`}>
+          <Icons.Basemap />
+        </button>
+
+        <button title="Layers" onClick={() => { setIsLayersOpen(!isLayersOpen); setIsBasemapOpen(false); setIsWeatherOpen(false); }} className={`map-icon-btn ${isLayersOpen ? 'active' : 'inactive'}`}>
+          <Icons.Layers />
+        </button>
+
+        {is3DView && (
+          <button title="Weather" onClick={() => { setIsWeatherOpen(!isWeatherOpen); setIsLayersOpen(false); setIsBasemapOpen(false); }} className={`map-icon-btn ${isWeatherOpen ? 'active' : 'inactive'}`}>
+            <Icons.Weather />
           </button>
         )}
       </div>
 
-      {showLoginModal && (
-        <AuthModal onClose={() => setShowLoginModal(false)} onSuccess={() => setShowLoginModal(false)} />
+      <div style={{ position: 'absolute', top: '20px', left: '70px', zIndex: 1000, display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+        
+        <button title={is3DView ? "Switch to 2D Map" : "Switch to 3D Map"} onClick={() => setIs3DView(!is3DView)} className="map-icon-btn inactive">
+          {is3DView ? <Icons.Map2D /> : <Icons.Map3D />}
+        </button>
+
+        {is3DView && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start' }}>
+            <button title="GIS Tools" onClick={() => setIsToolsMenuOpen(!isToolsMenuOpen)} className={`map-icon-btn ${isToolsMenuOpen ? 'active' : 'inactive'}`}>
+              <Icons.GisTools />
+            </button>
+
+            {isToolsMenuOpen && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: 'rgba(22, 27, 34, 0.9)', backdropFilter: 'blur(10px)', padding: '10px', borderRadius: '12px', border: '1px solid #444c56', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', width: '200px' }}>
+                <button 
+                  onClick={() => { setIsRoutingOpen(!isRoutingOpen); setIsStopsRoutingOpen(false); }} 
+                  style={{ padding: '10px', borderRadius: '6px', cursor: 'pointer', background: isRoutingOpen ? '#1f6feb' : 'transparent', color: isRoutingOpen ? '#fff' : '#c9d1d9', border: '1px solid #444c56', fontSize: '13px', fontWeight: 'bold', transition: 'all 0.2s ease', textAlign: 'left' }}
+                >
+                  {isRoutingOpen ? '✖ Close Services' : '📍 Closest Services'}
+                </button>
+                <button 
+                  onClick={() => { setIsStopsRoutingOpen(!isStopsRoutingOpen); setIsRoutingOpen(false); }} 
+                  style={{ padding: '10px', borderRadius: '6px', cursor: 'pointer', background: isStopsRoutingOpen ? '#1f6feb' : 'transparent', color: isStopsRoutingOpen ? '#fff' : '#c9d1d9', border: '1px solid #444c56', fontSize: '13px', fontWeight: 'bold', transition: 'all 0.2s ease', textAlign: 'left' }}
+                >
+                  {isStopsRoutingOpen ? '✖ Close Routing' : '🗺️ Multi-Stop Route'}
+                </button>
+              </div>
+            )}
+
+            {(isRoutingOpen || isStopsRoutingOpen) && (
+              <div style={{ width: '300px', marginTop: '10px' }}>
+                {isRoutingOpen && <ClosestServices view={mapView} />}
+                {isStopsRoutingOpen && <StopsRoutingWidget view={mapView} />}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {showLoginModal && <AuthModal onClose={() => setShowLoginModal(false)} onSuccess={() => setShowLoginModal(false)} />}
+
+      {is3DView && (
+        <button 
+          title="Property Catalog"
+          onClick={() => setIsCatalogOpen(!isCatalogOpen)} 
+          className={`map-icon-btn ${isCatalogOpen ? 'active' : 'inactive'}`}
+          style={{ position: 'absolute', bottom: '30px', left: '20px', zIndex: 1000 }}
+        >
+          <Icons.Catalog />
+        </button>
       )}
 
-      <button 
-        className={`nav-btn ${isCatalogOpen ? 'active' : ''}`}
-        onClick={() => setIsCatalogOpen(true)}
-        style={{
-          position: 'absolute', bottom: '30px', left: '30px', zIndex: 10,
-          padding: '12px 24px', borderRadius: '30px', fontSize: '16px',
-          fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-          display: 'flex', alignItems: 'center', gap: '8px'
-        }}
-      >
-        🏢 Property Catalog
-      </button>
-
-      {isCatalogOpen && (
+      {isCatalogOpen && is3DView && (
         <>
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 999 }} onClick={() => setIsCatalogOpen(false)} />
           <UnitCatalog view={mapView} onClose={() => setIsCatalogOpen(false)} />
         </>
       )}
 
-      <AIAdvisor view={mapView} />
-
-      {/* 🚀 حاوية أدوات التحليل (Toolbox) - تصميم زجاجي أنيق */}
-      <div style={{ 
-        position: 'absolute', 
-        top: '15px', 
-        left: '70px', 
-        zIndex: 11, 
-        display: 'flex', 
-        flexDirection: 'column', 
-        gap: '10px' 
-      }}>
-        
-        {/* الزر الرئيسي لفتح/غلق القائمة */}
-        <button 
-          onClick={() => setIsToolsMenuOpen(!isToolsMenuOpen)}
-          style={{
-            backgroundColor: 'rgba(22, 27, 34, 0.85)', backdropFilter: 'blur(10px)',
-            color: '#c9d1d9', border: '1px solid #30363d', padding: '10px 16px', 
-            borderRadius: '8px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', 
-            boxShadow: '0 4px 12px rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', 
-            justifyContent: 'space-between', width: '220px', transition: 'all 0.3s ease'
-          }}
-        >
-          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>🛠️ GIS Tools</span>
-          <span>{isToolsMenuOpen ? '▲' : '▼'}</span>
-        </button>
-
-        {/* القائمة المنسدلة */}
-        {isToolsMenuOpen && (
-          <div style={{ 
-            display: 'flex', flexDirection: 'column', gap: '8px', 
-            backgroundColor: 'rgba(22, 27, 34, 0.85)', backdropFilter: 'blur(10px)',
-            padding: '12px', borderRadius: '8px', border: '1px solid #30363d', 
-            boxShadow: '0 4px 12px rgba(0,0,0,0.3)', width: '194px',
-            animation: 'fadeInDown 0.2s ease-out'
+      {/* 👈 شاشة (Modal) وحداتي المملوكة */}
+      {isOwnerUnitsOpen && auth?.user?.role === 'owner' && (
+        <>
+          {/* خلفية معتمة تقفل الشاشة لما تضغط براها */}
+          <div 
+            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 999, backdropFilter: 'blur(4px)' }} 
+            onClick={() => setIsOwnerUnitsOpen(false)} 
+          />
+          
+          {/* المربع اللي جواه الكومبوننت */}
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 1000,
+            backgroundColor: '#0d1117',
+            borderRadius: '12px',
+            width: '90%',
+            maxWidth: '900px',
+            maxHeight: '85vh',
+            overflowY: 'auto',
+            border: '1px solid #30363d',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.5)'
           }}>
-            <button 
-              className={`nav-btn ${isRoutingOpen ? 'active' : ''}`}
-              onClick={() => { setIsRoutingOpen(!isRoutingOpen); setIsStopsRoutingOpen(false); }}
-              style={{ padding: '8px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid #30363d' }}
-            >
-              {isRoutingOpen ? '✖ Close Services' : '📍 Closest Services'}
-            </button>
-
-            <button 
-              className={`nav-btn ${isStopsRoutingOpen ? 'active' : ''}`}
-              onClick={() => { setIsStopsRoutingOpen(!isStopsRoutingOpen); setIsRoutingOpen(false); }}
-              style={{ padding: '8px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid #30363d' }}
-            >
-              {isStopsRoutingOpen ? '✖ Close Routing' : '🗺️ Multi-Stop Route'}
-            </button>
+            <div style={{ padding: '15px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #30363d', backgroundColor: '#161b22' }}>
+              <h3 style={{ margin: 0, color: '#e6edf3', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Icons.Home /> لوحة المالك
+              </h3>
+              <button 
+                onClick={() => setIsOwnerUnitsOpen(false)} 
+                style={{ background: 'transparent', border: 'none', color: '#f85149', fontSize: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+              >
+                ✖
+              </button>
+            </div>
+            
+            {/* هنا بنعرض الـ Tab اللي برمجناها */}
+            <div style={{ padding: '20px' }}>
+              {isOwnerUnitsOpen && <OwnerUnitsTab onClose={() => setIsOwnerUnitsOpen(false)} />}
+            </div>
           </div>
-        )}
+        </>
+      )}
 
-        {/* منطقة عرض الـ Widgets */}
-        {(isRoutingOpen || isStopsRoutingOpen) && (
-          <div style={{ animation: 'fadeInDown 0.2s ease-out', marginTop: '30px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {isRoutingOpen && <ClosestServices view={mapView} />}
-            {isStopsRoutingOpen && <StopsRoutingWidget view={mapView} />}
-          </div>
-        )}
-      </div>
-
+      {is3DView && <AIAdvisor view={mapView} />}
     </div>
   );
 };

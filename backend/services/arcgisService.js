@@ -2,58 +2,96 @@ const axios = require('axios');
 
 async function updateArcGISStatus(arcgisObjectId, newStatus, ownerName, ownerPhone, ownerGmail, sourceLayer) {
   
-  // 1. تعريف مسارات الطبقات (تأكد إن رقم لينك الفيلات صحيح، غالباً هيكون 0)
   const layerUrls = {
     "Units": "https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WFL1/FeatureServer/37",
     "Buildings_Global": "https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WFL1/FeatureServer/1",
-    "Villas_Global": "https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WFL1/FeatureServer/0" // 👈 لينك الفيلات
+    "Villas_Global": "https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WSL3/FeatureServer/8" 
   };
 
-  const featureLayerUrl = layerUrls[sourceLayer];
-
+  // تنظيف اسم الطبقة من أي مسافات أو أخطاء إملائية ممكن تيجي من الفرونت إند
+  const cleanSourceLayer = String(sourceLayer).trim();
+  const featureLayerUrl = layerUrls[cleanSourceLayer];
+  
   if (!featureLayerUrl) {
-    console.error("❌ الطبقة غير معروفة:", sourceLayer);
+    console.error(`❌ الطبقة غير معروفة: '${cleanSourceLayer}'`);
     return false;
   }
 
-  // 2. تحويل الحالة من نص إلى رقم (Domain Codes)
-  let statusCode = 1; // 1 = Available
-  if (newStatus === 'Reserved') statusCode = 2;
-  if (newStatus === 'Sold') statusCode = 3;
-
-  // 1. نرجع الحالة لـ نص زي ما كانت شغالة معاك في النسخة القديمة
-  // داخل updateArcGISStatus
-  const updates = [{
-    attributes: {
-      GlobalID: arcgisObjectId,    // 👈 استخدام GlobalID (يجب أن يكون String)
-      Status: statusCode,          // 👈 العودة لاستخدام الأرقام للـ Domain
-      Owner_Name: ownerName,       
-      Owner_Phone: ownerPhone,     
-      Gmail: ownerGmail            
-    }
-  }];
+  let statusCode = (newStatus === 'Sold' || newStatus === '4') ? 4 : parseInt(newStatus);
 
   try {
-    const response = await axios.post(`${featureLayerUrl}/applyEdits`, null, {
-      params: {
-        f: 'json',
-        updates: JSON.stringify(updates)
-      }
-    });
+    if (cleanSourceLayer === "Units") {
+      const numericId = Number(arcgisObjectId);
+      
+      console.log(`\n========================================`);
+      console.log(`🚨 مسار التحديث: updateFeatures (للشقق فقط)`);
+      console.log(`🚨 الطبقة: ${cleanSourceLayer} | ID: ${numericId}`);
+      console.log(`========================================\n`);
+      
+      const featuresPayload = [{
+        attributes: {
+          OBJECTID: numericId,         
+          Status: statusCode,          
+          Owner_Name: ownerName,       
+          Owner_Phone: ownerPhone,     
+          Gmail: ownerGmail            
+        }
+      }];
 
-    const result = response.data.updateResults && response.data.updateResults[0];
-    
-    // 🚀 السطر ده هو اللي هيجيب من الآخر ويفك لغز الـ [Object]
-    if (result && result.success === false) {
-       console.error("❌ سبب رفض ArcGIS بالظبط هو:", JSON.stringify(result.error, null, 2));
-       return false;
+      const formData = new URLSearchParams();
+      formData.append('f', 'json');
+      formData.append('features', JSON.stringify(featuresPayload));
+
+      const response = await axios.post(`${featureLayerUrl}/updateFeatures`, formData.toString(), {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      });
+
+      if (response.data.error) {
+          console.error(`❌ ArcGIS Error (Units):`, JSON.stringify(response.data.error));
+          return false;
+      }
+      console.log(`✅ ArcGIS Updated Successfully: Units`); 
+      return true;
+    } 
+    else {
+      console.log(`\n========================================`);
+      console.log(`🚨 مسار التحديث: applyEdits (للفلل والمباني)`);
+      console.log(`🚨 الطبقة: ${cleanSourceLayer}`);
+      console.log(`========================================\n`);
+      
+      const isGuid = String(arcgisObjectId).includes('-');
+      const updatesPayload = [{
+        attributes: {
+          [isGuid ? "GlobalID" : "OBJECTID"]: isGuid ? String(arcgisObjectId) : Number(arcgisObjectId),
+          Status: statusCode,          
+          Owner_Name: ownerName,       
+          Owner_Phone: ownerPhone,     
+          Gmail: ownerGmail            
+        }
+      }];
+
+      const formData = new URLSearchParams();
+      formData.append('f', 'json');
+      formData.append('updates', JSON.stringify(updatesPayload));
+      
+      if (isGuid) {
+        formData.append('useGlobalIds', 'true');
+      }
+
+      const response = await axios.post(`${featureLayerUrl}/applyEdits`, formData.toString(), {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      });
+
+      if (response.data.error) {
+          console.error(`❌ ArcGIS Error (${cleanSourceLayer}):`, JSON.stringify(response.data.error));
+          return false;
+      }
+      console.log(`✅ ArcGIS Updated Successfully: ${cleanSourceLayer}`); 
+      return true;
     }
 
-    console.log(`✅ تم تحديث ${sourceLayer} بنجاح في الخريطة!`); 
-    return true;
-
   } catch (error) {
-    console.error("❌ فشل الاتصال بسيرفر ArcGIS:", error.message);
+    console.error("❌ Request Crashed:", error.message);
     return false;
   }
 }
@@ -62,10 +100,9 @@ async function checkAndUpdateBuildingCompleteness(buildingFK) {
   if (!buildingFK) return;
 
   const unitsLayerUrl = "https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WFL1/FeatureServer/37";
-  const buildingsLayerUrl = "حط_لينك_طبقة_المباني_الجديد_هنا"; // ⚠️ متنساش تحط لينك العمارات الحقيقي
+  const buildingsLayerUrl = "https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WFL1/FeatureServer/1"; 
 
   try {
-    // 1. نجيب كل الشقق اللي جوه العمارة دي
     const unitsRes = await axios.get(`${unitsLayerUrl}/query`, {
       params: {
         where: `BuildingID_FK = '${buildingFK}'`,
@@ -77,11 +114,9 @@ async function checkAndUpdateBuildingCompleteness(buildingFK) {
     const units = unitsRes.data.features;
     if (!units || units.length === 0) return;
 
-    // 2. هل كل الشقق (الـ 5) حالتهم 3 (Sold)؟
-    const allSold = units.every(u => u.attributes.Status === 3);
+    const allSold = units.every(u => u.attributes.Status === 'Sold' || u.attributes.Status === '4' || u.attributes.Status === 4 || u.attributes.Status === 3);
 
     if (allSold) {
-      // 3. لو كلهم اتباعوا، نجيب الـ OBJECTID بتاع العمارة الأم
       const bldgRes = await axios.get(`${buildingsLayerUrl}/query`, {
         params: {
           where: `GlobalID = '${buildingFK}'`,
@@ -93,18 +128,15 @@ async function checkAndUpdateBuildingCompleteness(buildingFK) {
       const bldgFeatures = bldgRes.data.features;
       if (bldgFeatures && bldgFeatures.length > 0) {
         const bldgObjectId = bldgFeatures[0].attributes.OBJECTID;
-
-        // 4. نحدث العمارة نفسها ونخليها Sold
-        console.log(`🏢 جميع الشقق في العمارة ${buildingFK} تم بيعها! تحويل العمارة لـ Sold...`);
         await updateArcGISStatus(bldgObjectId, 'Sold', 'Multiple Owners', 'N/A', 'N/A', 'Buildings_Global');
       }
     }
   } catch (err) {
-    console.error("❌ فشل التحقق من حالة العمارة المكتملة:", err.message);
+    console.error("❌ فشل التحقق من حالة العمارة:", err.message);
   }
 }
 
-// 🚀 متنساش تعمل Export للدالتين في آخر الملف
-module.exports = { updateArcGISStatus, checkAndUpdateBuildingCompleteness };
-
-module.exports = { updateArcGISStatus };
+module.exports = {
+  updateArcGISStatus,
+  checkAndUpdateBuildingCompleteness
+};

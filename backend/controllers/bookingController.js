@@ -1,42 +1,53 @@
 const BookingRequest = require('../models/BookingRequest');
 const Unit = require('../models/Unit');
-// 🚀 استدعاء الدوال مرة واحدة فقط بشكل صحيح
+const User = require('../models/User'); 
 const { updateArcGISStatus, checkAndUpdateBuildingCompleteness } = require('../services/arcgisService');
 
-// دالة الموافقة على الطلب
 exports.approveRequest = async (req, res) => {
   try {
-    // 1. استخراج الـ ID بتاع الطلب من الرابط
+    console.log("=========================================");
+    console.log("🟢 1. Starting Approval Process...");
+    
     const { requestId } = req.params; 
     const request = await BookingRequest.findById(requestId);
-
-    if (!request) return res.status(404).json({ msg: "الطلب غير موجود" });
-
-    // 2. تحديث قاعدة البيانات MongoDB
-    const numericUnitId = Number(request.unitId);
-
-    const updatedUnit = await Unit.findOneAndUpdate(
-      { arcgisObjectId: numericUnitId },
-      { 
-        status: 'Sold', 
-        customerName: request.customerName, 
-        customerPhone: request.customerPhone,
-        customerGmail: request.customerGmail 
-      },
-      { new: true }
-    );
-
-    if (!updatedUnit) {
-      return res.status(404).json({ msg: "الوحدة غير موجودة في قاعدة بيانات MongoDB" });
+    if (!request) {
+      return res.status(404).json({ msg: "الطلب غير موجود" });
     }
 
-    request.status = 'Approved';
-    await request.save();
+    const unitGlobalId = String(request.unitId).replace(/[{}]/g, '').trim();
 
-    // 3. تحديث حالة الوحدة أو الشقة في ArcGIS Online
+    // 1. تحديث الداتا بيز (MongoDB)
+    let updatedUnit = await Unit.findOne({ 
+      $or: [
+        { globalId: { $regex: new RegExp(`^${unitGlobalId}$`, 'i') } },
+        { arcgisId: { $regex: new RegExp(`^${unitGlobalId}$`, 'i') } }
+      ]
+    });
+
+    if (!updatedUnit) {
+      updatedUnit = new Unit({
+        globalId: unitGlobalId,
+        arcgisId: unitGlobalId,
+        unitName: request.sourceLayer === 'Villas_Global' ? 'فيلا' : 'شقة',
+        status: '4',
+        ownerName: request.customerName,
+        ownerEmail: request.customerGmail,
+        ownerPhone: request.customerPhone
+      });
+      await updatedUnit.save();
+    } else {
+      updatedUnit.status = '4';
+      updatedUnit.ownerName = request.customerName;
+      updatedUnit.ownerEmail = request.customerGmail;
+      updatedUnit.ownerPhone = request.customerPhone;
+      await updatedUnit.save();
+    }
+    console.log("✅ Unit data updated in MongoDB!");
+
+    // 2. 🚀 تحديث الخريطة (ArcGIS) - ده اللي كان متعطل وشغلناه!
     const success = await updateArcGISStatus(
-      numericUnitId, 
-      'Sold', 
+      unitGlobalId, 
+      '4', 
       request.customerName, 
       request.customerPhone, 
       request.customerGmail, 
@@ -44,19 +55,39 @@ exports.approveRequest = async (req, res) => {
     );
 
     if (!success) {
-      return res.status(500).json({ msg: "تم التحديث محلياً ولكن فشل التزامن مع الخريطة، يرجى مراجعة روابط ArcGIS" });
+      console.log("🔴 Error: ArcGIS update failed!");
+      return res.status(500).json({ msg: "فشل التزامن مع الخريطة الحية." });
     }
 
-    // 4. 🚀 فحص اكتمال بيع العمارة (لو الطلب كان لشقة مش فيلا)
-    // لاحظ إننا بنشيك على buildingFK اللي ضفناه في الـ schema
+    // 3. التحقق من اكتمال العمارة (لو شقة)
     if (request.sourceLayer === 'Units' && request.buildingFK) {
-      // بتشتغل في الخلفية بدون await عشان متأخرش الـ Response للعميل
       checkAndUpdateBuildingCompleteness(request.buildingFK); 
     }
 
-    res.json({ msg: "تمت الموافقة وتحديث قاعدة البيانات والخريطة بنجاح ✅" });
-  } catch (err) {
-    console.error("Error in approveRequest:", err);
-    res.status(500).json({ error: err.message });
+    // 4. تحديث حالة الطلب لـ Approved
+    request.status = 'Approved';
+    await request.save();
+    console.log("🟢 Booking Request status updated to Approved!");
+
+    // 5. ترقية العميل لـ Owner
+    if (request.userId) {
+      const user = await User.findById(request.userId);
+      if (user) {
+        if (user.role === 'user') {
+          user.role = 'owner';
+        }
+        if (!user.ownedUnits.includes(updatedUnit._id)) {
+          user.ownedUnits.push(updatedUnit._id);
+        }
+        await user.save();
+        console.log("🟢 User promoted to Owner successfully!");
+      }
+    }
+
+    return res.status(200).json({ msg: "تمت الموافقة وتحديث الخريطة والداتا بيز بنجاح! 🎉" });
+
+  } catch (error) {
+    console.error("🚨 Error in approveRequest:", error);
+    return res.status(500).json({ error: error.message });
   }
 };

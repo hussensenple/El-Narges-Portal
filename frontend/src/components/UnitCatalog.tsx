@@ -177,6 +177,7 @@ const UnitCatalog = ({ view, onClose }: UnitCatalogProps) => {
   };
 
   const submitBookingRequest = async () => {
+    console.log("RAW UNIT DATA:", bookingUnit?.attributes);
     const currentToken = auth?.token || localStorage.getItem('token');
     
     // تأكد إن الـ user موجود قبل ما تبعت الداتا
@@ -188,7 +189,8 @@ const UnitCatalog = ({ view, onClose }: UnitCatalogProps) => {
     setIsLoading(true);
     try {
       await axios.post(`${import.meta.env.VITE_API_URL}/api/bookings/request`, {
-        unitId: bookingUnit.attributes.GlobalID, // 👈 استخدام GlobalID
+        // 🚀 السحر هنا: لو ملقاش GlobalID هياخد OBJECTID ويحوله لـ String
+        unitId: String(bookingUnit.attributes?.GlobalID || bookingUnit.attributes?.globalid || bookingUnit.attributes?.OBJECTID),
         sourceLayer: bookingUnit.attributes.SourceName || 'Villas_Global',
         buildingFK: bookingUnit.attributes.BuildingID_FK || null,
         customerName: auth.user.name,

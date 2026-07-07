@@ -5,8 +5,8 @@ const jwt = require('jsonwebtoken'); // مكتبة عمل التوكن (عشان
 // 1. دالة إنشاء حساب جديد (Register)
 const register = async (req, res) => {
   try {
-    // بنستقبل الداتا من الـ Frontend
-    const { name, email, phone, password } = req.body;
+    // بنستقبل الداتا من الـ Frontend (وضفنا الـ role)
+    const { name, email, phone, password, role } = req.body;
 
     // التأكد إن مفيش حد مسجل بنفس التليفون أو الإيميل قبل كده
     const existingUser = await User.findOne({ $or: [{ phone }, { email }] });
@@ -18,12 +18,17 @@ const register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // حماية: بنحدد الـ Role، لو الـ Frontend بعت 'broker' هنحطه، غير كده هيبقى 'user' افتراضي
+    // ده بيمنع أي حد يسجل نفسه كـ admin أو owner بالاختراق
+    const userRole = role === 'broker' ? 'broker' : 'user';
+
     // إنشاء مستخدم جديد
     const newUser = new User({
       name,
       email,
       phone,
-      password: hashedPassword
+      password: hashedPassword,
+      role: userRole // ضفنا الـ Role هنا
     });
 
     await newUser.save();

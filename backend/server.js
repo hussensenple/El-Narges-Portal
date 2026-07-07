@@ -37,6 +37,7 @@ app.use('/api/ai', require('./routes/aiRoutes'));
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/weather', require('./routes/weatherRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/complaints', require('./routes/complaintRoutes'));
 
 // ==========================================
 // 2. مسار تجريبي (Test Route)

@@ -1,7 +1,7 @@
 const express = require('express');
-const router = express.Router();
-const { addUser } = require('../controllers/userController');
+const auth = require('../middleware/authMiddleware');const router = express.Router();
+const { addUser, getMyUnits } = require('../controllers/userController');
 
-router.post('/', addUser); // لإنشاء عميل جديد
+router.get('/my-units', auth, getMyUnits); // 👈 الراوت الجديد
 
 module.exports = router;

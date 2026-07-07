@@ -10,33 +10,28 @@ interface AIAdvisorProps {
 
 const AIAdvisor = ({ view }: AIAdvisorProps) => {
   const [isOpen, setIsOpen] = useState(false); 
-  // 1. تغيير اسم المساعد إلى GeoTwin
+  
   const [messages, setMessages] = useState<{sender: string, text: string, action?: string, actionUnitId?: number}[]>([
-    { sender: 'ai', text: 'أهلاً بك في GeoTwin! كيف يمكنني مساعدتك في استكشاف العقارات والبيانات المكانية؟' }
+    { sender: 'ai', text: 'Welcome to GeoTwin! How can I assist you in exploring real estate and spatial data?' }
   ]);
+  
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
   const [isFilterActive, setIsFilterActive] = useState(false);
   const highlightHandleRef = useRef<any>(null);
-
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [pendingBookingId, setPendingBookingId] = useState<number | null>(null);
 
   const userToken = localStorage.getItem('token'); 
   const isUserLoggedIn = !!userToken;
 
-  // 2. تحديد الطبقات الجديدة المستهدفة للبحث والفلترة
   const TARGET_LAYERS = ["Villas_Global", "Units"];
   const VISUAL_LAYERS = ["Villas_Global", "Buildings_Global"];
 
-  // 3. تحديث دالة إلغاء الفلتر لتشمل جميع الطبقات
-  // 3. تحديث دالة إلغاء الفلتر لتشمل جميع الطبقات المرئية على الخريطة
   const handleResetFilter = () => {
     if (view && view.map) {
-      // 🚀 استخدام VISUAL_LAYERS بدلاً من TARGET_LAYERS
       VISUAL_LAYERS.forEach(title => {
-        const layer = view.map?.layers.find(l => l.title === title) as FeatureLayer;
+        const layer = view.map?.layers.find(l => l.title === title) as any;
         if (layer) layer.definitionExpression = "1=1"; 
       });
       setIsFilterActive(false);
@@ -71,7 +66,7 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
       }
 
       if (!targetGlobalId || !targetSourceLayer) {
-        setMessages(prev => [...prev, { sender: 'ai', text: '❌ عذراً، تعذر العثور على تفاصيل الوحدة في الخريطة.' }]);
+        setMessages(prev => [...prev, { sender: 'ai', text: '❌ Sorry, unit details could not be found on the map.' }]);
         return;
       }
 
@@ -84,12 +79,12 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
 
       setMessages(prev => [...prev, { 
         sender: 'ai', 
-        text: `✅ تم إرسال طلب حجز الوحدة رقم ${objectId} للأدمن بنجاح! سيتم التواصل معك قريباً.` 
+        text: `✅ Booking request for unit #${objectId} has been successfully sent! We will contact you soon.` 
       }]);
 
     } catch (error) {
       console.error("Booking error:", error);
-      setMessages(prev => [...prev, { sender: 'ai', text: '❌ عذراً، حدث خطأ أثناء محاولة الحجز.' }]);
+      setMessages(prev => [...prev, { sender: 'ai', text: '❌ Sorry, an error occurred while trying to book.' }]);
     }
   };
 
@@ -109,8 +104,7 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
       setPendingBookingId(null); 
     }
   };
-
-  // 2. تعديل دالة الإرسال لسحب الداتا من الطبقات وبعتها للـ AI
+  
   const handleSend = async () => {
     if (!input.trim()) return;
 
@@ -123,7 +117,6 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
       let contextData: any[] = [];
       
       if (view && view.map) {
-        // 1. سحب بيانات الفيلات
         const villasLayer = view.map.layers.find((l:any) => l.title === "Villas_Global") as FeatureLayer;
         if (villasLayer) {
           const q = villasLayer.createQuery(); q.where = "1=1"; q.outFields = ["*"];
@@ -137,7 +130,6 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
           })));
         }
 
-        // 2. سحب بيانات الشقق من الـ Tables
         const unitsTable = view.map.tables?.find((t:any) => t.title === "Units") as FeatureLayer || view.map.layers.find((l:any) => l.title === "Units") as FeatureLayer;
         if (unitsTable) {
           const q = unitsTable.createQuery(); q.where = "1=1"; q.outFields = ["*"];
@@ -145,7 +137,8 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
           contextData.push(...res.features.map(f => ({
             id: f.attributes.OBJECTID,
             layer: "Units",
-            buildingFK: f.attributes.BuildingID_FK, // 👈 مهم جداً لفلترة العمارات
+            // 🚀 استخراج آمن للـ FK مهما كان اسمه في الـ Database
+            buildingFK: f.attributes.BuildingID_FK || f.attributes.BuildingID_FK || f.attributes.GlobalID_FK, 
             type: "Apartment",
             price: f.attributes.Price,
             status: String(f.attributes.Status || 'available').toLowerCase()
@@ -153,7 +146,6 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
         }
       }
 
-      // إرسال المتاح فقط للذكاء الاصطناعي لتخفيف الحمل
       const availableOnly = contextData.filter(u => u.status === 'available' || u.status === '1');
 
       const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/ai/ask`, { 
@@ -165,24 +157,20 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
 
       setMessages(prev => [...prev, { sender: 'ai', text: reply, action: action, actionUnitId: actionUnitId }]); 
 
-      // 3. تطبيق الفلتر على الخريطة بذكاء
       if (view && view.map) {
-        const villasLayer = view.map.layers.find((l:any) => l.title === "Villas_Global") as FeatureLayer;
-        const buildings3DLayer = view.map.layers.find((l:any) => l.title === "Buildings_Global" && l.type === "scene") as any;
-
         if (isFilterQuery && filteredIds && filteredIds.length > 0) {
           
-          // تحديد العناصر اللي الـ AI اختارها
           const filteredItems = availableOnly.filter(u => filteredIds.includes(u.id));
           
-          // 🚀 فصل الـ IDs مع استخدام Set لمنع التكرار في العمارات
           const villaIds = filteredItems.filter(u => u.layer === "Villas_Global").map(u => u.id);
-          const rawBuildingFKs = filteredItems.filter(u => u.layer === "Units").map(u => `'${u.buildingFK}'`);
-          const apartmentBuildingFKs = [...new Set(rawBuildingFKs)]; // استخراج مفاتيح فريدة فقط
+          // 🚀 تصفية الـ FKs المكررة والتأكد إنها مش Undefined
+          const rawBuildingFKs = filteredItems.filter(u => u.layer === "Units" && u.buildingFK).map(u => `'${u.buildingFK}'`);
+          const apartmentBuildingFKs = [...new Set(rawBuildingFKs)]; 
 
           let allVisualFeatures: any[] = [];
 
-          // فلترة الفيلات
+          // 1. فلترة الفيلات
+          const villasLayer = view.map.layers.find((l:any) => l.title === "Villas_Global") as FeatureLayer;
           if (villasLayer) {
             if (villaIds.length > 0) {
               const expr = `OBJECTID IN (${villaIds.join(',')})`;
@@ -191,20 +179,38 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
               const vRes = await villasLayer.queryFeatures(q);
               allVisualFeatures.push(...vRes.features);
             } else {
-              villasLayer.definitionExpression = "1=0"; // إخفاء الفيلات لو البحث عن شقق
+              villasLayer.definitionExpression = "1=0"; 
             }
           }
 
-          // فلترة العمارات
-          if (buildings3DLayer) {
+          // 2. فلترة العمارات باحترافية (Reverse Querying)
+          const buildingsLayer = view.map.layers.find((l:any) => l.title === "Buildings_Global") as any;
+          if (buildingsLayer) {
             if (apartmentBuildingFKs.length > 0) {
-              const expr = `GlobalID IN (${apartmentBuildingFKs.join(',')})`;
-              buildings3DLayer.definitionExpression = expr;
-              const q = buildings3DLayer.createQuery(); q.where = expr; q.returnGeometry = true;
-              const bRes = await buildings3DLayer.queryFeatures(q);
-              allVisualFeatures.push(...bRes.features);
+              try {
+                // هنسأل طبقة العمارات الأول: مين الـ OBJECTID بتاع الـ GlobalIDs دي؟
+                const bQuery = buildingsLayer.createQuery();
+                bQuery.where = `GlobalID IN (${apartmentBuildingFKs.join(',')})`;
+                bQuery.outFields = ["OBJECTID"];
+                bQuery.returnGeometry = true;
+
+                const bRes = await buildingsLayer.queryFeatures(bQuery);
+                const bObjectIds = bRes.features.map((f:any) => f.attributes.OBJECTID);
+
+                // هنفلتر العمارات بناءً على الـ OBJECTID لأنه مضمون 100% مع الـ SceneLayers
+                if (bObjectIds.length > 0) {
+                  buildingsLayer.definitionExpression = `OBJECTID IN (${bObjectIds.join(',')})`;
+                  allVisualFeatures.push(...bRes.features);
+                } else {
+                  buildingsLayer.definitionExpression = "1=0";
+                }
+              } catch (err) {
+                console.error("Error applying filter to Buildings:", err);
+                // Fallback لو الكويري فشل
+                buildingsLayer.definitionExpression = `GlobalID IN (${apartmentBuildingFKs.join(',')})`;
+              }
             } else {
-              buildings3DLayer.definitionExpression = "1=0"; // إخفاء العمارات لو البحث عن فيلات
+              buildingsLayer.definitionExpression = "1=0"; 
             }
           }
 
@@ -214,14 +220,15 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
           }
 
         } else if (!isFilterQuery) {
-          // Reset
+          const villasLayer = view.map.layers.find((l:any) => l.title === "Villas_Global") as any;
+          const buildingsLayer = view.map.layers.find((l:any) => l.title === "Buildings_Global") as any;
           if (villasLayer) villasLayer.definitionExpression = "1=1";
-          if (buildings3DLayer) buildings3DLayer.definitionExpression = "1=1";
+          if (buildingsLayer) buildingsLayer.definitionExpression = "1=1";
           setIsFilterActive(false);
         }
       }
     } catch (error) {
-      setMessages(prev => [...prev, { sender: 'ai', text: 'عذراً، حدث خطأ في الاتصال بالخوادم.' }]); 
+      setMessages(prev => [...prev, { sender: 'ai', text: 'Sorry, an error occurred while connecting to the servers.' }]); 
     } finally {
       setIsLoading(false);
     }
@@ -260,7 +267,7 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
 
             <div style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {messages.map((m, i) => (
-                <div key={i} style={{ alignSelf: m.sender === 'user' ? 'flex-end' : 'flex-start', backgroundColor: m.sender === 'user' ? '#1f6feb' : '#30363d', padding: '10px 14px', borderRadius: '12px', borderBottomRightRadius: m.sender === 'user' ? '2px' : '12px', borderBottomLeftRadius: m.sender === 'ai' ? '2px' : '12px', maxWidth: '85%', fontSize: '14px', lineHeight: '1.5' }}>
+                <div key={i} style={{ alignSelf: m.sender === 'user' ? 'flex-end' : 'flex-start', backgroundColor: m.sender === 'user' ? '#1f6feb' : '#30363d', padding: '10px 14px', borderRadius: '12px', borderBottomRightRadius: m.sender === 'user' ? '2px' : '12px', borderBottomLeftRadius: m.sender === 'ai' ? '2px' : '12px', maxWidth: '85%', fontSize: '14px', lineHeight: '1.5', direction: 'ltr' }}>
                   {m.text}
                   
                   {m.action === 'BOOK_UNIT' && m.actionUnitId && (
@@ -273,12 +280,12 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
                         transition: 'background-color 0.2s'
                       }}
                     >
-                      ✅ تأكيد حجز الوحدة {m.actionUnitId}
+                      ✅ Confirm Booking for Unit #{m.actionUnitId}
                     </button>
                   )}
                 </div>
               ))}
-              {isLoading && <div style={{ fontSize: '13px', color: '#8b949e', alignSelf: 'flex-start' }}>جاري التفكير...</div>}
+              {isLoading && <div style={{ fontSize: '13px', color: '#8b949e', alignSelf: 'flex-start' }}>Thinking...</div>}
             </div>
             
             <div style={{ padding: '12px', borderTop: '1px solid #30363d', display: 'flex', gap: '8px', backgroundColor: '#0d1117' }}>
@@ -286,10 +293,10 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
                 value={input} 
                 onChange={e => setInput(e.target.value)}
                 onKeyPress={e => e.key === 'Enter' && handleSend()}
-                style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #30363d', backgroundColor: '#010409', color: '#fff' }}
-                placeholder="ابحث عن فيلا، اسأل عن الأسعار..." 
+                style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #30363d', backgroundColor: '#010409', color: '#fff', direction: 'ltr' }}
+                placeholder="Search for an apartment, ask about prices..." 
               />
-              <button onClick={handleSend} style={{ padding: '10px 16px', backgroundColor: '#238636', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>إرسال</button>
+              <button onClick={handleSend} style={{ padding: '10px 16px', backgroundColor: '#238636', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>Send</button>
             </div>
           </div>
         )}

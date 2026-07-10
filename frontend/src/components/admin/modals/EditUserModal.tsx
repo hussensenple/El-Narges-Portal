@@ -177,20 +177,25 @@ const EditUserModal = ({ user, onClose, onSuccess }: EditUserModalProps) => {
                   No properties assigned.
                 </div>
               ) : (
-                units.map(unit => (
-                  <div key={unit._id} style={{ backgroundColor: '#0d1117', border: '1px solid #30363d', padding: '12px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <div style={{ fontWeight: 'bold', color: '#58a6ff' }}>Property ID: {unit.arcgisId}</div>
-                      <div style={{ fontSize: '12px', color: '#8b949e' }}>Status: {unit.status === '4' ? 'Sold' : 'Active'}</div>
+                units.map(unit => {
+                  const typeLabel = unit.sourceLayer === 'Villas_Global' ? '🏡 Villa' : '🏢 Apartment';
+                  const displayId = unit.objectId || unit.arcgisId;
+                  return (
+                    <div key={unit._id} style={{ backgroundColor: '#0d1117', border: '1px solid #30363d', padding: '12px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ fontWeight: 'bold', color: '#58a6ff' }}>Unit #{displayId}</div>
+                        <div style={{ fontSize: '12px', color: '#8b949e', marginTop: '2px' }}>{typeLabel}</div>
+                        <div style={{ fontSize: '11px', color: '#6e7681', marginTop: '2px' }}>Status: {unit.status === '4' ? '🔴 Sold' : '🟢 Active'}</div>
+                      </div>
+                      <button 
+                        onClick={() => handleRemoveProperty(unit)}
+                        style={{ backgroundColor: 'transparent', color: '#f85149', border: '1px solid #f85149', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                      >
+                        Remove
+                      </button>
                     </div>
-                    <button 
-                      onClick={() => handleRemoveProperty(unit)}
-                      style={{ backgroundColor: 'transparent', color: '#f85149', border: '1px solid #f85149', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>

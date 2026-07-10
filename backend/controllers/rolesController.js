@@ -113,10 +113,10 @@ exports.assignProperty = async (req, res) => {
     const { userId, unitId, arcgisObjectId, sourceLayer, targetRole } = req.body;
 
     if (targetRole === 'owner') {
-      // 1. Save to MongoDB
+      // 1. Save to MongoDB — also store sourceLayer and OBJECTID (display ID matching property catalog)
       const updatedUnit = await Unit.findOneAndUpdate(
         { arcgisId: unitId },
-        { ownerId: userId, status: '4' },
+        { ownerId: userId, status: '4', sourceLayer: sourceLayer, objectId: arcgisObjectId },
         { upsert: true, new: true }
       );
       // 2. Add to user's ownedUnits array (MUST be ObjectId)
@@ -136,10 +136,10 @@ exports.assignProperty = async (req, res) => {
         );
       }
     } else if (targetRole === 'broker') {
-      // Assign unit to broker — just set brokerId, don't change ArcGIS status
+      // Assign unit to broker — also store sourceLayer and OBJECTID
       await Unit.findOneAndUpdate(
         { arcgisId: unitId },
-        { brokerId: userId },
+        { brokerId: userId, sourceLayer: sourceLayer, objectId: arcgisObjectId },
         { upsert: true }
       );
     }
@@ -154,9 +154,14 @@ exports.assignProperty = async (req, res) => {
 // 5. Remove Property (Owner or Broker)
 exports.removeProperty = async (req, res) => {
   try {
-    const { userId, unitId, currentRole, arcgisObjectId, sourceLayer } = req.body;
+    const { userId, unitId, currentRole } = req.body;
 
     if (currentRole === 'owner') {
+      // ✅ Look up the unit FIRST to get its stored sourceLayer — don't trust the client
+      const unitToRemove = await Unit.findOne({ arcgisId: unitId });
+      const correctSourceLayer = unitToRemove?.sourceLayer || 'Units';
+      const correctArcgisId = unitToRemove?.arcgisId || unitId;
+
       // Unlink from MongoDB unit
       const updatedUnit = await Unit.findOneAndUpdate(
         { arcgisId: unitId }, 
@@ -171,10 +176,9 @@ exports.removeProperty = async (req, res) => {
       if (!updatedUser.ownedUnits || updatedUser.ownedUnits.length === 0) {
         await User.findByIdAndUpdate(userId, { role: 'user' });
       }
-      // Sync ArcGIS: revert to Available (status 1)
-      if (arcgisObjectId && sourceLayer) {
-        await updateArcGISStatus(arcgisObjectId, '1', null, null, null, sourceLayer);
-      }
+      // ✅ Sync ArcGIS using the correct sourceLayer from MongoDB (Units vs Villas_Global)
+      await updateArcGISStatus(correctArcgisId, '1', null, null, null, correctSourceLayer);
+      console.log(`✅ ArcGIS reverted to Available for ${correctArcgisId} on layer ${correctSourceLayer}`);
     } else if (currentRole === 'broker') {
       // Unassign broker from unit
       await Unit.findOneAndUpdate({ arcgisId: unitId }, { brokerId: null });

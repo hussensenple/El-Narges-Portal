@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import WebScene from '@arcgis/core/WebScene';
 import SceneView from '@arcgis/core/views/SceneView';
 import LayerList from '@arcgis/core/widgets/LayerList'; 
-import BasemapGallery from '@arcgis/core/widgets/BasemapGallery'; // 🚀 استيراد الـ Basemap
+import BasemapGallery from '@arcgis/core/widgets/BasemapGallery'; 
 import '@arcgis/core/assets/esri/themes/dark/main.css';
 import WeatherWidget from './WeatherWidget';
 
@@ -11,13 +11,13 @@ interface MapViewerProps {
   isLayersOpen: boolean;
   isWeatherOpen: boolean;
   setIsWeatherOpen: (isOpen: boolean) => void;
-  isBasemapOpen: boolean; // 🚀 استقبال الـ Prop الجديدة
+  isBasemapOpen: boolean; 
 }
 
 const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen, isBasemapOpen }: MapViewerProps) => {
   const mapDiv = useRef<HTMLDivElement>(null);
   const layerListDiv = useRef<HTMLDivElement>(null); 
-  const basemapDiv = useRef<HTMLDivElement>(null); // 🚀 Ref لحاوية الـ Basemap
+  const basemapDiv = useRef<HTMLDivElement>(null); 
 
   const [viewInstance, setViewInstance] = useState<SceneView | null>(null);
 
@@ -49,7 +49,6 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
           });
         }
 
-        // 🚀 تهيئة الـ BasemapGallery
         if (basemapDiv.current) {
           new BasemapGallery({
             view: view,
@@ -98,7 +97,6 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
           <div ref={layerListDiv} />
         </div>
 
-        {/* 🚀 حاوية عرض الـ BasemapGallery */}
         <div style={{ 
           display: isBasemapOpen ? 'block' : 'none',
           backgroundColor: '#161b22',

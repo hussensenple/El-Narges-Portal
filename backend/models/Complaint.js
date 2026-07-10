@@ -1,30 +1,19 @@
 const mongoose = require('mongoose');
 
 const complaintSchema = new mongoose.Schema({
-  ownerId: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User', 
-    required: true 
+  title: { type: String, required: true },
+  arcgisId: { type: String, default: 'N/A' },
+  type: { type: String, enum: ['internal', 'external'], default: 'internal' },
+  description: { type: String, required: true },
+  coordinates: {
+    lat: { type: Number },
+    lon: { type: Number }
   },
-  arcgisId: { 
-    // بنسجل الـ ID بتاع خريطة ArcGIS مباشرة هنا عشان لما نيجي نعرضها 
-    // في الـ Frontend نخلي الخريطة تعمل Zoom عليها بسهولة
-    type: String, 
-    required: true 
-  },
-  title: { 
-    type: String, 
-    required: true 
-  },
-  description: { 
-    type: String, 
-    required: true 
-  },
-  status: { 
-    type: String, 
-    enum: ['Pending', 'In Progress', 'Resolved'], 
-    default: 'Pending' 
-  }
+  status: { type: String, default: 'Pending' },
+  
+  // 👈 ده الحقل اللي كان عامل المشكلة، لازم يكون اسمه ownerId
+  ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+  
 }, { timestamps: true });
 
 module.exports = mongoose.model('Complaint', complaintSchema);

@@ -17,6 +17,7 @@ const io = new Server(server, {
     methods: ["GET", "POST", "PUT", "DELETE"]
   }
 });
+app.set('io', io);
 
 // 💡 حفظ نسخة من io في الـ app عشان نقدر نستخدمها في ملفات الـ Routes ونبعت إشعارات
 app.set('socketio', io);

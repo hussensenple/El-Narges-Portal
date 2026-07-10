@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { io } from 'socket.io-client'; // 👈 استدعاء مكتبة السوكيت
+import { io } from 'socket.io-client';
+import AdminComplaintsTab from '../components/AdminComplaintsTab'; // 👈 استيراد التابة الجديدة
 
 const AdminPortal = () => {
-  // 1. حالة التابات (الافتراضي يفتح على تابة الـ Dashboard)
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'requests'>('dashboard');
-  
-  // 2. حالة الطلبات
+  // 1. حالة التابات بقت 3 اختيارات بدل 2
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'requests' | 'complaints'>('dashboard');
   const [requests, setRequests] = useState([]);
+  const [complaintsCount, setComplaintsCount] = useState(0);
 
-  // دالة جلب الطلبات
   const fetchRequests = async () => {
     try {
       const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin/pending`);
@@ -19,47 +18,36 @@ const AdminPortal = () => {
     }
   };
 
-  // 🎧 الـ useEffect بعد إضافة الـ WebSockets
   useEffect(() => {
-    fetchRequests(); // جلب الطلبات أول ما الصفحة تفتح
-
-    // الاتصال بالسيرفر
+    fetchRequests(); 
     const socket = io(`${import.meta.env.VITE_API_URL}`);
     
-    // أول ما نسمع إن في طلب جديد، نحدث الجدول فوراً
-    socket.on('newBookingRequest', () => {
-      fetchRequests(); 
-    });
-
-    // تنظيم الاتصال لما الأدمن يقفل الصفحة أو يروح مسار تاني
-    return () => {
-      socket.disconnect();
-    };
+    // 🚀 مسحنا السوكيت بتاع الشكاوى من هنا لأن الـ AdminComplaintsTab هو اللي بيسمعله وبيحدث الرقم
+    socket.on('newBookingRequest', () => fetchRequests());
+    
+    return () => { socket.disconnect(); };
   }, []);
 
-  // دالة الموافقة
   const handleApprove = async (id: string) => {
     if (window.confirm("هل أنت متأكد من الموافقة؟ سيتم تحديث الخريطة فوراً.")) {
       try {
         await axios.post(`${import.meta.env.VITE_API_URL}/api/admin/approve/${id}`);
         alert("✅ Approved successfully!");
-        fetchRequests(); // تحديث الجدول
+        fetchRequests(); 
       } catch (error) {
         alert("❌ An error occurred during approval.");
       }
     }
   };
 
-  // دالة المسح (Delete)
   const handleDelete = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this request? This action cannot be undone.")) {
+    if (window.confirm("Are you sure you want to delete this request?")) {
       try {
         await axios.delete(`${import.meta.env.VITE_API_URL}/api/admin/request/${id}`);
         alert("🗑️ Request deleted successfully!");
-        fetchRequests(); // تحديث الجدول عشان الطلب يختفي
+        fetchRequests(); 
       } catch (error) {
         alert("❌ An error occurred during deletion.");
-        console.error("Delete Error:", error);
       }
     }
   };
@@ -73,20 +61,14 @@ const AdminPortal = () => {
         
         <button 
           onClick={() => setActiveTab('dashboard')}
-          style={{
-            backgroundColor: activeTab === 'dashboard' ? '#1f6feb' : 'transparent',
-            color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s'
-          }}
+          style={{ backgroundColor: activeTab === 'dashboard' ? '#1f6feb' : 'transparent', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s' }}
         >
           📊 Dashboard
         </button>
 
         <button 
           onClick={() => setActiveTab('requests')}
-          style={{
-            backgroundColor: activeTab === 'requests' ? '#1f6feb' : 'transparent',
-            color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s', position: 'relative'
-          }}
+          style={{ backgroundColor: activeTab === 'requests' ? '#1f6feb' : 'transparent', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s', position: 'relative' }}
         >
           📥 Booking Requests
           {requests.length > 0 && (
@@ -95,28 +77,36 @@ const AdminPortal = () => {
             </span>
           )}
         </button>
+
+        {/* 👈 زرار الشكاوى بقى زيه زيهم بيغير التابة */}
+        <button 
+          onClick={() => setActiveTab('complaints')}
+          style={{ backgroundColor: activeTab === 'complaints' ? '#1f6feb' : 'transparent', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s', position: 'relative' }}
+        >
+          🛡️ Complaints
+          {/* 👈 البادج الأحمر هيظهر بس لو في شكاوى (بيقرا من الـ State اللي جاية من الابن) */}
+          {complaintsCount > 0 && (
+            <span style={{ backgroundColor: '#da3633', color: '#fff', borderRadius: '50%', padding: '2px 8px', marginLeft: '8px', fontSize: '12px' }}>
+              {complaintsCount}
+            </span>
+          )}
+        </button>
       </div>
 
       {/* 🖥️ منطقة عرض المحتوى (Content Area) */}
       <div style={{ flex: 1, overflow: 'hidden' }}>
         
-        {/* التابة الأولى: ArcGIS Dashboard (استخدمنا display بدل الشرط) */}
+        {/* التابة 1: Dashboard */}
         <div style={{ display: activeTab === 'dashboard' ? 'block' : 'none', height: '100%' }}>
           <iframe 
-            // ⚠️ حط لينك الـ ArcGIS Dashboard بتاعك هنا بدل اللينك ده ⚠️
             src="https://www.arcgis.com/apps/dashboards/345a8b7a40004be69a8de40951123b59" 
-            width="100%" 
-            height="100%" 
-            frameBorder="0"
-            title="ArcGIS Dashboard"
-            style={{ display: 'block' }}
+            width="100%" height="100%" frameBorder="0" title="ArcGIS Dashboard" style={{ display: 'block' }}
           />
         </div>
 
-        {/* التابة التانية: جدول الطلبات */}
+        {/* التابة 2: Requests */}
         <div style={{ display: activeTab === 'requests' ? 'block' : 'none', padding: '20px', height: '100%', overflowY: 'auto' }}>
           <h3 style={{ borderBottom: '1px solid #30363d', paddingBottom: '10px', marginTop: 0 }}>Unit Sales Management</h3>
-          
           {requests.length === 0 ? (
             <p style={{ color: '#8b949e' }}>No pending requests currently.</p>
           ) : (
@@ -135,27 +125,25 @@ const AdminPortal = () => {
                     <td style={{ padding: '12px', fontWeight: 'bold', color: '#58a6ff' }}>#{req.unitId}</td>
                     <td style={{ padding: '12px' }}>{req.userId?.name || 'Unknown'}</td>
                     <td style={{ padding: '12px', color: '#8b949e' }}>{req.userId?.phone || '---'}</td>
-                    
                     <td style={{ padding: '12px', display: 'flex', gap: '8px' }}>
-                      <button 
-                        onClick={() => handleApprove(req._id)} 
-                        style={{ backgroundColor: '#238636', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.2s' }}
-                      >
-                        ✅ Approve
-                      </button>
-
-                      <button 
-                        onClick={() => handleDelete(req._id)} 
-                        style={{ backgroundColor: '#da3633', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.2s' }}
-                      >
-                        🗑️ Delete
-                      </button>
+                      <button onClick={() => handleApprove(req._id)} style={{ backgroundColor: '#238636', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>✅ Approve</button>
+                      <button onClick={() => handleDelete(req._id)} style={{ backgroundColor: '#da3633', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>🗑️ Delete</button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           )}
+        </div>
+        
+        {/* 🚀 التابة 3: Complaints (مبدأ الـ SPA - الخريطة بتتحمل مرة واحدة وبتستخبى بس) */}
+        <div style={{ 
+          display: activeTab === 'complaints' ? 'block' : 'none', 
+          height: '100%', 
+          width: '100%' 
+        }}>
+          {/* 🚀 تمرير دالة التحديث للكومبوننت الابن */}
+          <AdminComplaintsTab onCountUpdate={setComplaintsCount} />
         </div>
 
       </div>

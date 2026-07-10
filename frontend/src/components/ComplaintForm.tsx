@@ -1,171 +1,149 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import axios from 'axios';
 
 interface ComplaintFormProps {
-  arcgisId: string; // الـ ID بتاع الوحدة من الخريطة
-  onClose: () => void; // دالة بتقفل الفورم بعد الإرسال
+  onClose: () => void;
+  arcgisId: string;
+  view?: any;
+  onPickingChange?: (isPicking: boolean) => void;
 }
 
-const ComplaintForm: React.FC<ComplaintFormProps> = ({ arcgisId, onClose }) => {
-  const [title, setTitle] = useState('');
+const ComplaintForm = ({ onClose, arcgisId, view, onPickingChange }: ComplaintFormProps) => {
+  const [type, setType] = useState('internal');
   const [description, setDescription] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [coordinates, setCoordinates] = useState<{lat: number, lon: number} | null>(null);
+  const [isPickingMap, setIsPickingMap] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setMessage(null);
-
-    try {
-      // هنجيب التوكن من الـ Local Storage (أو من الـ AuthContext لو بتخزنه هناك)
-      const token = localStorage.getItem('token'); 
-
-      // التأكد من تعديل البورت لو الباك إند شغال على بورت مختلف
-      const response = await axios.post('http://localhost:5000/api/complaints/submit', {
-        arcgisId,
-        title,
-        description
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-
-      setMessage({ text: response.data.msg, type: 'success' });
-      
-      // تفريغ الحقول وقفل الفورم بعد ثانيتين
-      setTitle('');
-      setDescription('');
-      setTimeout(() => {
-        onClose();
-      }, 2000);
-
-    } catch (error: any) {
-      setMessage({ 
-        text: error.response?.data?.msg || 'حدث خطأ أثناء إرسال الشكوى', 
-        type: 'error' 
-      });
-    } finally {
-      setLoading(false);
+  const handleSetPicking = (isPicking: boolean) => {
+    setIsPickingMap(isPicking);
+    if (onPickingChange) {
+      onPickingChange(isPicking); 
     }
   };
 
-  return (
-    <div style={styles.overlay}>
-      <div style={styles.modal}>
-        <h2 style={{ color: '#2c3e50', textAlign: 'center' }}>تقديم شكوى / صيانة 🛠️</h2>
-        <p style={{ textAlign: 'center', color: '#7f8c8d', fontSize: '14px' }}>
-          رقم الوحدة: {arcgisId}
-        </p>
+  useEffect(() => {
+    let clickHandle: any = null;
 
-        {message && (
-          <div style={{
-            padding: '10px',
-            marginBottom: '15px',
-            borderRadius: '5px',
-            textAlign: 'center',
-            backgroundColor: message.type === 'success' ? '#d4edda' : '#f8d7da',
-            color: message.type === 'success' ? '#155724' : '#721c24'
-          }}>
-            {message.text}
+    if (isPickingMap && view) {
+      view.container.style.cursor = 'crosshair';
+
+      clickHandle = view.on('click', (event: any) => {
+        const lat = event.mapPoint.latitude;
+        const lon = event.mapPoint.longitude;
+        setCoordinates({ lat, lon });
+        handleSetPicking(false); 
+        view.container.style.cursor = 'default';
+      });
+    }
+
+    return () => {
+      if (clickHandle) clickHandle.remove();
+      if (view) view.container.style.cursor = 'default';
+    };
+  }, [isPickingMap, view]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert("Please login first to submit a complaint.");
+        return;
+      }
+
+      // 🚀 تجهيز عنوان أوتوماتيكي للشكوى عشان الباك إند ميزعلش
+      const complaintTitle = type === 'external' ? 'External Issue' : 'Internal Maintenance';
+
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/complaints/submit`, {
+        title: complaintTitle, // 👈 ضفنا الـ Title هنا
+        arcgisId,
+        type,
+        description,
+        coordinates
+      }, {
+        headers: { 'x-auth-token': token }
+      });
+
+      console.log("Submitted Successfully to Backend!");
+      alert("Complaint submitted successfully! 🚀");
+      onClose();
+    } catch (error) {
+      console.error("Error submitting complaint", error);
+      alert("Error submitting complaint. Check console.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isPickingMap) {
+    return createPortal(
+      <div style={{ position: 'fixed', top: 30, left: '50%', transform: 'translateX(-50%)', backgroundColor: '#da3633', color: '#fff', padding: '15px 30px', borderRadius: '30px', zIndex: 99999999, fontWeight: 'bold', display: 'flex', gap: '15px', alignItems: 'center', boxShadow: '0 10px 30px rgba(0,0,0,0.8)' }}>
+        📍 Please click on the issue location on the map...
+        <button onClick={() => handleSetPicking(false)} style={{ background: '#fff', color: '#da3633', border: 'none', padding: '8px 15px', borderRadius: '15px', cursor: 'pointer', fontWeight: 'bold' }}>Cancel Selection</button>
+      </div>,
+      document.body
+    );
+  }
+
+  return createPortal(
+    <div onClick={onClose} style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 99999999, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: '#0d1117', padding: '30px', borderRadius: '16px', width: '550px', maxWidth: '90vw', border: '1px solid #30363d', color: '#fff', boxShadow: '0 20px 50px rgba(0,0,0,0.8)' }}>
+        <h2 style={{ marginTop: 0, borderBottom: '1px solid #30363d', paddingBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          🛠️ Submit Maintenance / Complaint Request
+        </h2>
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '20px' }}>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <label style={{ color: '#8b949e', fontWeight: 'bold' }}>Complaint Type:</label>
+            <select value={type} onChange={(e) => setType(e.target.value)} style={{ padding: '14px', borderRadius: '8px', backgroundColor: '#161b22', border: '1px solid #30363d', color: '#fff', fontSize: '16px', cursor: 'pointer' }}>
+              <option value="internal">Internal Maintenance (Inside the unit)</option>
+              <option value="external">External Issue (Street / Public Facilities)</option>
+            </select>
           </div>
-        )}
 
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <label style={styles.label}>عنوان الشكوى:</label>
-          <input
-            type="text"
-            required
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            style={styles.input}
-            placeholder="مثال: تسريب مياه، مشكلة بالكهرباء..."
-          />
+          {type === 'external' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: '#161b22', padding: '16px', borderRadius: '8px', border: '1px dashed #58a6ff' }}>
+              <label style={{ color: '#8b949e', fontWeight: 'bold' }}>Issue Location on Map:</label>
+              {coordinates ? (
+                <div style={{ color: '#2ea043', fontSize: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>✅ Selected (Lat: {coordinates.lat.toFixed(4)}, Lon: {coordinates.lon.toFixed(4)})</span>
+                  <button type="button" onClick={() => handleSetPicking(true)} style={{ background: 'transparent', color: '#58a6ff', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontWeight: 'bold' }}>Change Location</button>
+                </div>
+              ) : (
+                <button type="button" onClick={() => handleSetPicking(true)} style={{ padding: '12px', backgroundColor: '#1f6feb', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px', display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                  📍 Click here to select location on 3D Map
+                </button>
+              )}
+            </div>
+          )}
 
-          <label style={styles.label}>تفاصيل الشكوى:</label>
-          <textarea
-            required
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            style={{ ...styles.input, height: '100px', resize: 'none' }}
-            placeholder="اشرح المشكلة بالتفصيل هنا..."
-          />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <label style={{ color: '#8b949e', fontWeight: 'bold' }}>Issue Details:</label>
+            <textarea
+              required
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Please describe the issue in detail here..."
+              style={{ padding: '14px', borderRadius: '8px', backgroundColor: '#161b22', border: '1px solid #30363d', color: '#fff', fontSize: '16px', minHeight: '120px', resize: 'vertical' }}
+            />
+          </div>
 
-          <div style={styles.buttonContainer}>
-            <button type="button" onClick={onClose} style={styles.cancelBtn} disabled={loading}>
-              إلغاء
-            </button>
-            <button type="submit" style={styles.submitBtn} disabled={loading}>
-              {loading ? 'جاري الإرسال...' : 'إرسال الشكوى'}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '10px' }}>
+            <button type="button" onClick={onClose} style={{ padding: '14px 24px', backgroundColor: 'transparent', color: '#8b949e', border: '1px solid #30363d', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px' }}>Cancel</button>
+            <button type="submit" disabled={isSubmitting || (type === 'external' && !coordinates)} style={{ padding: '14px 24px', backgroundColor: (isSubmitting || (type === 'external' && !coordinates)) ? '#b6232455' : '#2ea043', color: '#fff', border: 'none', borderRadius: '8px', cursor: (isSubmitting || (type === 'external' && !coordinates)) ? 'not-allowed' : 'pointer', fontWeight: 'bold', fontSize: '16px' }}>
+              {isSubmitting ? 'Submitting...' : 'Submit Complaint 🚀'}
             </button>
           </div>
+
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
-};
-
-// 🎨 ستايلات بسيطة عشان الفورم تطلع بشكل Modal محترم (تقدر تغيرها لـ Tailwind أو CSS لاحقاً)
-const styles = {
-  overlay: {
-    position: 'fixed' as 'fixed',
-    top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 9999,
-  },
-  modal: {
-    backgroundColor: '#fff',
-    padding: '30px',
-    borderRadius: '10px',
-    width: '400px',
-    maxWidth: '90%',
-    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-    direction: 'rtl' as 'rtl',
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column' as 'column',
-  },
-  label: {
-    marginBottom: '8px',
-    fontWeight: 'bold',
-    color: '#34495e',
-  },
-  input: {
-    padding: '10px',
-    marginBottom: '20px',
-    borderRadius: '5px',
-    border: '1px solid #ccc',
-    fontSize: '16px',
-    fontFamily: 'inherit',
-  },
-  buttonContainer: {
-    display: 'flex',
-    justifyContent: 'space-between',
-  },
-  submitBtn: {
-    backgroundColor: '#3498db',
-    color: 'white',
-    border: 'none',
-    padding: '10px 20px',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    fontSize: '16px',
-    fontWeight: 'bold',
-  },
-  cancelBtn: {
-    backgroundColor: '#e74c3c',
-    color: 'white',
-    border: 'none',
-    padding: '10px 20px',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    fontSize: '16px',
-  }
 };
 
 export default ComplaintForm;

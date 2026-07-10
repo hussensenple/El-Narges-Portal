@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import SceneView from '@arcgis/core/views/SceneView';
 import MapViewer from './components/MapViewer';
 import MapViewer2D from './components/MapViewer2D';
-import OwnerUnitsTab from './components/OwnerUnitsTab'; // تأكد إن المسار صح
+import OwnerUnitsTab from './components/OwnerUnitsTab'; 
 import UnitCatalog from './components/UnitCatalog';
 import AIAdvisor from './components/AIAdvisor';
 import AdminRequests from './pages/AdminRequests'; 
@@ -22,7 +22,6 @@ const Icons = {
   Map3D: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>,
   Basemap: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>,
   Catalog: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>,
-  // 👈 أيقونة جديدة خاصة بوحدات المالك
   Home: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
 };
 
@@ -33,8 +32,7 @@ const CustomerInterface = () => {
   const [isStopsRoutingOpen, setIsStopsRoutingOpen] = useState(false); 
   const [showLoginModal, setShowLoginModal] = useState(false); 
   const [isToolsMenuOpen, setIsToolsMenuOpen] = useState(false);
-  const [isOwnerUnitsOpen, setIsOwnerUnitsOpen] = useState(false); // 👈 State جديد للوحة المالك
-  
+  const [isOwnerUnitsOpen, setIsOwnerUnitsOpen] = useState(false); 
   const [is3DView, setIs3DView] = useState(true);
   const [isLayersOpen, setIsLayersOpen] = useState(false);
   const [isWeatherOpen, setIsWeatherOpen] = useState(false);
@@ -48,7 +46,6 @@ const CustomerInterface = () => {
   return (
     <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden', backgroundColor: '#0d1117' }}>
       
-      {/* 🚀 إدراج كود الـ CSS الخاص بالأزرار والتأثيرات */}
       <style>{`
         .map-icon-btn {
           width: 45px;
@@ -113,10 +110,9 @@ const CustomerInterface = () => {
           </span>
         )}
 
-        {/* 👈 زرار وحداتي المملوكة بيظهر بس لو اليوزر Owner */}
         {auth?.user?.role === 'owner' && (
           <button 
-            title="وحداتي المملوكة" 
+            title="My Units" 
             onClick={() => setIsOwnerUnitsOpen(!isOwnerUnitsOpen)} 
             className={`map-icon-btn ${isOwnerUnitsOpen ? 'active' : 'inactive'}`}
           >
@@ -208,49 +204,8 @@ const CustomerInterface = () => {
         </>
       )}
 
-      {/* 👈 شاشة (Modal) وحداتي المملوكة */}
       {isOwnerUnitsOpen && auth?.user?.role === 'owner' && (
-        <>
-          {/* خلفية معتمة تقفل الشاشة لما تضغط براها */}
-          <div 
-            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 999, backdropFilter: 'blur(4px)' }} 
-            onClick={() => setIsOwnerUnitsOpen(false)} 
-          />
-          
-          {/* المربع اللي جواه الكومبوننت */}
-          <div style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            zIndex: 1000,
-            backgroundColor: '#0d1117',
-            borderRadius: '12px',
-            width: '90%',
-            maxWidth: '900px',
-            maxHeight: '85vh',
-            overflowY: 'auto',
-            border: '1px solid #30363d',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.5)'
-          }}>
-            <div style={{ padding: '15px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #30363d', backgroundColor: '#161b22' }}>
-              <h3 style={{ margin: 0, color: '#e6edf3', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Icons.Home /> لوحة المالك
-              </h3>
-              <button 
-                onClick={() => setIsOwnerUnitsOpen(false)} 
-                style={{ background: 'transparent', border: 'none', color: '#f85149', fontSize: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-              >
-                ✖
-              </button>
-            </div>
-            
-            {/* هنا بنعرض الـ Tab اللي برمجناها */}
-            <div style={{ padding: '20px' }}>
-              {isOwnerUnitsOpen && <OwnerUnitsTab onClose={() => setIsOwnerUnitsOpen(false)} />}
-            </div>
-          </div>
-        </>
+        <OwnerUnitsTab onClose={() => setIsOwnerUnitsOpen(false)} view={mapView} />
       )}
 
       {is3DView && <AIAdvisor view={mapView} />}

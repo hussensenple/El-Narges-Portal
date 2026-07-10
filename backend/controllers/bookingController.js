@@ -30,6 +30,7 @@ exports.approveRequest = async (req, res) => {
         arcgisId: unitGlobalId,
         unitName: request.sourceLayer === 'Villas_Global' ? 'فيلا' : 'شقة',
         status: '4',
+        ownerId: request.userId,
         ownerName: request.customerName,
         ownerEmail: request.customerGmail,
         ownerPhone: request.customerPhone
@@ -37,6 +38,7 @@ exports.approveRequest = async (req, res) => {
       await updatedUnit.save();
     } else {
       updatedUnit.status = '4';
+      updatedUnit.ownerId = request.userId;
       updatedUnit.ownerName = request.customerName;
       updatedUnit.ownerEmail = request.customerGmail;
       updatedUnit.ownerPhone = request.customerPhone;

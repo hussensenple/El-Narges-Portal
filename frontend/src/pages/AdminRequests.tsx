@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client'; // 👈 استدعاء مكتبة السوكيت
 
+import RolesWidget from '../components/admin/RolesWidget';
+
 const AdminPortal = () => {
-  // 1. حالة التابات (الافتراضي يفتح على تابة الـ Dashboard)
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'requests'>('dashboard');
+  // 1. حالة التابات
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'requests' | 'roles'>('dashboard');
   
   // 2. حالة الطلبات
   const [requests, setRequests] = useState([]);
@@ -95,6 +97,16 @@ const AdminPortal = () => {
             </span>
           )}
         </button>
+
+        <button 
+          onClick={() => setActiveTab('roles')}
+          style={{
+            backgroundColor: activeTab === 'roles' ? '#1f6feb' : 'transparent',
+            color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s'
+          }}
+        >
+          👥 Roles Management
+        </button>
       </div>
 
       {/* 🖥️ منطقة عرض المحتوى (Content Area) */}
@@ -156,6 +168,11 @@ const AdminPortal = () => {
               </tbody>
             </table>
           )}
+        </div>
+
+        {/* التابة الثالثة: إدارة الأدوار */}
+        <div style={{ display: activeTab === 'roles' ? 'block' : 'none', height: '100%' }}>
+          <RolesWidget />
         </div>
 
       </div>

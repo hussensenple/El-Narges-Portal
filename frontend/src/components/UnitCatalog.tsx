@@ -63,50 +63,30 @@ const UnitCatalog = ({ view, onClose }: UnitCatalogProps) => {
   const loadUnitsData = async () => {
     setIsLoading(true);
     try {
-      const targetNames = ["Villas_Global", "Units"];
+      // 🚀 SOLUTION: Always fetch the true live data from our Express backend!
+      // This bypasses the stale ArcGIS JS SDK cache and perfectly syncs MongoDB + ArcGIS.
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/roles/catalog?mode=all`);
       
-      const layersAndTables = [
-        ...(view?.map?.layers.toArray() || []),
-        ...(view?.map?.tables?.toArray() || [])
-      ];
+      const rawUnits = res.data.units || [];
+      const rawVillas = res.data.villas || [];
 
-      // 🚀 الحل هنا: فلترة الطبقات والجداول لمنع التكرار (Deduplication)
-      const uniqueLayersToQuery: any[] = [];
-      const seenTitles = new Set();
-
-      for (const item of layersAndTables) {
-        if (item.title && targetNames.includes(item.title) && !seenTitles.has(item.title)) {
-          uniqueLayersToQuery.push(item);
-          seenTitles.add(item.title); // تسجيل اسم الطبقة عشان منقراهاش تاني
-        }
-      }
-
-      let allFeatures: Graphic[] = [];
-
-      // اللوب هيمشي على الطبقات الفريدة بس
-      for (const layer of uniqueLayersToQuery) {
-        const isTable = layer.title === "Units";
-
-        if (layer.type === "feature" || layer.type === "scene" || isTable) {
-          const query = layer.createQuery();
-          query.where = "1=1";
-          query.outFields = ["*"]; 
-          query.returnGeometry = !isTable; 
-          
-          const results = await layer.queryFeatures(query);
-          
-          const featuresWithSource = results.features.map((f: Graphic) => {
-            f.attributes.SourceName = layer.title;
-            return f;
-          });
-
-          allFeatures = [...allFeatures, ...featuresWithSource];
-        }
-      }
+      const allFeatures: Graphic[] = [...rawUnits, ...rawVillas].map((item: any) => {
+        return new Graphic({
+          attributes: {
+            ...item,
+            // Ensure compatibility with previous logic
+            OBJECTID: item.OBJECTID,
+            GlobalID: item.GlobalID,
+            Status: item.Status,
+            SourceName: item.sourceLayer
+          }
+        });
+      });
 
       setUnits(allFeatures);
     } catch (error) {
-      console.error("Error loading units:", error);
+      console.error("Error loading units from backend:", error);
+      alert("Failed to load live catalog data. Please check your connection.");
     } finally {
       setIsLoading(false);
     }
@@ -249,12 +229,14 @@ const UnitCatalog = ({ view, onClose }: UnitCatalogProps) => {
     const attrs = unit.attributes || {};
     const matchesSearch = attrs.OBJECTID?.toString().includes(searchTerm);
     
-    // 🚀 تحويل قيم الـ Domains الرقمية إلى نصوص لمطابقتها مع الـ Dropdown
-    let rawStatus = String(attrs.Status || 'available').toLowerCase();
-    if (rawStatus === '1') rawStatus = 'available';
-    if (rawStatus === '2') rawStatus = 'reserved';
-    if (rawStatus === '3') rawStatus = 'sold';
-    
+    // ✅ Normalize ALL real ArcGIS data variations to internal labels
+    // Live data has 3 formats: text labels ("Available","Sold"), codes ("1","4")
+    let rawStatus = String(attrs.Status ?? 'available').toLowerCase();
+    if      (rawStatus === '1' || rawStatus === 'available')  rawStatus = 'available';
+    else if (rawStatus === '2' || rawStatus === 'interested') rawStatus = 'interested';
+    else if (rawStatus === '3' || rawStatus === 'reserved')   rawStatus = 'reserved';
+    else if (rawStatus === '4' || rawStatus === 'sold')       rawStatus = 'sold';
+
     const matchesStatus = statusFilter === 'All' || rawStatus === statusFilter.toLowerCase();
     
     let unitFinalType = 'Building';
@@ -275,7 +257,7 @@ const UnitCatalog = ({ view, onClose }: UnitCatalogProps) => {
     
     let matchesPrice = true;
     if (maxPrice.trim() !== '') { 
-      const priceValue = attrs.Total_Price || attrs.Price || 0;
+      const priceValue = attrs.Price || 0; // ✅ Correct field name
       matchesPrice = Number(priceValue) <= Number(maxPrice) * 1000000; 
     }
     
@@ -313,6 +295,14 @@ const UnitCatalog = ({ view, onClose }: UnitCatalogProps) => {
           </select>
           <input type="number" placeholder="💰 Max Price (M EGP)..." value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} min="0" step="any" style={{ padding: '10px', borderRadius: '6px', border: '1px solid #30363d', backgroundColor: '#010409', color: '#fff', width: '180px' }} />
           <button onClick={handleResetFilters} style={{ padding: '10px 16px', backgroundColor: '#d29922', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>🔄 Reset</button>
+          <button 
+            onClick={loadUnitsData}
+            disabled={isLoading}
+            title="Sync latest status from ArcGIS Online"
+            style={{ padding: '10px 16px', backgroundColor: isLoading ? '#21262d' : '#1f6feb', color: '#fff', border: 'none', borderRadius: '6px', cursor: isLoading ? 'not-allowed' : 'pointer', fontWeight: 'bold', opacity: isLoading ? 0.6 : 1 }}
+          >
+            {isLoading ? '⏳ Syncing...' : '🔃 Refresh'}
+          </button>
         </div>
         
         <div style={{ padding: '12px 24px 0', color: '#8b949e', fontSize: '14px' }}>
@@ -324,12 +314,13 @@ const UnitCatalog = ({ view, onClose }: UnitCatalogProps) => {
           {filteredUnits.length === 0 && !isLoading && <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: '#8b949e', padding: '40px' }}>No units match your criteria. 🕵️‍♂️</div>}
 
           {filteredUnits.map((unit, idx) => {
-            const status = String(unit.attributes.Status || 'Available').toLowerCase();
+            // ✅ Normalize status for badge — handles "Available","Sold","1","4" from live GIS data
+            const status = String(unit.attributes.Status ?? 'available').toLowerCase();
             const isAvailable = status === 'available' || status === '1';
-            const isReserved = status === 'reserved' || status === '2';
-            const badgeColor = isAvailable ? '#2ea043' : (isReserved ? '#d29922' : '#f85149');
+            const isReserved  = status === 'reserved'  || status === '3';
+            const badgeColor  = isAvailable ? '#2ea043' : (isReserved ? '#d29922' : '#f85149');
             const borderColor = isAvailable ? '#2ea04355' : (isReserved ? '#d2992255' : '#f8514955');
-            const rawPrice = unit.attributes.Total_Price || unit.attributes.Price;
+            const rawPrice = unit.attributes.Price; // ✅ Correct field name (Total_Price doesn't exist)
             const formattedPrice = rawPrice ? (Number(rawPrice) / 1000000).toFixed(2) + ' M EGP' : 'Contact Sales';
             const unitType = unit.attributes.DisplayType;
 

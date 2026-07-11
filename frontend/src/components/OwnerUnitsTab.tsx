@@ -9,6 +9,8 @@ interface Unit {
   unitName: string;
   globalId?: string;
   arcgisId?: string;
+  objectId?: number;
+  sourceLayer?: string;
   status: string;
 }
 
@@ -124,9 +126,8 @@ const OwnerUnitsTab = ({ onClose, view }: OwnerUnitsTabProps) => {
                 </thead>
                 <tbody>
                   {units.map((unit, index) => {
-                    const rawName = String(unit.unitName || '');
-                    const displayType = rawName.includes('فيلا') ? 'Villa' : (rawName.includes('شقة') ? 'Apartment' : 'Building');
-                    const displayId = unit.globalId || unit.arcgisId || 'N/A';
+                    const displayType = unit.sourceLayer === 'Villas_Global' ? 'Villa' : (unit.sourceLayer === 'Units' ? 'Apartment' : 'Building');
+                    const displayId = unit.objectId || unit.globalId || unit.arcgisId || 'N/A';
                     
                     return (
                       <tr key={unit._id} style={{ borderBottom: '1px solid #30363d', backgroundColor: index % 2 === 0 ? '#0d1117' : '#161b22' }}>

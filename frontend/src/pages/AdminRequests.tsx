@@ -3,22 +3,25 @@ import axios from 'axios';
 import { io } from 'socket.io-client';
 import AdminComplaintsTab from '../components/AdminComplaintsTab'; // 👈 استيراد التابة الجديدة
 
+import RolesWidget from '../components/admin/RolesWidget';
+
 const AdminPortal = () => {
-  // 1. حالة التابات بقت 3 اختيارات بدل 2
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'requests' | 'complaints'>('dashboard');
-  const [requests, setRequests] = useState([]);
+// حالة التابات بعد دمج الشكاوى (شغلك) والصلاحيات (شغل صاحبك)
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'requests' | 'complaints' | 'roles'>('dashboard');
   const [complaintsCount, setComplaintsCount] = useState(0);
+  const [requests, setRequests] = useState([]);
 
   const fetchRequests = async () => {
     try {
       const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin/pending`);
       setRequests(res.data);
     } catch (error) {
-      console.error("خطأ في جلب الطلبات:", error);
+      console.error("Error fetching requests:", error);
     }
   };
 
   useEffect(() => {
+    // eslint-disable-next-line
     fetchRequests(); 
     const socket = io(`${import.meta.env.VITE_API_URL}`);
     
@@ -29,7 +32,7 @@ const AdminPortal = () => {
   }, []);
 
   const handleApprove = async (id: string) => {
-    if (window.confirm("هل أنت متأكد من الموافقة؟ سيتم تحديث الخريطة فوراً.")) {
+    if (window.confirm("Are you sure you want to approve? The map will be updated immediately.")) {
       try {
         await axios.post(`${import.meta.env.VITE_API_URL}/api/admin/approve/${id}`);
         alert("✅ Approved successfully!");
@@ -40,14 +43,15 @@ const AdminPortal = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this request?")) {
+  const handleReject = async (id: string) => {
+    const reason = window.prompt("Please enter the reason for rejection:");
+    if (reason !== null) {
       try {
-        await axios.delete(`${import.meta.env.VITE_API_URL}/api/admin/request/${id}`);
-        alert("🗑️ Request deleted successfully!");
+        await axios.post(`${import.meta.env.VITE_API_URL}/api/admin/reject/${id}`, { reason });
+        alert("❌ Request rejected successfully!");
         fetchRequests(); 
       } catch (error) {
-        alert("❌ An error occurred during deletion.");
+        alert("❌ An error occurred during rejection.");
       }
     }
   };
@@ -91,6 +95,16 @@ const AdminPortal = () => {
             </span>
           )}
         </button>
+        
+        <button 
+          onClick={() => setActiveTab('roles')}
+          style={{
+            backgroundColor: activeTab === 'roles' ? '#1f6feb' : 'transparent',
+            color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s'
+          }}
+        >
+          👥 Roles Management
+        </button>
       </div>
 
       {/* 🖥️ منطقة عرض المحتوى (Content Area) */}
@@ -106,34 +120,36 @@ const AdminPortal = () => {
 
         {/* التابة 2: Requests */}
         <div style={{ display: activeTab === 'requests' ? 'block' : 'none', padding: '20px', height: '100%', overflowY: 'auto' }}>
-          <h3 style={{ borderBottom: '1px solid #30363d', paddingBottom: '10px', marginTop: 0 }}>Unit Sales Management</h3>
-          {requests.length === 0 ? (
-            <p style={{ color: '#8b949e' }}>No pending requests currently.</p>
-          ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px', backgroundColor: '#161b22', borderRadius: '8px', overflow: 'hidden' }}>
-              <thead>
-                <tr style={{ backgroundColor: '#21262d', textAlign: 'left' }}>
-                  <th style={{ padding: '12px', borderBottom: '1px solid #30363d' }}>Unit ID</th>
-                  <th style={{ padding: '12px', borderBottom: '1px solid #30363d' }}>Client Name</th>
-                  <th style={{ padding: '12px', borderBottom: '1px solid #30363d' }}>Phone Number</th>
-                  <th style={{ padding: '12px', borderBottom: '1px solid #30363d' }}>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {requests.map((req: any) => (
-                  <tr key={req._id} style={{ borderBottom: '1px solid #30363d' }}>
-                    <td style={{ padding: '12px', fontWeight: 'bold', color: '#58a6ff' }}>#{req.unitId}</td>
-                    <td style={{ padding: '12px' }}>{req.userId?.name || 'Unknown'}</td>
-                    <td style={{ padding: '12px', color: '#8b949e' }}>{req.userId?.phone || '---'}</td>
-                    <td style={{ padding: '12px', display: 'flex', gap: '8px' }}>
-                      <button onClick={() => handleApprove(req._id)} style={{ backgroundColor: '#238636', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>✅ Approve</button>
-                      <button onClick={() => handleDelete(req._id)} style={{ backgroundColor: '#da3633', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>🗑️ Delete</button>
-                    </td>
+          <div style={{ padding: '20px' }}>
+            <h2 style={{ marginBottom: '20px', color: '#58a6ff' }}>Pending Requests</h2>
+            {requests.length === 0 ? (
+              <p style={{ color: '#8b949e' }}>No pending requests.</p>
+            ) : (
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', backgroundColor: '#161b22', borderRadius: '8px', overflow: 'hidden' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#21262d', color: '#c9d1d9' }}>
+                    <th style={{ padding: '12px' }}>Unit ID</th>
+                    <th style={{ padding: '12px' }}>Customer Name</th>
+                    <th style={{ padding: '12px' }}>Phone</th>
+                    <th style={{ padding: '12px' }}>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+                </thead>
+                <tbody>
+                  {requests.map((req: { _id: string, objectId?: number, unitId: string, userId?: { name: string, phone: string } }) => (
+                    <tr key={req._id} style={{ borderTop: '1px solid #30363d' }}>
+                      <td style={{ padding: '12px' }}>#{req.objectId || req.unitId}</td>
+                      <td style={{ padding: '12px' }}>{req.userId?.name}</td>
+                      <td style={{ padding: '12px' }}>{req.userId?.phone}</td>
+                      <td style={{ padding: '12px' }}>
+                        <button onClick={() => handleApprove(req._id)} style={{ marginRight: '10px', backgroundColor: '#238636', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>Approve</button>
+                        <button onClick={() => handleReject(req._id)} style={{ backgroundColor: '#da3633', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>Reject</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
         
         {/* 🚀 التابة 3: Complaints (مبدأ الـ SPA - الخريطة بتتحمل مرة واحدة وبتستخبى بس) */}
@@ -144,6 +160,11 @@ const AdminPortal = () => {
         }}>
           {/* 🚀 تمرير دالة التحديث للكومبوننت الابن */}
           <AdminComplaintsTab onCountUpdate={setComplaintsCount} />
+        </div>
+
+        {/* التابة الثالثة: إدارة الأدوار */}
+        <div style={{ display: activeTab === 'roles' ? 'block' : 'none', height: '100%' }}>
+          <RolesWidget />
         </div>
 
       </div>

@@ -1,15 +1,6 @@
 const Complaint = require('../models/Complaint');
 const User = require('../models/User');
-const nodemailer = require('nodemailer');
-
-// ⚙️ إعدادات الإيميل (Nodemailer)
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER, 
-    pass: process.env.EMAIL_PASS  
-  }
-});
+const { sendComplaintEmail } = require('../utils/emailService');
 
 // 1. تقديم شكوى جديدة (خاص بالـ Owner)
 const submitComplaint = async (req, res) => {
@@ -72,44 +63,8 @@ const resolveComplaint = async (req, res) => {
     complaint.status = status || 'Resolved';
     await complaint.save();
 
-    // 📧 تجهيز محتوى الإيميل بناءً على قرار الأدمن
-    let emailSubject = 'تحديث بخصوص شكوتك - منصة النرجس';
-    let emailMessage = '';
-
-    if (status === 'Maintenance') {
-        emailSubject = '🚧 الشكوى قيد الصيانة - منصة النرجس';
-        emailMessage = 'نود إعلامك بأنه تم مراجعة شكوتك وتحويلها لقسم الصيانة، وجاري العمل على حل المشكلة في أسرع وقت.';
-    } else if (status === 'Dismissed') {
-        emailSubject = '❌ تم رفض الشكوى - منصة النرجس';
-        emailMessage = 'نود إعلامك بأنه تم مراجعة شكوتك وإغلاقها، إما لعدم استيفاء الشروط أو لأن المشكلة تقع خارج نطاق الإدارة.';
-    } else {
-        emailSubject = '✅ تم حل شكوتك - منصة النرجس';
-        emailMessage = 'نود إعلامك بأنه تم بنجاح حل الشكوى المقدمة من طرفكم.';
-    }
-
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: complaint.ownerId.email,
-      subject: emailSubject,
-      html: `
-        <div style="font-family: Arial, sans-serif; text-align: right; direction: rtl;">
-          <h3>أهلاً بك أستاذ ${complaint.ownerId.name}،</h3>
-          <p>${emailMessage}</p>
-          <p style="color: #555;"><strong>تفاصيل الشكوى المُقدمة:</strong> ${complaint.description || complaint.title}</p>
-          <p>شكراً لثقتكم بنا، ونتمنى لكم يوماً سعيداً!</p>
-          <hr>
-          <p style="color: gray; font-size: 12px;">إدارة منصة النرجس العقارية</p>
-        </div>
-      `
-    };
-
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error("Email Sending Error:", error);
-      } else {
-        console.log('Email sent: ' + info.response);
-      }
-    });
+    // 📧 إرسال إيميل بالقرار للمالك
+    await sendComplaintEmail(complaint.ownerId.email, complaint.ownerId.name, complaint.title, status);
 
     res.status(200).json({ msg: 'تم تحديث حالة الشكوى وإرسال بريد إلكتروني للمالك بنجاح.' });
   } catch (error) {

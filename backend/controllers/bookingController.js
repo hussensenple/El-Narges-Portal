@@ -2,14 +2,65 @@ const BookingRequest = require('../models/BookingRequest');
 const Unit = require('../models/Unit');
 const User = require('../models/User'); 
 const { updateArcGISStatus, checkAndUpdateBuildingCompleteness } = require('../services/arcgisService');
+const { sendBookingEmail } = require('../utils/emailService');
 
+exports.brokerReviewRequest = async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const { action, reason } = req.body; // 'raise' or 'decline'
+    
+    const request = await BookingRequest.findById(requestId).populate('userId', 'name email');
+    if (!request) return res.status(404).json({ msg: "الطلب غير موجود" });
+
+    const unitGlobalId = String(request.unitId).replace(/[{}]/g, '').trim();
+
+    if (action === 'raise') {
+      request.status = 'Reserved';
+      await request.save();
+      
+      // Update ArcGIS to Reserved (3)
+      await updateArcGISStatus(unitGlobalId, '3', '', '', '', request.sourceLayer);
+
+      let updatedUnit = await Unit.findOne({ 
+        $or: [
+          { globalId: { $regex: new RegExp(`^${unitGlobalId}$`, 'i') } },
+          { arcgisId: { $regex: new RegExp(`^${unitGlobalId}$`, 'i') } }
+        ]
+      });
+      if (updatedUnit) {
+          updatedUnit.status = '3';
+          await updatedUnit.save();
+      }
+      
+      const io = req.app.get('socketio');
+      if (io) io.emit('newBookingRequest');
+
+      return res.status(200).json({ msg: "تم رفع الطلب للإدارة بنجاح" });
+    } else if (action === 'decline') {
+      request.status = 'Declined';
+      await request.save();
+
+      await sendBookingEmail(request.userId.email, request.userId.name, 'Declined', request.objectId || request.unitId, reason);
+
+      const io = req.app.get('socketio');
+      if (io) io.emit('newBookingRequest');
+
+      return res.status(200).json({ msg: "تم رفض الطلب بنجاح وإبلاغ العميل" });
+    } else {
+      return res.status(400).json({ msg: "إجراء غير معروف" });
+    }
+  } catch (error) {
+    console.error("🚨 Error in brokerReviewRequest:", error);
+    return res.status(500).json({ error: error.message });
+  }
+};
 exports.approveRequest = async (req, res) => {
   try {
     console.log("=========================================");
     console.log("🟢 1. Starting Approval Process...");
     
     const { requestId } = req.params; 
-    const request = await BookingRequest.findById(requestId);
+    const request = await BookingRequest.findById(requestId).populate('userId', 'name email');
     if (!request) {
       return res.status(404).json({ msg: "الطلب غير موجود" });
     }
@@ -30,16 +81,22 @@ exports.approveRequest = async (req, res) => {
         arcgisId: unitGlobalId,
         unitName: request.sourceLayer === 'Villas_Global' ? 'فيلا' : 'شقة',
         status: '4',
+        ownerId: request.userId,
         ownerName: request.customerName,
         ownerEmail: request.customerGmail,
-        ownerPhone: request.customerPhone
+        ownerPhone: request.customerPhone,
+        sourceLayer: request.sourceLayer,
+        objectId: request.objectId
       });
       await updatedUnit.save();
     } else {
       updatedUnit.status = '4';
+      updatedUnit.ownerId = request.userId;
       updatedUnit.ownerName = request.customerName;
       updatedUnit.ownerEmail = request.customerGmail;
       updatedUnit.ownerPhone = request.customerPhone;
+      updatedUnit.sourceLayer = request.sourceLayer;
+      updatedUnit.objectId = request.objectId;
       await updatedUnit.save();
     }
     console.log("✅ Unit data updated in MongoDB!");
@@ -71,7 +128,7 @@ exports.approveRequest = async (req, res) => {
 
     // 5. ترقية العميل لـ Owner
     if (request.userId) {
-      const user = await User.findById(request.userId);
+      const user = await User.findById(request.userId._id);
       if (user) {
         if (user.role === 'user') {
           user.role = 'owner';
@@ -84,10 +141,56 @@ exports.approveRequest = async (req, res) => {
       }
     }
 
+    // 6. Send Approval Email
+    await sendBookingEmail(request.userId.email, request.userId.name, 'Approved', request.objectId || request.unitId);
+
+    // 7. Delete or Reject all other requests for this unit
+    await BookingRequest.deleteMany({
+      unitId: request.unitId,
+      _id: { $ne: request._id }
+    });
+    console.log("🟢 All other requests for this unit have been removed.");
+
     return res.status(200).json({ msg: "تمت الموافقة وتحديث الخريطة والداتا بيز بنجاح! 🎉" });
 
   } catch (error) {
     console.error("🚨 Error in approveRequest:", error);
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+exports.adminRejectRequest = async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const { reason } = req.body;
+    
+    const request = await BookingRequest.findById(requestId).populate('userId', 'name email');
+    if (!request) return res.status(404).json({ msg: "الطلب غير موجود" });
+
+    request.status = 'Rejected';
+    await request.save();
+
+    const unitGlobalId = String(request.unitId).replace(/[{}]/g, '').trim();
+    // Update ArcGIS back to Available (1)
+    await updateArcGISStatus(unitGlobalId, '1', '', '', '', request.sourceLayer);
+
+    let updatedUnit = await Unit.findOne({ 
+      $or: [
+        { globalId: { $regex: new RegExp(`^${unitGlobalId}$`, 'i') } },
+        { arcgisId: { $regex: new RegExp(`^${unitGlobalId}$`, 'i') } }
+      ]
+    });
+    if (updatedUnit) {
+        updatedUnit.status = '1';
+        await updatedUnit.save();
+    }
+
+    // Send Rejection Email
+    await sendBookingEmail(request.userId.email, request.userId.name, 'Rejected', request.objectId || request.unitId, reason);
+
+    return res.status(200).json({ msg: "تم رفض الطلب بنجاح وإبلاغ العميل" });
+  } catch (error) {
+    console.error("🚨 Error in adminRejectRequest:", error);
     return res.status(500).json({ error: error.message });
   }
 };

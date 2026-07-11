@@ -3,12 +3,12 @@ const router = express.Router();
 const BookingRequest = require('../models/BookingRequest'); 
 
 // 🚀 استيراد الكنترولر العبقري اللي تعبنا فيه وبيعمل كل حاجة صح
-const { approveRequest } = require('../controllers/bookingController');
+const { approveRequest, adminRejectRequest } = require('../controllers/bookingController');
 
 // 1. جلب الطلبات المعلقة للوحة الأدمن
 router.get('/pending', async (req, res) => {
   try {
-    const requests = await BookingRequest.find({ status: 'Pending' }).populate('userId', 'name phone');
+    const requests = await BookingRequest.find({ status: 'Reserved' }).populate('userId', 'name phone');
     res.json(requests);
   } catch (err) {
     res.status(500).json({ error: 'خطأ في جلب الطلبات' });
@@ -37,7 +37,10 @@ router.post('/approve/:requestId', async (req, res, next) => {
 }, approveRequest);
 
 
-// 3. مسح الطلب المرفوض
+// 3. مسح الطلب المرفوض (او رفضه من الادمن)
+router.post('/reject/:requestId', adminRejectRequest);
+
+// 4. مسح نهائي (لو لسه محتاجينها)
 router.delete('/request/:id', async (req, res) => {
   try {
     const { id } = req.params;

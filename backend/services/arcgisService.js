@@ -28,15 +28,15 @@ async function updateArcGISStatus(arcgisObjectId, newStatus, ownerName, ownerPho
       console.log(`🚨 الطبقة: ${cleanSourceLayer} | ID: ${numericId}`);
       console.log(`========================================\n`);
       
-      const featuresPayload = [{
-        attributes: {
-          OBJECTID: numericId,         
-          Status: statusCode,          
-          Owner_Name: ownerName,       
-          Owner_Phone: ownerPhone,     
-          Gmail: ownerGmail            
-        }
-      }];
+      const attributes = {
+        OBJECTID: numericId,         
+        Status: statusCode
+      };
+      if (ownerName) attributes.Owner_Name = ownerName;
+      if (ownerPhone) attributes.Owner_Phone = ownerPhone;
+      if (ownerGmail) attributes.Gmail = ownerGmail;
+
+      const featuresPayload = [{ attributes }];
 
       const formData = new URLSearchParams();
       formData.append('f', 'json');
@@ -50,6 +50,13 @@ async function updateArcGISStatus(arcgisObjectId, newStatus, ownerName, ownerPho
           console.error(`❌ ArcGIS Error (Units):`, JSON.stringify(response.data.error));
           return false;
       }
+      if (response.data.updateResults && response.data.updateResults.length > 0) {
+          const res = response.data.updateResults[0];
+          if (res.success === false) {
+              console.error(`❌ ArcGIS Update Failed (Units):`, JSON.stringify(res.error));
+              return false;
+          }
+      }
       console.log(`✅ ArcGIS Updated Successfully: Units`); 
       return true;
     } 
@@ -60,15 +67,15 @@ async function updateArcGISStatus(arcgisObjectId, newStatus, ownerName, ownerPho
       console.log(`========================================\n`);
       
       const isGuid = String(arcgisObjectId).includes('-');
-      const updatesPayload = [{
-        attributes: {
-          [isGuid ? "GlobalID" : "OBJECTID"]: isGuid ? String(arcgisObjectId) : Number(arcgisObjectId),
-          Status: statusCode,          
-          Owner_Name: ownerName,       
-          Owner_Phone: ownerPhone,     
-          Gmail: ownerGmail            
-        }
-      }];
+      const attributes = {
+        [isGuid ? "GlobalID" : "OBJECTID"]: isGuid ? String(arcgisObjectId) : Number(arcgisObjectId),
+        Status: statusCode
+      };
+      if (ownerName) attributes.Owner_Name = ownerName;
+      if (ownerPhone) attributes.Owner_Phone = ownerPhone;
+      if (ownerGmail) attributes.Gmail = ownerGmail;
+
+      const updatesPayload = [{ attributes }];
 
       const formData = new URLSearchParams();
       formData.append('f', 'json');
@@ -85,6 +92,13 @@ async function updateArcGISStatus(arcgisObjectId, newStatus, ownerName, ownerPho
       if (response.data.error) {
           console.error(`❌ ArcGIS Error (${cleanSourceLayer}):`, JSON.stringify(response.data.error));
           return false;
+      }
+      if (response.data.updateResults && response.data.updateResults.length > 0) {
+          const res = response.data.updateResults[0];
+          if (res.success === false) {
+              console.error(`❌ ArcGIS Update Failed (${cleanSourceLayer}):`, JSON.stringify(res.error));
+              return false;
+          }
       }
       console.log(`✅ ArcGIS Updated Successfully: ${cleanSourceLayer}`); 
       return true;

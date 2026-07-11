@@ -14,7 +14,10 @@ const AdminPortal = () => {
 
   const fetchRequests = async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin/pending`);
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin/pending`, {
+        headers: { 'x-auth-token': token }
+      });
       setRequests(res.data);
     } catch (error) {
       console.error("Error fetching requests:", error);
@@ -35,7 +38,10 @@ const AdminPortal = () => {
   const handleApprove = async (id: string) => {
     if (window.confirm("Are you sure you want to approve? The map will be updated immediately.")) {
       try {
-        await axios.post(`${import.meta.env.VITE_API_URL}/api/admin/approve/${id}`);
+        const token = localStorage.getItem('token');
+        await axios.post(`${import.meta.env.VITE_API_URL}/api/admin/approve/${id}`, {}, {
+          headers: { 'x-auth-token': token }
+        });
         alert("✅ Approved successfully!");
         fetchRequests(); 
       } catch (error) {
@@ -48,7 +54,10 @@ const AdminPortal = () => {
     const reason = window.prompt("Please enter the reason for rejection:");
     if (reason !== null) {
       try {
-        await axios.post(`${import.meta.env.VITE_API_URL}/api/admin/reject/${id}`, { reason });
+        const token = localStorage.getItem('token');
+        await axios.post(`${import.meta.env.VITE_API_URL}/api/admin/reject/${id}`, { reason }, {
+          headers: { 'x-auth-token': token }
+        });
         alert("❌ Request rejected successfully!");
         fetchRequests(); 
       } catch (error) {

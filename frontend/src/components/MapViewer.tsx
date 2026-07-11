@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState, useContext } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
 import axios from 'axios';
-import { AuthContext } from '../context/AuthContext';
 import WebScene from '@arcgis/core/WebScene';
 import SceneView from '@arcgis/core/views/SceneView';
 import LayerList from '@arcgis/core/widgets/LayerList'; 
@@ -25,7 +24,6 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
 
   const [viewInstance, setViewInstance] = useState<SceneView | null>(null);
   const [selectedBuildingId, setSelectedBuildingId] = useState<string | null>(null);
-  const auth = useContext(AuthContext);
 
   useEffect(() => {
     if (mapDiv.current) {

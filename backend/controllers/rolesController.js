@@ -3,7 +3,7 @@ const BrokerProfile = require('../models/BrokerProfile');
 const EngineerProfile = require('../models/EngineerProfile');
 const AdminProfile = require('../models/AdminProfile');
 const Unit = require('../models/Unit');
-const { updateArcGISStatus } = require('../services/arcgisService');
+const { updateArcGISStatus, checkAndUpdateBuildingCompleteness } = require('../services/arcgisService');
 
 // 1. Get users by role
 exports.getUsersByRole = async (req, res) => {
@@ -177,8 +177,22 @@ exports.removeProperty = async (req, res) => {
         await User.findByIdAndUpdate(userId, { role: 'user' });
       }
       // ✅ Sync ArcGIS using the correct sourceLayer from MongoDB (Units vs Villas_Global)
-      await updateArcGISStatus(correctArcgisId, '1', null, null, null, correctSourceLayer);
+      await updateArcGISStatus(correctArcgisId, '1', null, null, null, correctSourceLayer, unitToRemove?.objectId);
       console.log(`✅ ArcGIS reverted to Available for ${correctArcgisId} on layer ${correctSourceLayer}`);
+      
+      if (correctSourceLayer === 'Units') {
+        try {
+          const axios = require('axios');
+          const unitsLayerUrl = "https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WFL1/FeatureServer/37";
+          const unitRes = await axios.get(`${unitsLayerUrl}/query`, {
+            params: { where: `OBJECTID=${correctArcgisId}`, outFields: 'BuildingID_FK', f: 'json' }
+          });
+          const bldgFK = unitRes.data.features?.[0]?.attributes?.BuildingID_FK;
+          if (bldgFK) {
+            await checkAndUpdateBuildingCompleteness(bldgFK, correctArcgisId, 'Available');
+          }
+        } catch(err) { console.error('Failed to update building completeness on revert', err); }
+      }
     } else if (currentRole === 'broker') {
       // Unassign broker from unit
       await Unit.findOneAndUpdate({ arcgisId: unitId }, { brokerId: null });

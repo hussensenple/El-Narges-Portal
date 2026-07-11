@@ -116,9 +116,8 @@ exports.approveRequest = async (req, res) => {
       return res.status(500).json({ msg: "فشل التزامن مع الخريطة الحية." });
     }
 
-    // 3. التحقق من اكتمال العمارة (لو شقة)
     if (request.sourceLayer === 'Units' && request.buildingFK) {
-      checkAndUpdateBuildingCompleteness(request.buildingFK); 
+      checkAndUpdateBuildingCompleteness(request.buildingFK, unitGlobalId, 'Sold'); 
     }
 
     // 4. تحديث حالة الطلب لـ Approved

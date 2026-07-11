@@ -17,7 +17,8 @@ async function updateArcGISStatus(arcgisObjectId, newStatus, ownerName, ownerPho
     return false;
   }
 
-  let statusCode = (newStatus === 'Sold' || newStatus === '4') ? 4 : parseInt(newStatus);
+  // إرسال القيم كنصوص لأن الطبقة في AGOL ليس لها Domain وتتعامل كـ String
+  let statusCode = (newStatus === 'Sold' || newStatus === '4' || newStatus == 4) ? 'Sold' : 'Available';
 
   try {
     if (cleanSourceLayer === "Units") {
@@ -32,9 +33,9 @@ async function updateArcGISStatus(arcgisObjectId, newStatus, ownerName, ownerPho
         OBJECTID: numericId,         
         Status: statusCode
       };
-      if (ownerName) attributes.Owner_Name = ownerName;
-      if (ownerPhone) attributes.Owner_Phone = ownerPhone;
-      if (ownerGmail) attributes.Gmail = ownerGmail;
+      if (ownerName !== undefined) attributes.Owner_Name = ownerName === null ? "" : ownerName;
+      if (ownerPhone !== undefined) attributes.Owner_Phone = ownerPhone === null ? "" : ownerPhone;
+      if (ownerGmail !== undefined) attributes.Gmail = ownerGmail === null ? "" : ownerGmail;
 
       const featuresPayload = [{ attributes }];
 
@@ -71,9 +72,9 @@ async function updateArcGISStatus(arcgisObjectId, newStatus, ownerName, ownerPho
         [isGuid ? "GlobalID" : "OBJECTID"]: isGuid ? String(arcgisObjectId) : Number(arcgisObjectId),
         Status: statusCode
       };
-      if (ownerName) attributes.Owner_Name = ownerName;
-      if (ownerPhone) attributes.Owner_Phone = ownerPhone;
-      if (ownerGmail) attributes.Gmail = ownerGmail;
+      if (ownerName !== undefined) attributes.Owner_Name = ownerName === null ? "" : ownerName;
+      if (ownerPhone !== undefined) attributes.Owner_Phone = ownerPhone === null ? "" : ownerPhone;
+      if (ownerGmail !== undefined) attributes.Owner_Gmail = ownerGmail === null ? "" : ownerGmail;
 
       const updatesPayload = [{ attributes }];
 
@@ -110,7 +111,70 @@ async function updateArcGISStatus(arcgisObjectId, newStatus, ownerName, ownerPho
   }
 }
 
-async function checkAndUpdateBuildingCompleteness(buildingFK) {
+async function updateArcGISPrice(arcgisObjectId, newPrice, sourceLayer) {
+  const layerUrls = {
+    "Units": "https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WFL1/FeatureServer/37",
+    "Buildings_Global": "https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WFL1/FeatureServer/1",
+    "Villas_Global": "https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WSL3/FeatureServer/8" 
+  };
+
+  const cleanSourceLayer = String(sourceLayer).trim();
+  const featureLayerUrl = layerUrls[cleanSourceLayer];
+  
+  if (!featureLayerUrl) {
+    console.error(`❌ الطبقة غير معروفة: '${cleanSourceLayer}'`);
+    return false;
+  }
+
+  try {
+    if (cleanSourceLayer === "Units") {
+      const numericId = Number(arcgisObjectId);
+      const attributes = {
+        OBJECTID: numericId,         
+        Price: Number(newPrice)
+      };
+
+      const featuresPayload = [{ attributes }];
+
+      const formData = new URLSearchParams();
+      formData.append('f', 'json');
+      formData.append('features', JSON.stringify(featuresPayload));
+
+      const response = await axios.post(`${featureLayerUrl}/updateFeatures`, formData.toString(), {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      });
+
+      if (response.data.error) return false;
+      return true;
+    } else {
+      const isGuid = String(arcgisObjectId).includes('-');
+      const attributes = {
+        [isGuid ? "GlobalID" : "OBJECTID"]: isGuid ? String(arcgisObjectId) : Number(arcgisObjectId),
+        Price: Number(newPrice)
+      };
+
+      const updatesPayload = [{ attributes }];
+
+      const formData = new URLSearchParams();
+      formData.append('f', 'json');
+      formData.append('updates', JSON.stringify(updatesPayload));
+      
+      if (isGuid) formData.append('useGlobalIds', 'true');
+
+      const response = await axios.post(`${featureLayerUrl}/applyEdits`, formData.toString(), {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      });
+
+      if (response.data.error) return false;
+      return true;
+    }
+  } catch (error) {
+    console.error("❌ Request Crashed:", error.message);
+    return false;
+  }
+}
+
+async function checkAndUpdateBuildingCompleteness(buildingFK, changedUnitId = null, changedUnitNewStatus = null) {
   if (!buildingFK) return;
 
   const unitsLayerUrl = "https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WFL1/FeatureServer/37";
@@ -120,7 +184,7 @@ async function checkAndUpdateBuildingCompleteness(buildingFK) {
     const unitsRes = await axios.get(`${unitsLayerUrl}/query`, {
       params: {
         where: `BuildingID_FK = '${buildingFK}'`,
-        outFields: 'Status',
+        outFields: 'OBJECTID,Status',
         f: 'json'
       }
     });
@@ -128,21 +192,41 @@ async function checkAndUpdateBuildingCompleteness(buildingFK) {
     const units = unitsRes.data.features;
     if (!units || units.length === 0) return;
 
+    // Apply the override for the recently changed unit to bypass ArcGIS index delay
+    if (changedUnitId !== null && changedUnitNewStatus !== null) {
+      const targetUnit = units.find(u => Number(u.attributes.OBJECTID) === Number(changedUnitId));
+      if (targetUnit) {
+        targetUnit.attributes.Status = changedUnitNewStatus;
+      }
+    }
+
     const allSold = units.every(u => u.attributes.Status === 'Sold' || u.attributes.Status === '4' || u.attributes.Status === 4 || u.attributes.Status === 3);
 
-    if (allSold) {
-      const bldgRes = await axios.get(`${buildingsLayerUrl}/query`, {
-        params: {
-          where: `GlobalID = '${buildingFK}'`,
-          outFields: 'OBJECTID',
-          f: 'json'
-        }
-      });
+    const bldgRes = await axios.get(`${buildingsLayerUrl}/query`, {
+      params: {
+        where: `GlobalID = '${buildingFK}'`,
+        outFields: 'OBJECTID,Status',
+        f: 'json'
+      }
+    });
 
-      const bldgFeatures = bldgRes.data.features;
-      if (bldgFeatures && bldgFeatures.length > 0) {
-        const bldgObjectId = bldgFeatures[0].attributes.OBJECTID;
+    const bldgFeatures = bldgRes.data.features;
+    if (bldgFeatures && bldgFeatures.length > 0) {
+      const bldgObjectId = bldgFeatures[0].attributes.OBJECTID;
+      const bldgStatus = bldgFeatures[0].attributes.Status;
+      
+      console.log(`[checkAndUpdateBuildingCompleteness] Building ${bldgObjectId} | allSold=${allSold} | current bldgStatus=${bldgStatus}`);
+
+      if (allSold) {
         await updateArcGISStatus(bldgObjectId, 'Sold', 'Multiple Owners', 'N/A', 'N/A', 'Buildings_Global');
+      } else {
+        // Revert to Available if it was Sold
+        if (bldgStatus === 'Sold' || bldgStatus === '4' || bldgStatus == 4 || bldgStatus === '3' || bldgStatus == 3) {
+          console.log(`[checkAndUpdateBuildingCompleteness] Reverting building ${bldgObjectId} to Available...`);
+          await updateArcGISStatus(bldgObjectId, 'Available', null, null, null, 'Buildings_Global');
+        } else {
+          console.log(`[checkAndUpdateBuildingCompleteness] Building is already not sold (${bldgStatus}), skipping revert.`);
+        }
       }
     }
   } catch (err) {
@@ -152,5 +236,6 @@ async function checkAndUpdateBuildingCompleteness(buildingFK) {
 
 module.exports = {
   updateArcGISStatus,
-  checkAndUpdateBuildingCompleteness
+  checkAndUpdateBuildingCompleteness,
+  updateArcGISPrice
 };

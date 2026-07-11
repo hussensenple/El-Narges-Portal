@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 import AdminComplaintsTab from '../components/AdminComplaintsTab'; // 👈 استيراد التابة الجديدة
+import PropertyManagementTab from '../components/admin/PropertyManagementTab';
 
 import RolesWidget from '../components/admin/RolesWidget';
 
 const AdminPortal = () => {
 // حالة التابات بعد دمج الشكاوى (شغلك) والصلاحيات (شغل صاحبك)
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'requests' | 'complaints' | 'roles'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'requests' | 'complaints' | 'roles' | 'properties'>('dashboard');
   const [complaintsCount, setComplaintsCount] = useState(0);
   const [requests, setRequests] = useState([]);
 
@@ -105,6 +106,16 @@ const AdminPortal = () => {
         >
           👥 Roles Management
         </button>
+        
+        <button 
+          onClick={() => setActiveTab('properties')}
+          style={{
+            backgroundColor: activeTab === 'properties' ? '#1f6feb' : 'transparent',
+            color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s'
+          }}
+        >
+          🏢 Property Management
+        </button>
       </div>
 
       {/* 🖥️ منطقة عرض المحتوى (Content Area) */}
@@ -165,6 +176,11 @@ const AdminPortal = () => {
         {/* التابة الثالثة: إدارة الأدوار */}
         <div style={{ display: activeTab === 'roles' ? 'block' : 'none', height: '100%' }}>
           <RolesWidget />
+        </div>
+
+        {/* التابة الرابعة: إدارة العقارات */}
+        <div style={{ display: activeTab === 'properties' ? 'block' : 'none', height: '100%' }}>
+          <PropertyManagementTab />
         </div>
 
       </div>

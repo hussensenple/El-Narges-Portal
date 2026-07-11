@@ -105,3 +105,25 @@ This document records the step-by-step progress and updates made during the impl
   * Manually patched corrupted unit records for an owner where `ownerId` was null despite being in the user's `ownedUnits` array.
   * Corrected missing `sourceLayer` on a purchased Villa to ensure proper rendering across the Admin Portal.
 
+---
+
+## 🛠️ Step 8: Frontend Polishing & Real-time Sync Fixes (Completed)
+**Date:** July 11, 2026
+
+* **Map Widgets Optimization & UI Improvements:**
+  * Re-organized widget placement on the map (Login top-right, MyUnits below it, Weather at top-left, Fullscreen at bottom-right) and adjusted sizes.
+  * Added a close (X) button to the `BuildingSidebar` and adjusted its height to prevent overlapping with other widgets.
+  * Greatly optimized `BuildingSidebar` loading speed by querying only the 5 units of the clicked building directly from ArcGIS, instead of downloading the entire catalog.
+  * Added "🔖 Book Now" buttons inside the `BuildingSidebar` exclusively for available apartments.
+* **3D Map Zoom functionality Fixed:**
+  * Fixed `UnitCatalog.tsx` "Zoom to" button which was broken for SceneLayers. Migrated from `queryFeatures` to `queryExtent` combined with `highlight` by object IDs to accurately zoom and highlight Villas and Buildings.
+  * Fixed the Reset button in `UnitCatalog.tsx` to properly clear default ArcGIS popup selections using `view.popup.close()`.
+* **ArcGIS Bidirectional Sync & Cache Bypass:**
+  * Upgraded `checkAndUpdateBuildingCompleteness` in `arcgisService.js` to not only mark buildings as "Sold", but also revert them to "Available" if a unit's sale is cancelled.
+  * Fixed a race condition/indexing delay in AGOL: Forced the local node script to forcefully override the recently changed unit's status in memory before evaluating `allSold`, ensuring the backend does not rely on stale AGOL cached responses.
+* **Premium Popups & Dynamic Actions:**
+  * Completely redesigned the `Villas_Global` Popup Template into a stunning, premium dark-mode card with dynamic status colors, gradients, and a prominent "View Full Design" button.
+  * Added a dynamic "🔖 Book Now" popup action button for Villas that only appears if the Villa is Available. 
+  * Wrote custom CSS in `index.css` to style the native ArcGIS popup action buttons to look like modern gradient UI elements.
+  * Fixed an authentication bug during Villa booking caused by a stale closure by reading user session directly from `localStorage`.
+  * Fixed a bug where popup actions (like the "Book Now" button) persisted when clicking on Buildings by explicitly resetting `view.popup.actions` for non-villa layers.

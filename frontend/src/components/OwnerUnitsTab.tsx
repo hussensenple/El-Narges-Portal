@@ -126,7 +126,7 @@ const OwnerUnitsTab = ({ onClose, view }: OwnerUnitsTabProps) => {
                 </thead>
                 <tbody>
                   {units.map((unit, index) => {
-                    const displayType = unit.sourceLayer === 'Villas_Global' ? 'Villa' : (unit.sourceLayer === 'Units' ? 'Apartment' : 'Building');
+                    const displayType = unit.sourceLayer === 'Villas_Global' ? 'Villa' : 'Apartment';
                     const displayId = unit.objectId || unit.globalId || unit.arcgisId || 'N/A';
                     
                     return (

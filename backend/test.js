@@ -1,3 +1,7 @@
-const axios = require('axios');
-const w = "Status = '1' OR Status = 'Available'";
-axios.get('https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WFL1/FeatureServer/37/query', { params: { where: w, outFields: 'OBJECTID,Status', f: 'json' } }).then(r=>console.log(r.data.error || r.data.features?.length)).catch(console.error);
+const mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost:27017/elnarges').then(() => {
+  return mongoose.connection.db.collection('units').find({ownerId: {$ne: null}}).toArray();
+}).then(res => {
+  console.log(JSON.stringify(res, null, 2));
+  process.exit(0);
+});

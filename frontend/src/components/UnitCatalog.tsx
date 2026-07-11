@@ -13,7 +13,7 @@ interface UnitCatalogProps {
 
 const UnitCatalog = ({ view, onClose }: UnitCatalogProps) => {
   const [units, setUnits] = useState<Graphic[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   
   const auth = useContext(AuthContext);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -31,10 +31,8 @@ const UnitCatalog = ({ view, onClose }: UnitCatalogProps) => {
   const dragInfo = useRef({ startX: 0, startY: 0, startPosX: 0, startPosY: 0 });
 
   useEffect(() => {
-    if (view && view.map) {
-      loadUnitsData();
-    }
-  }, [view]);
+    loadUnitsData();
+  }, []);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -96,13 +94,28 @@ const UnitCatalog = ({ view, onClose }: UnitCatalogProps) => {
     if (!view || !view.map) return;
 
     // 1. لو كارت فيلا أو توين هاوس (ليها Geometry مباشر)
-    if (unit.attributes.SourceName === 'Villas_Global' && unit.geometry) {
-      view.goTo({ target: unit.geometry, tilt: 45, zoom: 19 }, { animate: true, duration: 2000 });
-      const layer = unit.layer as any;
-      if (layer) {
-        const layerView = await view.whenLayerView(layer) as any;
-        if (highlightHandleRef.current) highlightHandleRef.current.remove();
-        highlightHandleRef.current = layerView.highlight(unit);
+    if (unit.attributes.SourceName === 'Villas_Global') {
+      const villaLayer = view.map.layers.find((l: any) => l.title === "Villas_Global" || l.title === "Villas") as any;
+      if (villaLayer) {
+        const query = villaLayer.createQuery();
+        query.where = `GlobalID = '${unit.attributes.GlobalID || unit.attributes.globalid}' OR OBJECTID = ${unit.attributes.OBJECTID}`;
+        query.returnGeometry = true;
+        query.outFields = ["*"];
+        try {
+          const extentRes = await villaLayer.queryExtent(query);
+          if (extentRes && extentRes.extent) {
+            view.goTo({ target: extentRes.extent, tilt: 45, zoom: 19 }, { animate: true, duration: 2000 });
+          }
+          
+          const objectIds = await villaLayer.queryObjectIds(query);
+          if (objectIds && objectIds.length > 0) {
+            const layerView = await view.whenLayerView(villaLayer) as any;
+            if (highlightHandleRef.current) highlightHandleRef.current.remove();
+            highlightHandleRef.current = layerView.highlight(objectIds);
+          }
+        } catch (err) {
+          console.error("Error zooming to Villa:", err);
+        }
       }
     } 
     
@@ -121,17 +134,16 @@ const UnitCatalog = ({ view, onClose }: UnitCatalogProps) => {
           query.outFields = ["*"];
           
           try {
-            const results = await buildingLayer.queryFeatures(query);
-            if (results.features.length > 0) {
-              const buildingGraphic = results.features[0];
-              
-              // زووم على العمارة
-              view.goTo({ target: buildingGraphic.geometry, tilt: 60, zoom: 20 }, { animate: true, duration: 1500 });
-              
-              // تنوير العمارة (Highlight)
+            const extentRes = await buildingLayer.queryExtent(query);
+            if (extentRes && extentRes.extent) {
+              view.goTo({ target: extentRes.extent, tilt: 60, zoom: 20 }, { animate: true, duration: 1500 });
+            }
+            
+            const objectIds = await buildingLayer.queryObjectIds(query);
+            if (objectIds && objectIds.length > 0) {
               const layerView = await view.whenLayerView(buildingLayer) as any;
               if (highlightHandleRef.current) highlightHandleRef.current.remove();
-              highlightHandleRef.current = layerView.highlight(buildingGraphic);
+              highlightHandleRef.current = layerView.highlight(objectIds);
             }
           } catch (err) {
             console.error("Error highlighting 3D building:", err);
@@ -212,9 +224,9 @@ const UnitCatalog = ({ view, onClose }: UnitCatalogProps) => {
 
     // 3. 🚀 مسح الـ Selection الافتراضي للـ Popup بطريقة صحيحة
     if (view && view.popup) {
-      view.popup.visible = false; // إخفاء النافذة
-      view.popup.clear(); // 🚀 الطريقة الصحيحة لمسح الـ selection من الخريطة تماماً
-      view.popup.features = []; // تفريغ مصفوفة الـ features المحددة
+      view.popup.close(); // 🚀 إغلاق النافذة يمسح التحديد الأساسي (اللون السماوي)
+      view.popup.clear();
+      view.popup.features = [];
     }
 
     // 4. إرجاع الكاميرا للوضع الافتراضي

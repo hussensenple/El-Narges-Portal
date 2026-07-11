@@ -115,55 +115,63 @@ const CustomerInterface = () => {
         />
       </div>
 
-      <div style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 1000, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      {/* Fullscreen - glued to bottom-right above Esri bar */}
+      <button 
+        title="Fullscreen" 
+        onClick={handleFullscreen} 
+        className="map-icon-btn inactive"
+        style={{ position: 'absolute', bottom: '26px', right: '0px', zIndex: 1000, width: '28px', height: '28px', padding: '4px', borderRadius: '4px 0 0 4px' }}
+      >
+        <Icons.Fullscreen />
+      </button>
+
+      {/* My Units under Login */}
+      {auth?.user?.role === 'owner' && (
+        <button 
+          title="My Units" 
+          onClick={() => setIsOwnerUnitsOpen(!isOwnerUnitsOpen)} 
+          className={`map-icon-btn ${isOwnerUnitsOpen ? 'active' : 'inactive'}`}
+          style={{ position: 'absolute', top: '75px', right: '20px', zIndex: 1000 }}
+        >
+          <Icons.Home />
+        </button>
+      )}
+
+      <div style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 1000, display: 'flex', flexDirection: 'row', gap: '10px', alignItems: 'center' }}>
         
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {auth?.user && (
-            <span style={{ fontSize: '13px', color: '#fff', backgroundColor: 'rgba(22,27,34,0.85)', padding: '12px 16px', borderRadius: '10px', border: '1px solid #30363d', fontFamily: 'sans-serif', backdropFilter: 'blur(10px)' }}>
-              Welcome, <strong style={{ color: '#4493f8' }}>{auth.user.name}</strong>
-            </span>
-          )}
+        {/* Last one on the left (user's "أخر واحد") */}
+        {auth?.user && (
+          <span style={{ fontSize: '13px', color: '#fff', backgroundColor: 'rgba(22,27,34,0.85)', padding: '12px 16px', borderRadius: '10px', border: '1px solid #30363d', fontFamily: 'sans-serif', backdropFilter: 'blur(10px)' }}>
+            Welcome, <strong style={{ color: '#4493f8' }}>{auth.user.name}</strong>
+          </span>
+        )}
 
-          {auth?.user?.role === 'owner' && (
-            <button 
-              title="My Units" 
-              onClick={() => setIsOwnerUnitsOpen(!isOwnerUnitsOpen)} 
-              className={`map-icon-btn ${isOwnerUnitsOpen ? 'active' : 'inactive'}`}
-            >
-              <Icons.Home />
-            </button>
-          )}
-
-          {auth?.user ? (
-            <button title="Logout" onClick={() => auth.logout?.()} className="map-icon-btn inactive">
-              <Icons.Logout />
-            </button>
-          ) : (
-            <button title="Login" onClick={() => setShowLoginModal(true)} className={`map-icon-btn ${showLoginModal ? 'active' : 'inactive'}`}>
-              <Icons.Login />
-            </button>
-          )}
-          
-          <button title="Fullscreen" onClick={handleFullscreen} className="map-icon-btn inactive">
-            <Icons.Fullscreen />
-          </button>
-        </div>
-
-        {/* Customer / Owner Tools */}
+        {/* Customer / Owner Tools (Weather, Layers, Basemap) */}
         {isAuthenticated && auth?.user?.role !== 'broker' && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'flex-end' }}>
-            <button title="Basemap Gallery" onClick={() => { setIsBasemapOpen(!isBasemapOpen); setIsLayersOpen(false); setIsWeatherOpen(false); }} className={`map-icon-btn ${isBasemapOpen ? 'active' : 'inactive'}`}>
-              <Icons.Basemap />
-            </button>
-            <button title="Layers" onClick={() => { setIsLayersOpen(!isLayersOpen); setIsBasemapOpen(false); setIsWeatherOpen(false); }} className={`map-icon-btn ${isLayersOpen ? 'active' : 'inactive'}`}>
-              <Icons.Layers />
-            </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             {is3DView && (
               <button title="Weather" onClick={() => { setIsWeatherOpen(!isWeatherOpen); setIsLayersOpen(false); setIsBasemapOpen(false); }} className={`map-icon-btn ${isWeatherOpen ? 'active' : 'inactive'}`}>
                 <Icons.Weather />
               </button>
             )}
+            <button title="Layers" onClick={() => { setIsLayersOpen(!isLayersOpen); setIsBasemapOpen(false); setIsWeatherOpen(false); }} className={`map-icon-btn ${isLayersOpen ? 'active' : 'inactive'}`}>
+              <Icons.Layers />
+            </button>
+            <button title="Basemap Gallery" onClick={() => { setIsBasemapOpen(!isBasemapOpen); setIsLayersOpen(false); setIsWeatherOpen(false); }} className={`map-icon-btn ${isBasemapOpen ? 'active' : 'inactive'}`}>
+              <Icons.Basemap />
+            </button>
           </div>
+        )}
+
+        {/* First one on the right (user's "أول واحدة على اليمين") */}
+        {auth?.user ? (
+          <button title="Logout" onClick={() => auth.logout?.()} className="map-icon-btn inactive">
+            <Icons.Logout />
+          </button>
+        ) : (
+          <button title="Login" onClick={() => setShowLoginModal(true)} className={`map-icon-btn ${showLoginModal ? 'active' : 'inactive'}`}>
+            <Icons.Login />
+          </button>
         )}
       </div>
 

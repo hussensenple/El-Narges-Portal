@@ -1,4 +1,4 @@
-import { useState, useContext, useCallback, useEffect } from 'react';
+import { useState, useContext, useCallback, useEffect, type ReactNode } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import SceneView from '@arcgis/core/views/SceneView';
 import MapViewer from './components/MapViewer';
@@ -266,7 +266,7 @@ const CustomerInterface = () => {
   );
 };
 
-const ProtectedRoute = ({ children, allowedRoles }: { children: JSX.Element, allowedRoles: string[] }) => {
+const ProtectedRoute = ({ children, allowedRoles }: { children: ReactNode, allowedRoles: string[] }) => {
   const auth = useContext(AuthContext);
   
   if (!auth?.user) {

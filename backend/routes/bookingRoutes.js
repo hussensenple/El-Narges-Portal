@@ -99,7 +99,7 @@ router.get('/broker-pending', auth, async (req, res) => {
     const unitIds = brokerUnits.map(u => u.arcgisId);
 
     // Find pending requests for these units
-    const requests = await BookingRequest.find({ unitId: { $in: unitIds }, status: 'Pending' }).populate('userId', 'name phone');
+    const requests = await BookingRequest.find({ unitId: { $in: unitIds }, status: { $in: ['Pending', 'Reserved'] } }).populate('userId', 'name phone');
     res.json(requests);
   } catch (error) {
     res.status(500).json({ error: 'Error fetching broker requests' });

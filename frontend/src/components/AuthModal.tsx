@@ -1,7 +1,6 @@
 import { useState, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
 
 interface AuthModalProps {
   isOpen?: boolean;
@@ -11,7 +10,6 @@ interface AuthModalProps {
 
 const AuthModal = ({ onClose, onSuccess }: AuthModalProps) => {
   const auth = useContext(AuthContext);
-  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true); 
   
   const [name, setName] = useState('');
@@ -67,18 +65,11 @@ const AuthModal = ({ onClose, onSuccess }: AuthModalProps) => {
         auth.login(res.data.user, res.data.token);
       }
 
-      if (res.data.user.role === 'admin') {
-        navigate('/admin');
-      } else if (res.data.user.role === 'broker') {
-        navigate('/broker');
+      if (onSuccess) {
+        onSuccess();
       } else {
-        if (onSuccess) {
-          onSuccess();
-        } else {
-          onClose();
-        }
+        onClose();
       }
-      
     } catch (err: any) {
       setError(err.response?.data?.msg || "Connection error occurred.");
     } finally {

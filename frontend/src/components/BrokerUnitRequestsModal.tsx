@@ -56,7 +56,9 @@ const BrokerUnitRequestsModal = ({ unit, requests, onClose, onRefresh }: BrokerU
         {/* Header */}
         <div style={{ padding: '20px', borderBottom: '1px solid #30363d', backgroundColor: '#0d1117', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h3 style={{ margin: 0, color: '#58a6ff' }}>Requests for {unit.unitName || 'Unit'} #{unit.objectId || unit.OBJECTID}</h3>
+            <h3 style={{ margin: 0, color: '#58a6ff' }}>
+              Requests for {unit.unitName?.includes('شقة') ? 'Apartment' : unit.unitName?.includes('فيلا') ? 'Villa' : unit.unitName || 'Unit'} #{unit.objectId || unit.OBJECTID}
+            </h3>
             <p style={{ margin: '4px 0 0', color: '#8b949e', fontSize: '13px' }}>
               Handle incoming interests. FIFO (Oldest first) priority is recommended.
             </p>
@@ -70,38 +72,50 @@ const BrokerUnitRequestsModal = ({ unit, requests, onClose, onRefresh }: BrokerU
             <div style={{ textAlign: 'center', color: '#8b949e', padding: '40px 0' }}>No pending requests for this unit.</div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-              {requests.map((req, index) => (
-                <div key={req._id} style={{ backgroundColor: '#0d1117', border: '1px solid #30363d', borderRadius: '8px', padding: '16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                    <h4 style={{ margin: 0, color: '#e6edf3' }}>{req.customerName}</h4>
-                    <span style={{ fontSize: '12px', color: '#8b949e' }}>
-                      {new Date(req.createdAt).toLocaleString()}
-                    </span>
-                  </div>
-                  
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '15px', fontSize: '13px', color: '#c9d1d9' }}>
-                    <div>📞 {req.customerPhone}</div>
-                    <div>✉️ {req.customerGmail}</div>
-                  </div>
+              {(() => {
+                const isAnyReserved = requests.some(r => r.status === 'Reserved');
+                return requests.map((req) => (
+                  <div key={req._id} style={{ backgroundColor: '#0d1117', border: `1px solid ${req.status === 'Reserved' ? '#d29922' : '#30363d'}`, borderRadius: '8px', padding: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                      <h4 style={{ margin: 0, color: '#e6edf3' }}>{req.customerName}</h4>
+                      <span style={{ fontSize: '12px', color: '#8b949e' }}>
+                        {new Date(req.createdAt).toLocaleString()}
+                      </span>
+                    </div>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '15px', fontSize: '13px', color: '#c9d1d9' }}>
+                      <div>📞 {req.customerPhone}</div>
+                      <div>✉️ {req.customerGmail}</div>
+                    </div>
 
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <button
-                      onClick={() => handleAction(req._id, 'raise')}
-                      disabled={processingId === req._id}
-                      style={{ flex: 1, backgroundColor: '#238636', color: '#fff', border: 'none', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
-                    >
-                      {processingId === req._id ? 'Processing...' : '⬆️ Raise to Admin (Reserve)'}
-                    </button>
-                    <button
-                      onClick={() => handleAction(req._id, 'decline')}
-                      disabled={processingId === req._id}
-                      style={{ flex: 1, backgroundColor: 'transparent', border: '1px solid #f85149', color: '#f85149', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
-                    >
-                      {processingId === req._id ? 'Processing...' : '✖ Decline'}
-                    </button>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      {req.status === 'Reserved' ? (
+                        <div style={{ flex: 1, backgroundColor: '#d2992222', color: '#d29922', padding: '8px', borderRadius: '6px', textAlign: 'center', fontWeight: 'bold', border: '1px solid #d29922' }}>
+                          ⏳ Under Admin Review
+                        </div>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => handleAction(req._id, 'raise')}
+                            disabled={processingId === req._id || isAnyReserved}
+                            style={{ flex: 1, backgroundColor: isAnyReserved ? '#444c56' : '#238636', color: isAnyReserved ? '#8b949e' : '#fff', border: 'none', padding: '8px', borderRadius: '6px', cursor: isAnyReserved ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}
+                            title={isAnyReserved ? "Another request is currently under review." : ""}
+                          >
+                            {processingId === req._id ? 'Processing...' : '⬆️ Raise to Admin'}
+                          </button>
+                          <button
+                            onClick={() => handleAction(req._id, 'decline')}
+                            disabled={processingId === req._id}
+                            style={{ flex: 1, backgroundColor: 'transparent', border: '1px solid #f85149', color: '#f85149', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                          >
+                            {processingId === req._id ? 'Processing...' : '✖ Decline'}
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ));
+              })()}
             </div>
           )}
         </div>

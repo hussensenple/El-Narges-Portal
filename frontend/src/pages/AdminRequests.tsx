@@ -1,14 +1,12 @@
-import { useEffect, useState, useContext } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 import AdminComplaintsTab from '../components/AdminComplaintsTab'; // 👈 استيراد التابة الجديدة
 import PropertyManagementTab from '../components/admin/PropertyManagementTab';
-import { AuthContext } from '../context/AuthContext';
 
 import RolesWidget from '../components/admin/RolesWidget';
 
 const AdminPortal = () => {
-  const auth = useContext(AuthContext);
 // حالة التابات بعد دمج الشكاوى (شغلك) والصلاحيات (شغل صاحبك)
   const [activeTab, setActiveTab] = useState<'dashboard' | 'requests' | 'complaints' | 'roles' | 'properties'>('dashboard');
   const [complaintsCount, setComplaintsCount] = useState(0);
@@ -128,13 +126,6 @@ const AdminPortal = () => {
           🏢 Property Management
         </button>
 
-        <div style={{ flex: 1 }}></div>
-        <button 
-          onClick={() => auth?.logout?.()}
-          style={{ backgroundColor: '#da3633', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s' }}
-        >
-          🚪 Logout
-        </button>
       </div>
 
       {/* 🖥️ منطقة عرض المحتوى (Content Area) */}

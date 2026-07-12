@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useState, type ReactNode } from 'react';
 
 // تعريف شكل بيانات المستخدم
 interface User {
@@ -20,23 +20,19 @@ interface AuthContextType {
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-
-  // أول ما الموقع يفتح، بندور في ذاكرة المتصفح (localStorage) لو العميل كان مسجل قبل كده
-  useEffect(() => {
-    const storedToken = localStorage.getItem('token');
+  const [user, setUser] = useState<User | null>(() => {
     const storedUser = localStorage.getItem('user');
-    
-    if (storedToken && storedUser) {
+    if (storedUser) {
       try {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error("Error parsing user data from localStorage", error);
+        return JSON.parse(storedUser);
+      } catch (e) {
+        return null;
       }
     }
-  }, []);
+    return null;
+  });
+  
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
 
   // دالة تسجيل الدخول (بتحفظ البيانات في المتصفح عشان متضيعش مع الريفريش)
   const login = (userData: User, authToken: string) => {

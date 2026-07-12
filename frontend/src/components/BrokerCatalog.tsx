@@ -61,25 +61,46 @@ const BrokerCatalog = ({ view, onClose }: BrokerCatalogProps) => {
     e.stopPropagation();
     if (!view) return;
     try {
-      const layerTitle = unit.sourceLayer === 'Villas_Global' ? 'Villas_Global' : 'Units';
-      const layer = view.map.layers.find((l: any) => l.title === layerTitle);
-      
-      if (!layer) {
-        alert("Map layer not fully loaded yet.");
-        return;
-      }
+      if (unit.sourceLayer === 'Units' || unit.unitName !== 'فيلا') {
+        const unitsLayer = view.map.layers.find((l: any) => l.title === 'Units');
+        if (!unitsLayer) {
+          alert("Units layer not found.");
+          return;
+        }
+        const q = unitsLayer.createQuery();
+        q.where = `OBJECTID = ${unit.objectId || unit.arcgisId}`;
+        q.outFields = ['BuildingID_FK'];
+        const res = await unitsLayer.queryFeatures(q);
+        const bldgFK = res.features?.[0]?.attributes?.BuildingID_FK;
 
-      const query = layer.createQuery();
-      query.where = `OBJECTID = ${unit.objectId || unit.arcgisId}`;
-      const extentRes = await layer.queryExtent(query);
-      if (extentRes && extentRes.extent) {
-        view.goTo({ target: extentRes.extent, tilt: 60, zoom: 20 }, { animate: true, duration: 1500 });
-        onClose();
+        if (bldgFK) {
+          const bldgLayer = view.map.layers.find((l: any) => l.title === 'Buildings_Global' || l.title === 'Buildings');
+          if (bldgLayer) {
+            const bldgQ = bldgLayer.createQuery();
+            bldgQ.where = `GlobalID = '${bldgFK}' OR globalid = '${bldgFK}'`;
+            const extentRes = await bldgLayer.queryExtent(bldgQ);
+            if (extentRes && extentRes.extent) {
+              view.goTo({ target: extentRes.extent, tilt: 60, zoom: 20 }, { animate: true, duration: 1500 });
+              onClose();
+              return;
+            }
+          }
+        }
+        alert("Could not locate the parent building for this apartment.");
       } else {
-        // Fallback for buildings
-        const bldgLayer = view.map.layers.find((l: any) => l.title === 'Buildings');
-        if (bldgLayer) {
-           alert("Precise zoom for this apartment requires the building. Please locate manually.");
+        const layer = view.map.layers.find((l: any) => l.title === 'Villas_Global');
+        if (!layer) {
+          alert("Villas layer not found.");
+          return;
+        }
+        const query = layer.createQuery();
+        query.where = `OBJECTID = ${unit.objectId || unit.arcgisId}`;
+        const extentRes = await layer.queryExtent(query);
+        if (extentRes && extentRes.extent) {
+          view.goTo({ target: extentRes.extent, tilt: 60, zoom: 20 }, { animate: true, duration: 1500 });
+          onClose();
+        } else {
+          alert("Could not locate this villa.");
         }
       }
     } catch(err) {
@@ -95,6 +116,68 @@ const BrokerCatalog = ({ view, onClose }: BrokerCatalogProps) => {
     if (v === '4' || v === 'sold') return { label: 'Sold', color: '#f85149' };
     return { label: 'Other', color: '#8b949e' };
   };
+
+  const renderUnitCard = (unit: any, type: 'Apartment' | 'Villa') => {
+    const unitRequests = getRequestsForUnit(unit.arcgisId);
+    const s = statusLabel(unit.status);
+    
+    return (
+      <div 
+        key={unit._id} 
+        onClick={() => setSelectedUnit(unit)}
+        style={{ 
+          position: 'relative',
+          backgroundColor: '#0d1117', 
+          border: `1px solid ${unitRequests.length > 0 ? '#f85149' : '#30363d'}`, 
+          borderRadius: '10px', 
+          padding: '16px',
+          cursor: 'pointer',
+          transition: 'transform 0.2s, boxShadow 0.2s',
+          boxShadow: unitRequests.length > 0 ? '0 0 10px rgba(248, 81, 73, 0.2)' : 'none'
+        }}
+      >
+        {unitRequests.length > 0 && (
+          <div style={{ position: 'absolute', top: '-10px', right: '-10px', backgroundColor: '#f85149', color: '#fff', borderRadius: '20px', padding: '4px 10px', fontSize: '12px', fontWeight: 'bold', boxShadow: '0 2px 8px rgba(0,0,0,0.5)', zIndex: 2 }}>
+            {unitRequests.length} Request{unitRequests.length > 1 ? 's' : ''}
+          </div>
+        )}
+        
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+          <span style={{ fontWeight: 'bold', color: '#fff', fontSize: '15px' }}>
+            {type} #{unit.objectId || unit.arcgisId}
+          </span>
+          <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+            <button 
+              onClick={(e) => handleZoom(e, unit)}
+              style={{ backgroundColor: '#21262d', color: '#c9d1d9', border: '1px solid #30363d', borderRadius: '4px', padding: '2px 6px', fontSize: '10px', cursor: 'pointer', transition: 'all 0.2s' }}
+              title="Zoom to Unit"
+            >
+              🔍
+            </button>
+            <span style={{ color: s.color, fontSize: '12px', fontWeight: 'bold', backgroundColor: `${s.color}22`, padding: '2px 8px', borderRadius: '12px' }}>
+              {s.label}
+            </span>
+          </div>
+        </div>
+        
+        <div style={{ color: '#8b949e', fontSize: '13px' }}>
+          Click to view details and manage requests.
+        </div>
+      </div>
+    );
+  };
+
+  const getCategorizedUnits = () => {
+    const apts = units.filter(u => u.sourceLayer === 'Units' || (!u.sourceLayer && u.unitName !== 'فيلا'));
+    const vils = units.filter(u => u.sourceLayer === 'Villas_Global' || (!u.sourceLayer && u.unitName === 'فيلا'));
+    
+    apts.sort((a, b) => getRequestsForUnit(b.arcgisId).length - getRequestsForUnit(a.arcgisId).length);
+    vils.sort((a, b) => getRequestsForUnit(b.arcgisId).length - getRequestsForUnit(a.arcgisId).length);
+    
+    return { apts, vils };
+  };
+
+  const { apts, vils } = getCategorizedUnits();
 
   return (
     <div style={{ position: 'fixed', top: '50px', left: '50%', transform: 'translateX(-50%)', width: '850px', maxHeight: '80vh', backgroundColor: '#161b22', borderRadius: '12px', border: '1px solid #30363d', display: 'flex', flexDirection: 'column', zIndex: 1001, boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
@@ -115,56 +198,24 @@ const BrokerCatalog = ({ view, onClose }: BrokerCatalogProps) => {
         ) : units.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px', color: '#8b949e' }}>You have no properties assigned yet.</div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '15px' }}>
-            {[...units].sort((a, b) => getRequestsForUnit(b.arcgisId).length - getRequestsForUnit(a.arcgisId).length).map(unit => {
-              const unitRequests = getRequestsForUnit(unit.arcgisId);
-              const s = statusLabel(unit.status);
-              
-              return (
-                <div 
-                  key={unit._id} 
-                  onClick={() => setSelectedUnit(unit)}
-                  style={{ 
-                    position: 'relative',
-                    backgroundColor: '#0d1117', 
-                    border: `1px solid ${unitRequests.length > 0 ? '#f85149' : '#30363d'}`, 
-                    borderRadius: '10px', 
-                    padding: '16px',
-                    cursor: 'pointer',
-                    transition: 'transform 0.2s, boxShadow 0.2s',
-                    boxShadow: unitRequests.length > 0 ? '0 0 10px rgba(248, 81, 73, 0.2)' : 'none'
-                  }}
-                >
-                  {unitRequests.length > 0 && (
-                    <div style={{ position: 'absolute', top: '-10px', right: '-10px', backgroundColor: '#f85149', color: '#fff', borderRadius: '20px', padding: '4px 10px', fontSize: '12px', fontWeight: 'bold', boxShadow: '0 2px 8px rgba(0,0,0,0.5)', zIndex: 2 }}>
-                      {unitRequests.length} Request{unitRequests.length > 1 ? 's' : ''}
-                    </div>
-                  )}
-                  
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                    <span style={{ fontWeight: 'bold', color: '#fff', fontSize: '15px' }}>
-                      {(unit.sourceLayer === 'Villas_Global' || unit.unitName === 'فيلا') ? 'Villa' : 'Apartment'} #{unit.objectId || unit.arcgisId}
-                    </span>
-                    <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-                      <button 
-                        onClick={(e) => handleZoom(e, unit)}
-                        style={{ backgroundColor: '#21262d', color: '#c9d1d9', border: '1px solid #30363d', borderRadius: '4px', padding: '2px 6px', fontSize: '10px', cursor: 'pointer', transition: 'all 0.2s' }}
-                        title="Zoom to Unit"
-                      >
-                        🔍
-                      </button>
-                      <span style={{ color: s.color, fontSize: '12px', fontWeight: 'bold', backgroundColor: `${s.color}22`, padding: '2px 8px', borderRadius: '12px' }}>
-                        {s.label}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div style={{ color: '#8b949e', fontSize: '13px' }}>
-                    Click to view details and manage requests.
-                  </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {apts.length > 0 && (
+              <div>
+                <h3 style={{ color: '#e6edf3', borderBottom: '1px solid #30363d', paddingBottom: '8px', marginBottom: '15px' }}>Apartments</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '15px' }}>
+                  {apts.map(u => renderUnitCard(u, 'Apartment'))}
                 </div>
-              );
-            })}
+              </div>
+            )}
+            
+            {vils.length > 0 && (
+              <div>
+                <h3 style={{ color: '#e6edf3', borderBottom: '1px solid #30363d', paddingBottom: '8px', marginBottom: '15px' }}>Villas</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '15px' }}>
+                  {vils.map(u => renderUnitCard(u, 'Villa'))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

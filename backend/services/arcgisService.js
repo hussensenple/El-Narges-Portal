@@ -17,9 +17,11 @@ async function updateArcGISStatus(arcgisObjectId, newStatus, ownerName, ownerPho
     return false;
   }
 
-  // إرسال القيم كنصوص لأن الطبقة في AGOL ليس لها Domain وتتعامل كـ String
-  let statusCode = (newStatus === 'Sold' || newStatus === '4' || newStatus == 4) ? 'Sold' : 'Available';
-
+  let statusCode = String(newStatus);
+  if (statusCode.toLowerCase() === 'available') statusCode = '1';
+  if (statusCode.toLowerCase() === 'interested') statusCode = '2';
+  if (statusCode.toLowerCase() === 'reserved') statusCode = '3';
+  if (statusCode.toLowerCase() === 'sold') statusCode = '4';
   try {
     if (cleanSourceLayer === "Units") {
       const numericId = Number(arcgisObjectId);

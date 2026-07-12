@@ -11,9 +11,9 @@ const {
 router.post('/submit', auth, submitComplaint);
 
 // 2. جلب جميع الشكاوى (للأدمن)
-router.get('/all', auth, getAllComplaints);
+router.get('/all', getAllComplaints);
 
 // 3. حل الشكوى (للأدمن)
-router.put('/resolve/:complaintId', auth, resolveComplaint);
+router.put('/resolve/:complaintId', resolveComplaint);
 
 module.exports = router;

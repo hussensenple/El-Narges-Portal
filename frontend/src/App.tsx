@@ -1,5 +1,5 @@
-import { useState, useContext, useCallback, useEffect, type ReactNode } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { useState, useContext, useCallback } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import SceneView from '@arcgis/core/views/SceneView';
 import MapViewer from './components/MapViewer';
 import MapViewer2D from './components/MapViewer2D';
@@ -12,7 +12,6 @@ import ClosestServices from './components/ClosestServices';
 import StopsRoutingWidget from './components/StopsRoutingWidget';
 import { AuthContext } from './context/AuthContext'; 
 import AuthModal from './components/AuthModal'; 
-import BrokerDashboard from './components/BrokerDashboard';
 
 
 const Icons = {
@@ -45,14 +44,6 @@ const CustomerInterface = () => {
 
   const auth = useContext(AuthContext); 
   const isAuthenticated = !!auth?.user;
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (auth?.user) {
-      if (auth.user.role === 'admin') navigate('/admin', { replace: true });
-      if (auth.user.role === 'broker') navigate('/broker', { replace: true });
-    }
-  }, [auth?.user, navigate]);
 
   const handleSwitchTo3D = useCallback(() => setIs3DView(true), []);
   const handleViewReady = useCallback((view: SceneView) => setMapView(view), []);
@@ -226,7 +217,7 @@ const CustomerInterface = () => {
 
       {showLoginModal && <AuthModal onClose={() => setShowLoginModal(false)} onSuccess={() => setShowLoginModal(false)} />}
 
-      {is3DView && isAuthenticated && auth?.user?.role !== 'broker' && (
+      {is3DView && isAuthenticated && (
         <button 
           title="Property Catalog"
           onClick={() => {
@@ -266,27 +257,14 @@ const CustomerInterface = () => {
   );
 };
 
-const ProtectedRoute = ({ children, allowedRoles }: { children: ReactNode, allowedRoles: string[] }) => {
-  const auth = useContext(AuthContext);
-  
-  if (!auth?.user) {
-    return <Navigate to="/" replace />;
-  }
-  
-  if (!allowedRoles.includes(auth.user.role)) {
-    return <Navigate to="/" replace />;
-  }
-  
-  return children;
-};
+
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<CustomerInterface />} />
-        <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminRequests /></ProtectedRoute>} />
-        <Route path="/broker" element={<ProtectedRoute allowedRoles={['broker']}><BrokerDashboard /></ProtectedRoute>} />
+        <Route path="/admin" element={<AdminRequests />} />
       </Routes>
     </Router>
   );

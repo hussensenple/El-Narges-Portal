@@ -150,6 +150,9 @@ exports.approveRequest = async (req, res) => {
     });
     console.log("🟢 All other requests for this unit have been removed.");
 
+    const io = req.app.get('socketio');
+    if (io) io.emit('newBookingRequest');
+
     return res.status(200).json({ msg: "Approved and synced with map successfully! 🎉" });
 
   } catch (error) {
@@ -186,6 +189,9 @@ exports.adminRejectRequest = async (req, res) => {
 
     // Send Rejection Email
     await sendBookingEmail(request.userId.email, request.userId.name, 'Rejected', request.objectId || request.unitId, reason);
+
+    const io = req.app.get('socketio');
+    if (io) io.emit('newBookingRequest');
 
     return res.status(200).json({ msg: "Request rejected successfully and customer notified" });
   } catch (error) {

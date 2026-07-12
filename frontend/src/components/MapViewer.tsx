@@ -2,8 +2,8 @@ import { useEffect, useRef, useState, useContext } from 'react';
 
 import WebScene from '@arcgis/core/WebScene';
 import SceneView from '@arcgis/core/views/SceneView';
-import LayerList from '@arcgis/core/widgets/LayerList'; 
-import BasemapGallery from '@arcgis/core/widgets/BasemapGallery'; 
+import LayerList from '@arcgis/core/widgets/LayerList';
+import BasemapGallery from '@arcgis/core/widgets/BasemapGallery';
 import '@arcgis/core/assets/esri/themes/dark/main.css';
 import WeatherWidget from './WeatherWidget';
 import BuildingSidebar from './BuildingSidebar';
@@ -17,13 +17,13 @@ interface MapViewerProps {
   isLayersOpen: boolean;
   isWeatherOpen: boolean;
   setIsWeatherOpen: (isOpen: boolean) => void;
-  isBasemapOpen: boolean; 
+  isBasemapOpen: boolean;
 }
 
 const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen, isBasemapOpen }: MapViewerProps) => {
   const mapDiv = useRef<HTMLDivElement>(null);
-  const layerListDiv = useRef<HTMLDivElement>(null); 
-  const basemapDiv = useRef<HTMLDivElement>(null); 
+  const layerListDiv = useRef<HTMLDivElement>(null);
+  const basemapDiv = useRef<HTMLDivElement>(null);
 
   const [viewInstance, setViewInstance] = useState<SceneView | null>(null);
   const [selectedBuildingId, setSelectedBuildingId] = useState<string | null>(null);
@@ -43,7 +43,7 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
       const view = new SceneView({
         container: mapDiv.current,
         map: webscene,
-        qualityProfile: "low",
+        qualityProfile: "high",
         environment: {
           lighting: {
             type: "virtual"
@@ -62,7 +62,7 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
             listItemCreatedFunction: (event) => {
               const item = event.item;
               if (item.title === "Units") {
-                item.visible = false; 
+                item.visible = false;
               }
             }
           });
@@ -231,7 +231,7 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
           });
         }
 
-        setViewInstance(view); 
+        setViewInstance(view);
         onViewReady(view);
       });
 
@@ -239,16 +239,16 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
         if (view) view.destroy();
       };
     }
-  }, []); 
+  }, []);
 
   return (
     <div style={{ height: '100%', width: '100%', position: 'relative' }}>
-      
+
       <div ref={mapDiv} style={{ height: '100%', width: '100%' }} />
 
       <div style={{
         position: 'absolute',
-        top: '80px', 
+        top: '80px',
         right: '20px',
         zIndex: 10,
         display: 'flex',
@@ -256,8 +256,8 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
         alignItems: 'flex-end',
         gap: '10px'
       }}>
-        
-        <div style={{ 
+
+        <div style={{
           display: isLayersOpen ? 'block' : 'none',
           backgroundColor: '#161b22',
           border: '1px solid #30363d',
@@ -272,7 +272,7 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
           <div ref={layerListDiv} />
         </div>
 
-        <div style={{ 
+        <div style={{
           display: isBasemapOpen ? 'block' : 'none',
           backgroundColor: '#161b22',
           border: '1px solid #30363d',
@@ -289,9 +289,9 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
 
         {isWeatherOpen && (
           <div style={{ animation: 'fadeInDown 0.2s ease-out' }}>
-            <WeatherWidget 
-              view={viewInstance} 
-              onClose={() => setIsWeatherOpen(false)} 
+            <WeatherWidget
+              view={viewInstance}
+              onClose={() => setIsWeatherOpen(false)}
             />
           </div>
         )}
@@ -300,10 +300,10 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
           .esri-popup { display: none !important; }
         `}</style>
       </div>
-      
+
       {/* Sidebar: Building mode */}
       {canSeeSidebar && selectedBuildingId && (
-        <BuildingSidebar 
+        <BuildingSidebar
           buildingId={selectedBuildingId}
           onClose={() => setSelectedBuildingId(null)}
         />

@@ -28,12 +28,6 @@ const getBuildingDesignUrl = (model: string) => {
   return `${BASE_URL}/S.png`;
 };
 
-// Helper: derive floor from unit OBJECTID within building
-const getFloorLabel = (unit: any, totalFloors: number) => {
-  if (unit.Floor !== undefined && unit.Floor !== null) return `Floor ${unit.Floor}`;
-  // If no Floor field, infer from OBJECTID order (just a best-effort label)
-  return totalFloors > 0 ? `Floor ~` : '—';
-};
 
 const BuildingSidebar = ({ buildingId, villaData, onClose }: BuildingSidebarProps) => {
   const [units, setUnits] = useState<any[]>([]);

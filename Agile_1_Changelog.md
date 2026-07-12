@@ -127,3 +127,16 @@ This document records the step-by-step progress and updates made during the impl
   * Wrote custom CSS in `index.css` to style the native ArcGIS popup action buttons to look like modern gradient UI elements.
   * Fixed an authentication bug during Villa booking caused by a stale closure by reading user session directly from `localStorage`.
   * Fixed a bug where popup actions (like the "Book Now" button) persisted when clicking on Buildings by explicitly resetting `view.popup.actions` for non-villa layers.
+
+---
+
+## 🛠️ Step 9: Post-Sprint Bug Fixes & Refinements (Completed)
+**Date:** July 12, 2026
+
+* **Admin Access Flow:**
+  * Removed forced auto-redirects from / to /admin in App.tsx and AuthModal.tsx, allowing admin accounts to freely navigate the map client interface without being forcibly pushed to the admin portal.
+* **Broker Catalog Translation:**
+  * Dynamically translated ArcGIS Arabic source layer names (شقة, فيلا) to English (Apartment, Villa) within the BrokerUnitRequestsModal header to maintain UI consistency.
+* **Codebase Cleanup:**
+  * Cleared all remaining ESLint/TypeScript warnings by removing unused imports and variables across App.tsx, AuthModal.tsx, and BrokerUnitRequestsModal.tsx.
+

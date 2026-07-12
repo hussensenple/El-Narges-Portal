@@ -24,6 +24,17 @@ const BrokersTable = () => {
     }
   };
 
+  const handleDelete = async (userId: string, userName: string) => {
+    if (!window.confirm(`Are you sure you want to permanently delete broker ${userName}? This will remove their profile and unassign their properties.`)) return;
+    try {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/roles/${userId}`);
+      fetchUsers();
+    } catch (error) {
+      console.error('Error deleting broker:', error);
+      alert('Failed to delete broker');
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -82,6 +93,12 @@ const BrokersTable = () => {
                     style={{ backgroundColor: '#da3633', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}
                   >
                     🔄 Revoke
+                  </button>
+                  <button 
+                    onClick={() => handleDelete(user._id, user.name)}
+                    style={{ backgroundColor: 'transparent', color: '#f85149', border: '1px solid #f85149', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}
+                  >
+                    🗑️ Delete
                   </button>
                 </td>
               </tr>

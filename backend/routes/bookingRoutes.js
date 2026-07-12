@@ -18,12 +18,12 @@ router.post('/request', auth, async (req, res) => {
 
     // 🚀 الفحص الجديد: نمنع الـ Crash لو الفرونت إند نسي يبعت الـ ID
     if (!unitId || unitId === 'undefined') {
-      return res.status(400).json({ error: "عذراً، حدث خطأ في قراءة معرف الوحدة من الخريطة، يرجى المحاولة مرة أخرى." });
+      return res.status(400).json({ error: "Error reading unit ID from map, please try again." });
     }
 
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ error: "المستخدم غير موجود" });
+      return res.status(404).json({ error: "User not found" });
     }
 
     const newRequest = new BookingRequest({
@@ -45,14 +45,14 @@ router.post('/request', auth, async (req, res) => {
         io.emit('newBookingRequest'); 
     }
 
-    res.status(201).json({ msg: "تم إرسال طلب الحجز بنجاح!" });
+    res.status(201).json({ msg: "Booking request submitted successfully!" });
 
   } catch (error) {
     console.error("🚨 Booking Crash Error:", error);
     if (error.code === 11000) {
-      return res.status(400).json({ error: "عذراً، لقد قمت بتقديم طلب لهذه الوحدة مسبقاً، وهو قيد المراجعة." });
+      return res.status(400).json({ error: "You have already submitted a request for this unit. It is currently under review." });
     }
-    res.status(500).json({ error: "حدث خطأ أثناء إرسال الطلب" });
+    res.status(500).json({ error: "An error occurred while submitting the request" });
   }
 });
 

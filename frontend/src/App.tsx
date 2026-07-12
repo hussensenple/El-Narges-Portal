@@ -6,12 +6,13 @@ import MapViewer2D from './components/MapViewer2D';
 import OwnerUnitsTab from './components/OwnerUnitsTab'; 
 import UnitCatalog from './components/UnitCatalog';
 import AIAdvisor from './components/AIAdvisor';
+import BrokerCatalog from './components/BrokerCatalog';
 import AdminRequests from './pages/AdminRequests'; 
 import ClosestServices from './components/ClosestServices'; 
 import StopsRoutingWidget from './components/StopsRoutingWidget';
 import { AuthContext } from './context/AuthContext'; 
 import AuthModal from './components/AuthModal'; 
-import BrokerDashboard from './components/BrokerDashboard';
+
 
 const Icons = {
   Login: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>,
@@ -30,6 +31,7 @@ const Icons = {
 const CustomerInterface = () => {
   const [mapView, setMapView] = useState<SceneView | null>(null);
   const [isCatalogOpen, setIsCatalogOpen] = useState(false);
+  const [isBrokerCatalogOpen, setIsBrokerCatalogOpen] = useState(false);
   const [isRoutingOpen, setIsRoutingOpen] = useState(false); 
   const [isStopsRoutingOpen, setIsStopsRoutingOpen] = useState(false); 
   const [showLoginModal, setShowLoginModal] = useState(false); 
@@ -216,11 +218,17 @@ const CustomerInterface = () => {
 
       {showLoginModal && <AuthModal onClose={() => setShowLoginModal(false)} onSuccess={() => setShowLoginModal(false)} />}
 
-      {is3DView && auth?.user?.role !== 'broker' && (
+      {is3DView && (
         <button 
           title="Property Catalog"
-          onClick={() => setIsCatalogOpen(!isCatalogOpen)} 
-          className={`map-icon-btn ${isCatalogOpen ? 'active' : 'inactive'}`}
+          onClick={() => {
+            if (auth?.user?.role === 'broker') {
+              setIsBrokerCatalogOpen(!isBrokerCatalogOpen);
+            } else {
+              setIsCatalogOpen(!isCatalogOpen);
+            }
+          }} 
+          className={`map-icon-btn ${isCatalogOpen || isBrokerCatalogOpen ? 'active' : 'inactive'}`}
           style={{ position: 'absolute', bottom: '30px', left: '20px', zIndex: 1000 }}
         >
           <Icons.Catalog />
@@ -231,6 +239,13 @@ const CustomerInterface = () => {
         <>
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 999 }} onClick={() => setIsCatalogOpen(false)} />
           <UnitCatalog view={mapView} onClose={() => setIsCatalogOpen(false)} />
+        </>
+      )}
+
+      {isBrokerCatalogOpen && is3DView && auth?.user?.role === 'broker' && (
+        <>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 999 }} onClick={() => setIsBrokerCatalogOpen(false)} />
+          <BrokerCatalog view={mapView} onClose={() => setIsBrokerCatalogOpen(false)} />
         </>
       )}
 
@@ -249,7 +264,7 @@ function App() {
       <Routes>
         <Route path="/" element={<CustomerInterface />} />
         <Route path="/admin" element={<AdminRequests />} />
-        <Route path="/broker" element={<BrokerDashboard />} />
+
       </Routes>
     </Router>
   );

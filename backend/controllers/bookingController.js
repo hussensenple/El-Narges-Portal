@@ -10,7 +10,7 @@ exports.brokerReviewRequest = async (req, res) => {
     const { action, reason } = req.body; // 'raise' or 'decline'
     
     const request = await BookingRequest.findById(requestId).populate('userId', 'name email');
-    if (!request) return res.status(404).json({ msg: "الطلب غير موجود" });
+    if (!request) return res.status(404).json({ msg: "Request not found" });
 
     const unitGlobalId = String(request.unitId).replace(/[{}]/g, '').trim();
 
@@ -35,7 +35,7 @@ exports.brokerReviewRequest = async (req, res) => {
       const io = req.app.get('socketio');
       if (io) io.emit('newBookingRequest');
 
-      return res.status(200).json({ msg: "تم رفع الطلب للإدارة بنجاح" });
+      return res.status(200).json({ msg: "Request raised to admin successfully" });
     } else if (action === 'decline') {
       request.status = 'Declined';
       await request.save();
@@ -45,9 +45,9 @@ exports.brokerReviewRequest = async (req, res) => {
       const io = req.app.get('socketio');
       if (io) io.emit('newBookingRequest');
 
-      return res.status(200).json({ msg: "تم رفض الطلب بنجاح وإبلاغ العميل" });
+      return res.status(200).json({ msg: "Request declined successfully and customer notified" });
     } else {
-      return res.status(400).json({ msg: "إجراء غير معروف" });
+      return res.status(400).json({ msg: "Unknown action" });
     }
   } catch (error) {
     console.error("🚨 Error in brokerReviewRequest:", error);
@@ -62,7 +62,7 @@ exports.approveRequest = async (req, res) => {
     const { requestId } = req.params; 
     const request = await BookingRequest.findById(requestId).populate('userId', 'name email');
     if (!request) {
-      return res.status(404).json({ msg: "الطلب غير موجود" });
+      return res.status(404).json({ msg: "Request not found" });
     }
 
     const unitGlobalId = String(request.unitId).replace(/[{}]/g, '').trim();
@@ -79,7 +79,7 @@ exports.approveRequest = async (req, res) => {
       updatedUnit = new Unit({
         globalId: unitGlobalId,
         arcgisId: unitGlobalId,
-        unitName: request.sourceLayer === 'Villas_Global' ? 'فيلا' : 'شقة',
+        unitName: request.sourceLayer === 'Villas_Global' ? 'Villa' : 'Apartment',
         status: '4',
         ownerId: request.userId,
         ownerName: request.customerName,
@@ -113,7 +113,7 @@ exports.approveRequest = async (req, res) => {
 
     if (!success) {
       console.log("🔴 Error: ArcGIS update failed!");
-      return res.status(500).json({ msg: "فشل التزامن مع الخريطة الحية." });
+      return res.status(500).json({ msg: "Failed to sync with live map." });
     }
 
     if (request.sourceLayer === 'Units' && request.buildingFK) {
@@ -150,7 +150,7 @@ exports.approveRequest = async (req, res) => {
     });
     console.log("🟢 All other requests for this unit have been removed.");
 
-    return res.status(200).json({ msg: "تمت الموافقة وتحديث الخريطة والداتا بيز بنجاح! 🎉" });
+    return res.status(200).json({ msg: "Approved and synced with map successfully! 🎉" });
 
   } catch (error) {
     console.error("🚨 Error in approveRequest:", error);
@@ -164,7 +164,7 @@ exports.adminRejectRequest = async (req, res) => {
     const { reason } = req.body;
     
     const request = await BookingRequest.findById(requestId).populate('userId', 'name email');
-    if (!request) return res.status(404).json({ msg: "الطلب غير موجود" });
+    if (!request) return res.status(404).json({ msg: "Request not found" });
 
     request.status = 'Rejected';
     await request.save();
@@ -187,7 +187,7 @@ exports.adminRejectRequest = async (req, res) => {
     // Send Rejection Email
     await sendBookingEmail(request.userId.email, request.userId.name, 'Rejected', request.objectId || request.unitId, reason);
 
-    return res.status(200).json({ msg: "تم رفض الطلب بنجاح وإبلاغ العميل" });
+    return res.status(200).json({ msg: "Request rejected successfully and customer notified" });
   } catch (error) {
     console.error("🚨 Error in adminRejectRequest:", error);
     return res.status(500).json({ error: error.message });

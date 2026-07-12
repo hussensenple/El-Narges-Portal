@@ -17,6 +17,7 @@ const PropertyAssignCatalog = ({ userId, targetRole, pendingRoleData, roleAlread
   const [loading, setLoading] = useState(true);
   const [searchId, setSearchId] = useState('');
   const [assigning, setAssigning] = useState<string | null>(null);
+  const [selectedUnits, setSelectedUnits] = useState<Set<string>>(new Set());
   // If role is already committed (editing existing owner/broker), start as true to skip role-commit step
   const [roleCommitted, setRoleCommitted] = useState(roleAlreadyCommitted);
 
@@ -70,6 +71,50 @@ const PropertyAssignCatalog = ({ userId, targetRole, pendingRoleData, roleAlread
     }
   };
 
+  const toggleSelection = (propertyId: string) => {
+    const newSet = new Set(selectedUnits);
+    if (newSet.has(propertyId)) newSet.delete(propertyId);
+    else newSet.add(propertyId);
+    setSelectedUnits(newSet);
+  };
+
+  const handleAssignSelected = async () => {
+    try {
+      setAssigning('all');
+
+      if (!roleCommitted) {
+        const rolePayload: any = { newRole: pendingRoleData.newRole };
+        if (pendingRoleData.manualId) rolePayload.manualId = pendingRoleData.manualId;
+        await axios.put(`${import.meta.env.VITE_API_URL}/api/roles/change-role/${userId}`, rolePayload);
+        setRoleCommitted(true);
+      }
+
+      const allProps = [...units, ...villas];
+      for (const propertyId of Array.from(selectedUnits)) {
+        const property = allProps.find(p => p.arcgisId === propertyId);
+        if (property) {
+          await axios.post(`${import.meta.env.VITE_API_URL}/api/roles/assign-property`, {
+            userId,
+            unitId: property.arcgisId,
+            arcgisObjectId: property.OBJECTID,
+            sourceLayer: property.sourceLayer,
+            targetRole
+          });
+        }
+      }
+
+      alert(`✅ ${selectedUnits.size} properties assigned successfully!`);
+      
+      setUnits(prev => prev.filter(u => !selectedUnits.has(u.arcgisId)));
+      setVillas(prev => prev.filter(v => !selectedUnits.has(v.arcgisId)));
+      setSelectedUnits(new Set());
+    } catch (error: any) {
+      alert(error.response?.data?.error || 'Failed to assign properties');
+    } finally {
+      setAssigning(null);
+    }
+  };
+
   // Group apartments by their Building ID (for broker mode)
   const groupedUnits: Record<string, any[]> = {};
   units.forEach(u => {
@@ -111,6 +156,15 @@ const PropertyAssignCatalog = ({ userId, targetRole, pendingRoleData, roleAlread
             </p>
           </div>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            {targetRole === 'broker' && selectedUnits.size > 0 && (
+              <button
+                onClick={handleAssignSelected}
+                disabled={assigning === 'all'}
+                style={{ padding: '8px 16px', backgroundColor: '#1f6feb', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+              >
+                {assigning === 'all' ? 'Assigning...' : `Assign ${selectedUnits.size} Selected`}
+              </button>
+            )}
             {roleCommitted && (
               <button
                 onClick={onSuccess}
@@ -173,11 +227,11 @@ const PropertyAssignCatalog = ({ userId, targetRole, pendingRoleData, roleAlread
                                 </div>
                                 {price && <div style={{ color: '#8b949e', fontSize: '12px', marginBottom: '10px' }}>💰 {(Number(price) / 1000000).toFixed(1)}M EGP</div>}
                                 <button
-                                  onClick={() => handleAssign(unit)}
-                                  disabled={assigning === unit.arcgisId}
-                                  style={{ width: '100%', padding: '7px', backgroundColor: assigning === unit.arcgisId ? '#21262d' : '#1f6feb', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
+                                  onClick={() => toggleSelection(unit.arcgisId)}
+                                  disabled={assigning === unit.arcgisId || assigning === 'all'}
+                                  style={{ width: '100%', padding: '7px', backgroundColor: assigning === unit.arcgisId ? '#21262d' : (selectedUnits.has(unit.arcgisId) ? '#2ea043' : '#1f6feb'), color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
                                 >
-                                  {assigning === unit.arcgisId ? 'Assigning...' : '+ Assign'}
+                                  {assigning === unit.arcgisId ? 'Assigning...' : (selectedUnits.has(unit.arcgisId) ? '✓ Selected' : 'Select')}
                                 </button>
                               </div>
                             );
@@ -226,11 +280,11 @@ const PropertyAssignCatalog = ({ userId, targetRole, pendingRoleData, roleAlread
                           {villa.VillaModel && <div style={{ color: '#8b949e', fontSize: '12px', marginBottom: '4px' }}>🏡 {modelMap[String(villa.VillaModel)] || villa.VillaModel}</div>}
                           {villa.Price && <div style={{ color: '#8b949e', fontSize: '12px', marginBottom: '10px' }}>💰 {(Number(villa.Price) / 1000000).toFixed(1)}M EGP</div>}
                           <button
-                            onClick={() => handleAssign(villa)}
-                            disabled={assigning === villa.arcgisId}
-                            style={{ width: '100%', padding: '7px', backgroundColor: assigning === villa.arcgisId ? '#21262d' : '#1f6feb', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
+                            onClick={() => targetRole === 'broker' ? toggleSelection(villa.arcgisId) : handleAssign(villa)}
+                            disabled={assigning === villa.arcgisId || assigning === 'all'}
+                            style={{ width: '100%', padding: '7px', backgroundColor: assigning === villa.arcgisId ? '#21262d' : (targetRole === 'broker' && selectedUnits.has(villa.arcgisId) ? '#2ea043' : '#1f6feb'), color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
                           >
-                            {assigning === villa.arcgisId ? 'Assigning...' : '+ Assign'}
+                            {assigning === villa.arcgisId ? 'Assigning...' : (targetRole === 'broker' && selectedUnits.has(villa.arcgisId) ? '✓ Selected' : (targetRole === 'broker' ? 'Select' : '+ Assign'))}
                           </button>
                         </div>
                       );

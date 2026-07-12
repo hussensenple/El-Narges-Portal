@@ -1,6 +1,7 @@
 import { useState, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthModalProps {
   isOpen?: boolean;
@@ -10,6 +11,7 @@ interface AuthModalProps {
 
 const AuthModal = ({ onClose, onSuccess }: AuthModalProps) => {
   const auth = useContext(AuthContext);
+  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true); 
   
   const [name, setName] = useState('');
@@ -65,10 +67,16 @@ const AuthModal = ({ onClose, onSuccess }: AuthModalProps) => {
         auth.login(res.data.user, res.data.token);
       }
 
-      if (onSuccess) {
-        onSuccess();
+      if (res.data.user.role === 'admin') {
+        navigate('/admin');
+      } else if (res.data.user.role === 'broker') {
+        navigate('/broker');
       } else {
-        onClose();
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          onClose();
+        }
       }
       
     } catch (err: any) {

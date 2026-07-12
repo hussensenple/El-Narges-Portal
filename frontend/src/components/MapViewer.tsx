@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useContext } from 'react';
 import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
 import axios from 'axios';
 import WebScene from '@arcgis/core/WebScene';
@@ -8,6 +8,10 @@ import BasemapGallery from '@arcgis/core/widgets/BasemapGallery';
 import '@arcgis/core/assets/esri/themes/dark/main.css';
 import WeatherWidget from './WeatherWidget';
 import BuildingSidebar from './BuildingSidebar';
+import { AuthContext } from '../context/AuthContext';
+import esriConfig from "@arcgis/core/config";
+
+esriConfig.apiKey = import.meta.env.VITE_ARCGIS_API_KEY || "AAPTalXA9GcZ5lZfym8hKak90bg..wGOn5mTNFbEDgQTSt91zZ3JRiK5hffTjYdmL1ERTSPKglXpsx21W9RNlgzgoJF0Jz2FSdRc_kgkQKBh7X5t02_GyVncvhTB8KHXfFs1UpjrO_P_Si65XTQXNm5Ad_12WXsc1fjlDCgbbBvTDxYSAA495unWWkWQI47Y_XAhMLQaVT-wFHLzecsgMw-jJNUuxC1NWVSjSgp6-dtfQswbqkkwKXrGQ6asF2YrQ9PLmQhL_98RwBQ..AT1_e4bvhm43";
 
 interface MapViewerProps {
   onViewReady: (view: SceneView) => void;
@@ -24,6 +28,10 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
 
   const [viewInstance, setViewInstance] = useState<SceneView | null>(null);
   const [selectedBuildingId, setSelectedBuildingId] = useState<string | null>(null);
+  const [selectedVillaData, setSelectedVillaData] = useState<any | null>(null);
+
+  const auth = useContext(AuthContext);
+  const canSeeSidebar = auth?.user && (auth.user.role === 'user' || auth.user.role === 'owner');
 
   useEffect(() => {
     if (mapDiv.current) {
@@ -41,7 +49,10 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
           lighting: {
             type: "virtual"
           }
-        }
+        },
+        popup: {
+          autoOpenEnabled: false
+        } as any
       });
 
       view.when(() => {
@@ -162,159 +173,57 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
           }
         });
 
-        // Listen for clicks to open sidebar reliably without popup.watch errors
+        // Listen for clicks to open sidebar (Buildings + Villas — no popup)
         view.on("click", async (event) => {
           try {
             const response = await view.hitTest(event);
-            const buildingResult = response.results.find((res: any) => 
-              res.graphic && res.graphic.layer && 
+
+            // Check villa click first
+            const villaResult = response.results.find((res: any) =>
+              res.graphic && res.graphic.layer &&
+              res.graphic.layer.title === "Villas_Global"
+            );
+            if (villaResult) {
+              const graphic = (villaResult as any).graphic;
+              const layer = graphic.layer;
+              const query = layer.createQuery();
+              query.objectIds = [graphic.attributes.OBJECTID];
+              query.outFields = ['*'];
+              const result = await layer.queryFeatures(query);
+              if (result.features.length > 0) {
+                const attrs = result.features[0].attributes;
+                setSelectedVillaData(attrs);
+                setSelectedBuildingId(null);
+              }
+              return;
+            }
+
+            // Check building click
+            const buildingResult = response.results.find((res: any) =>
+              res.graphic && res.graphic.layer &&
               (res.graphic.layer.title === "Buildings_Global" || res.graphic.layer.title === "Buildings")
             );
-            
             if (buildingResult) {
               const graphic = (buildingResult as any).graphic;
               const objectId = graphic.attributes.OBJECTID;
               const layer = graphic.layer;
-              
-              // Query the layer directly to guarantee we get the GlobalID safely
               const query = layer.createQuery();
               query.objectIds = [objectId];
               query.outFields = ["GlobalID", "globalid"];
               const result = await layer.queryFeatures(query);
-              
               if (result.features.length > 0) {
                 const globalId = result.features[0].attributes.GlobalID || result.features[0].attributes.globalid;
                 setSelectedBuildingId(globalId || null);
+                setSelectedVillaData(null);
               }
             } else {
               setSelectedBuildingId(null);
+              setSelectedVillaData(null);
             }
           } catch (err) {
             console.error("hitTest or query error", err);
           }
         });
-
-        // Dynamic actions for Villa popups (Show Book Now only if available)
-        reactiveUtils.watch(
-          () => view.popup.selectedFeature,
-          (feature) => {
-            if (feature && feature.layer) {
-              if (feature.layer.title === "Villas_Global") {
-                const status = String(feature.attributes.Status || '').toLowerCase();
-                const isSold = status === 'sold' || status === '4' || status === 'reserved' || status === '3';
-                
-                if (!isSold) {
-                  view.popup.actions = [
-                    {
-                      title: "Zoom to",
-                      id: "zoom-to",
-                      className: "esri-icon-zoom-in-magnifying-glass"
-                    } as any,
-                    {
-                      title: "🔖 Book Now",
-                      id: "book-villa",
-                      className: "esri-icon-plus-circled"
-                    } as any
-                  ];
-                } else {
-                  view.popup.actions = [
-                    {
-                      title: "Zoom to",
-                      id: "zoom-to",
-                      className: "esri-icon-zoom-in-magnifying-glass"
-                    } as any
-                  ];
-                }
-              } else {
-                // Reset to default for other layers (like Buildings)
-                view.popup.actions = [
-                  {
-                    title: "Zoom to",
-                    id: "zoom-to",
-                    className: "esri-icon-zoom-in-magnifying-glass"
-                  } as any
-                ];
-              }
-            }
-          }
-        );
-
-        // Listen for Popup Actions (like Booking)
-        reactiveUtils.on(
-          () => view.popup,
-          "trigger-action",
-          async (event: any) => {
-          if (event.action.id === "book-villa") {
-            const feature = view.popup.selectedFeature;
-            if (feature) {
-              const currentToken = localStorage.getItem('token');
-              let currentUser = null;
-              try {
-                currentUser = JSON.parse(localStorage.getItem('user') || 'null');
-              } catch (e) {}
-
-              if (!currentToken || !currentUser) {
-                alert("❌ Please log in first to book a villa.");
-                return;
-              }
-              const status = String(feature.attributes.Status || '').toLowerCase();
-              if (status === 'sold' || status === '4' || status === 'reserved' || status === '3') {
-                alert("❌ This villa is already sold or reserved.");
-                return;
-              }
-              try {
-                await axios.post(`${import.meta.env.VITE_API_URL}/api/bookings/request`, {
-                  unitId: String(feature.attributes.GlobalID || feature.attributes.globalid || feature.attributes.OBJECTID),
-                  objectId: feature.attributes.OBJECTID,
-                  sourceLayer: 'Villas_Global',
-                  buildingFK: null,
-                  customerName: currentUser.name,
-                  customerPhone: currentUser.phone || 'N/A', 
-                  customerGmail: currentUser.email || currentUser.gmail || 'N/A'
-                }, {
-                  headers: { 'x-auth-token': currentToken }
-                });
-                alert("🎉 Booking request sent successfully! Our sales team will review your request.");
-              } catch (err: any) {
-                alert("❌ " + (err.response?.data?.error || err.response?.data?.msg || "An error occurred"));
-              }
-            }
-          }
-        });
-
-        // Conditionally show "Book Villa" action only for Available Villas
-        reactiveUtils.watch(
-          () => view.popup.selectedFeature,
-          (feature) => {
-            if (feature && feature.layer && feature.layer.title === "Villas_Global") {
-              const v = feature.attributes.Status;
-              let isAvailable = false;
-              if (typeof v === 'number') {
-                isAvailable = (v === 1);
-              } else {
-                const s = String(v || '').trim().toLowerCase();
-                isAvailable = (s === 'available' || s === '1');
-              }
-
-              if (isAvailable) {
-                // Try to find if it already has the action to prevent duplication
-                const hasAction = view.popup.actions.find((a: any) => a.id === "book-villa");
-                if (!hasAction) {
-                  view.popup.actions.push({
-                    id: "book-villa",
-                    title: "🔖 Book Villa",
-                    className: "esri-icon-documentation"
-                  } as any);
-                }
-              } else {
-                const actionObj = view.popup.actions.find((a: any) => a.id === "book-villa");
-                if (actionObj) {
-                  view.popup.actions.remove(actionObj);
-                }
-              }
-            }
-          }
-        );
 
         if (basemapDiv.current) {
           new BasemapGallery({
@@ -389,27 +298,23 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
         )}
 
         <style>{`
-          .esri-popup__main-container {
-            width: 360px !important;
-            max-height: 80vh !important;
-          }
-          .esri-popup__content {
-            margin: 0 !important;
-            overflow-y: hidden !important;
-          }
+          .esri-popup { display: none !important; }
         `}</style>
       </div>
       
-      {/* Building Sidebar */}
-      {selectedBuildingId && (
+      {/* Sidebar: Building mode */}
+      {canSeeSidebar && selectedBuildingId && (
         <BuildingSidebar 
-          buildingId={selectedBuildingId} 
-          onClose={() => {
-            setSelectedBuildingId(null);
-            if (viewInstance && viewInstance.popup) {
-              viewInstance.popup.close();
-            }
-          }} 
+          buildingId={selectedBuildingId}
+          onClose={() => setSelectedBuildingId(null)}
+        />
+      )}
+
+      {/* Sidebar: Villa mode */}
+      {canSeeSidebar && selectedVillaData && (
+        <BuildingSidebar
+          villaData={selectedVillaData}
+          onClose={() => setSelectedVillaData(null)}
         />
       )}
     </div>

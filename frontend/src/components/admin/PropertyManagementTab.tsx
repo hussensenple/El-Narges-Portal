@@ -111,7 +111,11 @@ const PropertyManagementTab = () => {
               <tr key={idx} style={{ borderTop: '1px solid #30363d' }}>
                 <td style={{ padding: '12px' }}>{prop.OBJECTID || prop.GlobalID?.substring(0,8)}</td>
                 <td style={{ padding: '12px' }}>{prop.sourceLayer === 'Units' ? 'Apartment' : prop.sourceLayer === 'Villas_Global' ? 'Villa' : 'Building'}</td>
-                <td style={{ padding: '12px' }}>{prop.Status}</td>
+                <td style={{ padding: '12px' }}>
+                  <span style={{ color: '#2ea043', fontWeight: 'bold' }}>
+                    {String(prop.Status).toLowerCase() === '1' || String(prop.Status).toLowerCase() === 'available' ? 'Available' : prop.Status}
+                  </span>
+                </td>
                 <td style={{ padding: '12px' }}>
                   {editingId === prop.arcgisId ? (
                     <input 

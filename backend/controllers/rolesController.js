@@ -222,8 +222,8 @@ exports.getAdminCatalog = async (req, res) => {
     if (mode === 'broker') statusWhere = `Status = '1' OR Status = '2' OR Status = 'Available' OR Status = 'Interested'`;
 
     const [unitsRes, villasRes] = await Promise.all([
-      axios.get(`${UNITS_URL}/query`, { params: { where: statusWhere, outFields: 'OBJECTID,Status,BuildingID_FK,Price', f: 'json' } }),
-      axios.get(`${VILLAS_URL}/query`, { params: { where: statusWhere, outFields: 'OBJECTID,GlobalID,Status,VillaModel,Price', f: 'json' } }),
+      axios.get(`${UNITS_URL}/query`, { params: { where: statusWhere, outFields: '*', f: 'json' } }),
+      axios.get(`${VILLAS_URL}/query`, { params: { where: statusWhere, outFields: '*', f: 'json' } }),
     ]);
 
     let units = (unitsRes.data.features || []).map(f => ({ ...f.attributes, sourceLayer: 'Units', arcgisId: String(f.attributes.OBJECTID) }));

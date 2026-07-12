@@ -1,5 +1,5 @@
-import { useState, useContext, useCallback } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useState, useContext, useCallback, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import SceneView from '@arcgis/core/views/SceneView';
 import MapViewer from './components/MapViewer';
 import MapViewer2D from './components/MapViewer2D';
@@ -42,6 +42,14 @@ const CustomerInterface = () => {
 
   const auth = useContext(AuthContext); 
   const isAuthenticated = !!auth?.user;
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (auth?.user) {
+      if (auth.user.role === 'admin') navigate('/admin', { replace: true });
+      if (auth.user.role === 'broker') navigate('/broker', { replace: true });
+    }
+  }, [auth?.user, navigate]);
 
   const handleSwitchTo3D = useCallback(() => setIs3DView(true), []);
   const handleViewReady = useCallback((view: SceneView) => setMapView(view), []);
@@ -125,20 +133,19 @@ const CustomerInterface = () => {
         <Icons.Fullscreen />
       </button>
 
-      {/* My Units under Login */}
-      {auth?.user?.role === 'owner' && (
-        <button 
-          title="My Units" 
-          onClick={() => setIsOwnerUnitsOpen(!isOwnerUnitsOpen)} 
-          className={`map-icon-btn ${isOwnerUnitsOpen ? 'active' : 'inactive'}`}
-          style={{ position: 'absolute', top: '75px', right: '20px', zIndex: 1000 }}
-        >
-          <Icons.Home />
-        </button>
-      )}
-
       <div style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 1000, display: 'flex', flexDirection: 'row', gap: '10px', alignItems: 'center' }}>
         
+        {/* My Units Button */}
+        {auth?.user?.role === 'owner' && (
+          <button 
+            title="My Units" 
+            onClick={() => setIsOwnerUnitsOpen(!isOwnerUnitsOpen)} 
+            className={`map-icon-btn ${isOwnerUnitsOpen ? 'active' : 'inactive'}`}
+          >
+            <Icons.Home />
+          </button>
+        )}
+
         {/* Last one on the left (user's "أخر واحد") */}
         {auth?.user && (
           <span style={{ fontSize: '13px', color: '#fff', backgroundColor: 'rgba(22,27,34,0.85)', padding: '12px 16px', borderRadius: '10px', border: '1px solid #30363d', fontFamily: 'sans-serif', backdropFilter: 'blur(10px)' }}>
@@ -216,7 +223,7 @@ const CustomerInterface = () => {
 
       {showLoginModal && <AuthModal onClose={() => setShowLoginModal(false)} onSuccess={() => setShowLoginModal(false)} />}
 
-      {is3DView && auth?.user?.role !== 'broker' && (
+      {is3DView && isAuthenticated && auth?.user?.role !== 'broker' && (
         <button 
           title="Property Catalog"
           onClick={() => setIsCatalogOpen(!isCatalogOpen)} 
@@ -227,7 +234,7 @@ const CustomerInterface = () => {
         </button>
       )}
 
-      {isCatalogOpen && is3DView && auth?.user?.role !== 'broker' && (
+      {isCatalogOpen && is3DView && isAuthenticated && auth?.user?.role !== 'broker' && (
         <>
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 999 }} onClick={() => setIsCatalogOpen(false)} />
           <UnitCatalog view={mapView} onClose={() => setIsCatalogOpen(false)} />
@@ -243,13 +250,27 @@ const CustomerInterface = () => {
   );
 };
 
+const ProtectedRoute = ({ children, allowedRoles }: { children: JSX.Element, allowedRoles: string[] }) => {
+  const auth = useContext(AuthContext);
+  
+  if (!auth?.user) {
+    return <Navigate to="/" replace />;
+  }
+  
+  if (!allowedRoles.includes(auth.user.role)) {
+    return <Navigate to="/" replace />;
+  }
+  
+  return children;
+};
+
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<CustomerInterface />} />
-        <Route path="/admin" element={<AdminRequests />} />
-        <Route path="/broker" element={<BrokerDashboard />} />
+        <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminRequests /></ProtectedRoute>} />
+        <Route path="/broker" element={<ProtectedRoute allowedRoles={['broker']}><BrokerDashboard /></ProtectedRoute>} />
       </Routes>
     </Router>
   );

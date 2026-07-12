@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 import SceneView from '@arcgis/core/views/SceneView';
+import { AuthContext } from '../context/AuthContext';
 
 const BrokerDashboard: React.FC = () => {
+  const auth = useContext(AuthContext);
   const [brokerData, setBrokerData] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<number>(0);
 
@@ -59,9 +61,17 @@ const BrokerDashboard: React.FC = () => {
         padding: '30px',
         boxShadow: '0 8px 32px rgba(0,0,0,0.5)'
       }}>
-        <h2 style={{ margin: '0 0 20px 0', color: '#58a6ff', borderBottom: '1px solid #30363d', paddingBottom: '15px' }}>
-          Brokers Dashboard
-        </h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #30363d', paddingBottom: '15px', marginBottom: '20px' }}>
+          <h2 style={{ margin: 0, color: '#58a6ff' }}>
+            Brokers Dashboard
+          </h2>
+          <button 
+            onClick={() => auth?.logout?.()}
+            style={{ backgroundColor: '#da3633', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s' }}
+          >
+            🚪 Logout
+          </button>
+        </div>
         
         {brokerData.length === 0 ? (
           <p style={{ textAlign: 'center', color: '#8b949e', marginTop: '40px', fontSize: '18px' }}>Loading brokers...</p>

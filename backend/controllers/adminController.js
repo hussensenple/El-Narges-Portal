@@ -1,0 +1,140 @@
+const Unit = require('../models/Unit');
+const BookingRequest = require('../models/BookingRequest');
+const User = require('../models/User');
+const axios = require('axios');
+
+exports.getDashboardStats = async (req, res) => {
+  try {
+    const UNITS_URL = 'https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WFL1/FeatureServer/37';
+    const VILLAS_URL = 'https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WSL3/FeatureServer/8';
+
+    const statsQuery = {
+      where: '1=1',
+      groupByFieldsForStatistics: 'Status',
+      outStatistics: JSON.stringify([
+        {statisticType: 'count', onStatisticField: 'OBJECTID', outStatisticFieldName: 'count'},
+        {statisticType: 'sum', onStatisticField: 'Price', outStatisticFieldName: 'totalPrice'}
+      ]),
+      f: 'json'
+    };
+
+    const [unitsRes, villasRes] = await Promise.all([
+      axios.get(`${UNITS_URL}/query`, { params: statsQuery }),
+      axios.get(`${VILLAS_URL}/query`, { params: statsQuery })
+    ]);
+
+    let aptAvailable = 0, aptReserved = 0, aptSold = 0;
+    let villaAvailable = 0, villaReserved = 0, villaSold = 0;
+    let totalRevenueRaw = 0;
+
+    const parseFeatures = (features, isVilla) => {
+      features.forEach(f => {
+        const attrs = f.attributes;
+        const status = attrs.Status ? attrs.Status.toString().toLowerCase().trim() : '';
+        const count = attrs.count || 0;
+        const price = attrs.totalPrice || 0;
+
+        if (status === '1' || status === 'available') {
+          if (isVilla) villaAvailable += count; else aptAvailable += count;
+        } else if (status === '3' || status === 'reserved') {
+          if (isVilla) villaReserved += count; else aptReserved += count;
+        } else if (status === '4' || status === 'sold') {
+          if (isVilla) villaSold += count; else aptSold += count;
+          totalRevenueRaw += price;
+        }
+      });
+    };
+
+    parseFeatures(unitsRes.data.features || [], false);
+    parseFeatures(villasRes.data.features || [], true);
+
+    const totalSoldUnits = aptSold + villaSold;
+    const totalAvailableUnits = aptAvailable + villaAvailable;
+    const totalReservedUnits = aptReserved + villaReserved;
+    const revenueMEGP = Math.round(totalRevenueRaw / 1000000);
+
+    const barChartData = [
+      { name: 'Villa', Available: villaAvailable, Sold: villaSold, Reserved: villaReserved },
+      { name: 'Apartment', Available: aptAvailable, Sold: aptSold, Reserved: aptReserved }
+    ];
+
+    const pieChartData = [
+      { name: 'Sold Apartments', value: aptSold },
+      { name: 'Sold Villas', value: villaSold }
+    ];
+
+    // 2. Recent Sales
+    const recentSalesRequests = await BookingRequest.find({ status: 'Approved' })
+      .sort({ updatedAt: -1 })
+      .limit(10);
+    
+    const recentSales = await Promise.all(recentSalesRequests.map(async (req) => {
+      let price = 'N/A';
+      try {
+        if (req.sourceLayer === 'Units' && req.objectId) {
+          const res = await axios.get(`${UNITS_URL}/query`, { params: { where: `OBJECTID=${req.objectId}`, outFields: 'Price', f: 'json' } });
+          if (res.data.features && res.data.features.length > 0) {
+            price = res.data.features[0].attributes.Price;
+          }
+        } else if (req.sourceLayer === 'Villas_Global' && req.unitId) {
+          const res = await axios.get(`${VILLAS_URL}/query`, { params: { where: `GlobalID='${req.unitId}'`, outFields: 'Price', f: 'json' } });
+          if (res.data.features && res.data.features.length > 0) {
+            price = res.data.features[0].attributes.Price;
+          }
+        }
+      } catch(e) { console.error('Error fetching price for recent sale'); }
+
+      return {
+        _id: req._id,
+        customerName: req.customerName,
+        type: req.sourceLayer === 'Units' ? 'Apartment' : 'Villa',
+        unitId: req.objectId || req.unitId.substring(0, 8),
+        price: price !== 'N/A' ? (price / 1000000).toFixed(2) + ' M' : 'N/A',
+        date: req.updatedAt
+      };
+    }));
+
+    // 3. Broker Performance Leaderboard
+    const brokers = await User.find({ role: 'broker' }).select('name');
+    const allUnits = await Unit.find({ brokerId: { $ne: null } }).select('brokerId arcgisId globalId');
+    const allRequests = await BookingRequest.find({}).select('unitId status');
+
+    const topBrokers = brokers.map(broker => {
+      const brokerUnits = allUnits.filter(u => u.brokerId && u.brokerId.toString() === broker._id.toString());
+      const brokerUnitIds = brokerUnits.map(u => u.arcgisId).concat(brokerUnits.map(u => u.globalId).filter(id => id));
+
+      const brokerRequests = allRequests.filter(req => brokerUnitIds.includes(req.unitId));
+
+      let totalRequests = brokerRequests.length;
+      let sold = brokerRequests.filter(r => r.status === 'Approved').length;
+      let declined = brokerRequests.filter(r => r.status === 'Declined').length;
+      let raisedToAdmin = brokerRequests.filter(r => r.status === 'Reserved' || r.status === 'Approved' || r.status === 'Rejected').length;
+
+      return {
+        _id: broker._id,
+        name: broker.name,
+        totalRequests,
+        sold,
+        declined,
+        raisedToAdmin
+      };
+    }).sort((a, b) => b.sold - a.sold || b.raisedToAdmin - a.raisedToAdmin || b.totalRequests - a.totalRequests);
+
+    res.status(200).json({
+      indicators: {
+        totalRevenue: revenueMEGP,
+        totalSoldUnits,
+        totalAvailableUnits,
+        totalReservedUnits
+      },
+      barChartData,
+      pieChartData,
+      recentSales,
+      topBrokers
+    });
+
+  } catch (error) {
+    console.error('getDashboardStats error:', error);
+    res.status(500).json({ error: 'Failed to fetch dashboard stats' });
+  }
+};

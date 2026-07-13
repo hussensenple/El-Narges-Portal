@@ -20,6 +20,9 @@ router.get('/catalog', rolesController.getAdminCatalog);
 // 7. Get units assigned to a specific user
 router.get('/user-units/:userId', rolesController.getUserUnits);
 
+// 9. Get Broker Performance
+router.get('/broker/:userId/performance', rolesController.getBrokerPerformance);
+
 // 1. Get users by role (MUST BE LAST to avoid intercepting /catalog)
 router.get('/:role', rolesController.getUsersByRole);
 

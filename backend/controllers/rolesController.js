@@ -3,6 +3,7 @@ const BrokerProfile = require('../models/BrokerProfile');
 const EngineerProfile = require('../models/EngineerProfile');
 const AdminProfile = require('../models/AdminProfile');
 const Unit = require('../models/Unit');
+const BookingRequest = require('../models/BookingRequest');
 const { updateArcGISStatus, checkAndUpdateBuildingCompleteness } = require('../services/arcgisService');
 
 // 1. Get users by role
@@ -10,7 +11,7 @@ exports.getUsersByRole = async (req, res) => {
   try {
     const { role } = req.params;
     let users = await User.find({ role }).select('-password');
-    
+
     // Attach profile data based on role
     if (role === 'owner') {
       users = await User.find({ role }).populate('ownedUnits').select('-password');
@@ -164,7 +165,7 @@ exports.removeProperty = async (req, res) => {
 
       // Unlink from MongoDB unit
       const updatedUnit = await Unit.findOneAndUpdate(
-        { arcgisId: unitId }, 
+        { arcgisId: unitId },
         { ownerId: null, status: '1' }
       );
       if (updatedUnit) {
@@ -179,7 +180,7 @@ exports.removeProperty = async (req, res) => {
       // ✅ Sync ArcGIS using the correct sourceLayer from MongoDB (Units vs Villas_Global)
       await updateArcGISStatus(correctArcgisId, '1', null, null, null, correctSourceLayer, unitToRemove?.objectId);
       console.log(`✅ ArcGIS reverted to Available for ${correctArcgisId} on layer ${correctSourceLayer}`);
-      
+
       if (correctSourceLayer === 'Units') {
         try {
           const axios = require('axios');
@@ -191,7 +192,7 @@ exports.removeProperty = async (req, res) => {
           if (bldgFK) {
             await checkAndUpdateBuildingCompleteness(bldgFK, correctArcgisId, 'Available');
           }
-        } catch(err) { console.error('Failed to update building completeness on revert', err); }
+        } catch (err) { console.error('Failed to update building completeness on revert', err); }
       }
     } else if (currentRole === 'broker') {
       // Unassign broker from unit
@@ -211,8 +212,8 @@ exports.getAdminCatalog = async (req, res) => {
     const { mode } = req.query; // 'owner' = Available only | 'broker' = Available + Interested, unassigned
     const axios = require('axios');
 
-    const UNITS_URL   = 'https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WFL1/FeatureServer/37';
-    const VILLAS_URL  = 'https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WSL3/FeatureServer/8';
+    const UNITS_URL = 'https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WFL1/FeatureServer/37';
+    const VILLAS_URL = 'https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WSL3/FeatureServer/8';
 
     // For 'owner': only ArcGIS Status=Available (1)
     // For 'broker': ArcGIS Status=Available (1) OR Interested (2)
@@ -233,13 +234,13 @@ exports.getAdminCatalog = async (req, res) => {
     // For 'all' mode, we don't filter them out, but we SHOULD mark them as Sold (4) if MongoDB says they have an owner, ensuring perfect sync.
     const ownedUnits = await Unit.find({ ownerId: { $ne: null } }).select('arcgisId');
     const ownedIds = new Set(ownedUnits.map(u => u.arcgisId));
-    
+
     if (mode !== 'all') {
-      units  = units.filter(u => !ownedIds.has(u.arcgisId));
+      units = units.filter(u => !ownedIds.has(u.arcgisId));
       villas = villas.filter(v => !ownedIds.has(v.arcgisId));
     } else {
       // For user catalog ('all'), force the Status to 4 (Sold) if MongoDB says it's owned
-      units  = units.map(u => ownedIds.has(u.arcgisId) ? { ...u, Status: '4' } : u);
+      units = units.map(u => ownedIds.has(u.arcgisId) ? { ...u, Status: '4' } : u);
       villas = villas.map(v => ownedIds.has(v.arcgisId) ? { ...v, Status: '4' } : v);
     }
 
@@ -247,7 +248,7 @@ exports.getAdminCatalog = async (req, res) => {
       // ✅ Also filter out units already assigned to a broker in MongoDB
       const assignedUnits = await Unit.find({ brokerId: { $ne: null } }).select('arcgisId');
       const assignedIds = new Set(assignedUnits.map(u => u.arcgisId));
-      units  = units.filter(u => !assignedIds.has(u.arcgisId));
+      units = units.filter(u => !assignedIds.has(u.arcgisId));
       villas = villas.filter(v => !assignedIds.has(v.arcgisId));
     }
 
@@ -283,7 +284,7 @@ exports.deleteUser = async (req, res) => {
     const { userId } = req.params;
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ error: 'User not found' });
-    
+
     // Cleanup if they were not a standard user
     if (user.role === 'broker') {
       await BrokerProfile.findOneAndDelete({ userId });
@@ -295,11 +296,122 @@ exports.deleteUser = async (req, res) => {
     } else if (user.role === 'owner') {
       await Unit.updateMany({ ownerId: userId }, { ownerId: null, status: '1' });
     }
-    
+
     await User.findByIdAndDelete(userId);
     res.status(200).json({ message: 'User deleted successfully' });
   } catch (error) {
     console.error('Delete user error:', error);
     res.status(500).json({ error: 'Failed to delete user' });
+  }
+};
+// 9. Get Broker Performance
+exports.getBrokerPerformance = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // 1. Get all units currently assigned to this broker
+    const assignedUnits = await Unit.find({ brokerId: userId });
+
+    // Indicators
+    let availableUnits = 0;
+    let reservedUnits = 0;
+    let soldUnits = 0;
+
+    const unitGlobalIds = [];
+
+    assignedUnits.forEach(unit => {
+      if (unit.status === '1') availableUnits++;
+      if (unit.status === '3') reservedUnits++;
+      if (unit.status === '4') soldUnits++;
+
+      if (unit.arcgisId) unitGlobalIds.push(unit.arcgisId);
+      if (unit.globalId && !unitGlobalIds.includes(unit.globalId)) unitGlobalIds.push(unit.globalId);
+    });
+
+    // 2. Fetch all BookingRequests for these units
+    const bookingRequests = await BookingRequest.find({
+      unitId: { $in: unitGlobalIds }
+    });
+
+    // Pie Chart Data: Pending vs Reserved vs Sold vs Rejected Requests
+    let pendingRequests = bookingRequests.filter(req => req.status === 'Pending').length;
+    let reservedRequests = bookingRequests.filter(req => req.status === 'Reserved').length;
+    let soldRequests = bookingRequests.filter(req => req.status === 'Approved').length;
+    let rejectedRequests = bookingRequests.filter(req => req.status === 'Rejected' || req.status === 'Declined').length;
+
+    // Bar Chart Data: Unit status by property type
+    let aptAvailable = 0, aptReserved = 0, aptSold = 0;
+    let villaAvailable = 0, villaReserved = 0, villaSold = 0;
+
+    assignedUnits.forEach(u => {
+      if (u.sourceLayer === 'Units') {
+        if (u.status === '1') aptAvailable++;
+        if (u.status === '3') aptReserved++;
+        if (u.status === '4') aptSold++;
+      } else {
+        if (u.status === '1') villaAvailable++;
+        if (u.status === '3') villaReserved++;
+        if (u.status === '4') villaSold++;
+      }
+    });
+
+    const hasApartments = assignedUnits.some(u => u.sourceLayer === 'Units');
+    const hasVillas = assignedUnits.some(u => u.sourceLayer === 'Villas_Global');
+
+    const barChartData = [];
+    if (hasVillas) {
+      barChartData.push({ name: 'Villa', Available: villaAvailable, Sold: villaSold, Reserved: villaReserved });
+    }
+    if (hasApartments) {
+      barChartData.push({ name: 'Apartment', Available: aptAvailable, Sold: aptSold, Reserved: aptReserved });
+    }
+
+    // Calculate Total Revenue (M EGP)
+    const axios = require('axios');
+    const UNITS_URL = 'https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WFL1/FeatureServer/37';
+    const VILLAS_URL = 'https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WSL3/FeatureServer/8';
+
+    let totalRevenue = 0;
+    const soldApartmentsIds = assignedUnits.filter(u => u.status === '4' && u.sourceLayer === 'Units').map(u => u.objectId).filter(id => id);
+    const soldVillasIds = assignedUnits.filter(u => u.status === '4' && u.sourceLayer === 'Villas_Global').map(u => u.arcgisId).filter(id => id);
+
+    if (soldApartmentsIds.length > 0) {
+      const whereClause = `OBJECTID IN (${soldApartmentsIds.join(',')})`;
+      const unitsRes = await axios.get(`${UNITS_URL}/query`, { params: { where: whereClause, outFields: 'Price', f: 'json' } });
+      (unitsRes.data.features || []).forEach(f => {
+        if (f.attributes.Price) totalRevenue += Number(f.attributes.Price);
+      });
+    }
+
+    if (soldVillasIds.length > 0) {
+      const formattedIds = soldVillasIds.map(id => `'${id}'`).join(',');
+      const whereClause = `GlobalID IN (${formattedIds})`;
+      const villasRes = await axios.get(`${VILLAS_URL}/query`, { params: { where: whereClause, outFields: 'Price', f: 'json' } });
+      (villasRes.data.features || []).forEach(f => {
+        if (f.attributes.Price) totalRevenue += Number(f.attributes.Price);
+      });
+    }
+
+    const revenueMEGP = Math.floor(totalRevenue / 1000000);
+
+    res.status(200).json({
+      indicators: {
+        availableUnits,
+        reservedUnits,
+        soldUnits,
+        revenueMEGP
+      },
+      pieChartData: [
+        { name: 'Pending', value: pendingRequests },
+        { name: 'Reserved', value: reservedRequests },
+        { name: 'Sold', value: soldRequests },
+        { name: 'Rejected', value: rejectedRequests }
+      ],
+      barChartData
+    });
+
+  } catch (error) {
+    console.error('getBrokerPerformance error:', error);
+    res.status(500).json({ error: 'Failed to fetch broker performance' });
   }
 };

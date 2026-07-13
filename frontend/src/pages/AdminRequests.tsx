@@ -3,12 +3,13 @@ import axios from 'axios';
 import { io } from 'socket.io-client';
 import AdminComplaintsTab from '../components/AdminComplaintsTab'; // 👈 استيراد التابة الجديدة
 import PropertyManagementTab from '../components/admin/PropertyManagementTab';
+import AdminDashboardTab from '../components/admin/AdminDashboardTab';
 
 import RolesWidget from '../components/admin/RolesWidget';
 
 const AdminPortal = () => {
 // حالة التابات بعد دمج الشكاوى (شغلك) والصلاحيات (شغل صاحبك)
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'requests' | 'complaints' | 'roles' | 'properties'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'requests' | 'complaints' | 'roles' | 'properties'>('analytics');
   const [complaintsCount, setComplaintsCount] = useState(0);
   const [requests, setRequests] = useState([]);
 
@@ -74,10 +75,10 @@ const AdminPortal = () => {
         <h2 style={{ margin: '0 20px 0 0', color: '#58a6ff' }}>El Narges Portal</h2>
         
         <button 
-          onClick={() => setActiveTab('dashboard')}
-          style={{ backgroundColor: activeTab === 'dashboard' ? '#1f6feb' : 'transparent', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s' }}
+          onClick={() => setActiveTab('analytics')}
+          style={{ backgroundColor: activeTab === 'analytics' ? '#1f6feb' : 'transparent', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s' }}
         >
-          📊 Dashboard
+          📈 Analytics Overview
         </button>
 
         <button 
@@ -131,12 +132,9 @@ const AdminPortal = () => {
       {/* 🖥️ منطقة عرض المحتوى (Content Area) */}
       <div style={{ flex: 1, overflow: 'hidden' }}>
         
-        {/* التابة 1: Dashboard */}
-        <div style={{ display: activeTab === 'dashboard' ? 'block' : 'none', height: '100%' }}>
-          <iframe 
-            src="https://www.arcgis.com/apps/dashboards/345a8b7a40004be69a8de40951123b59" 
-            width="100%" height="100%" frameBorder="0" title="ArcGIS Dashboard" style={{ display: 'block' }}
-          />
+        {/* التابة الجديدة: Analytics */}
+        <div style={{ display: activeTab === 'analytics' ? 'block' : 'none', height: '100%', paddingBottom: '5px', boxSizing: 'border-box' }}>
+          <AdminDashboardTab />
         </div>
 
         {/* التابة 2: Requests */}

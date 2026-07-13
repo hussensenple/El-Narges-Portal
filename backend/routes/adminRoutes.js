@@ -4,6 +4,10 @@ const BookingRequest = require('../models/BookingRequest');
 
 // 🚀 استيراد الكنترولر العبقري اللي تعبنا فيه وبيعمل كل حاجة صح
 const { approveRequest, adminRejectRequest } = require('../controllers/bookingController');
+const { getDashboardStats } = require('../controllers/adminController');
+
+// 0. Dashboard Stats
+router.get('/dashboard-stats', getDashboardStats);
 
 // 1. جلب الطلبات المعلقة للوحة الأدمن
 router.get('/pending', async (req, res) => {

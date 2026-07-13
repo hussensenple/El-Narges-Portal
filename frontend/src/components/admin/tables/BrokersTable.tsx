@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import RoleChangeModal from '../modals/RoleChangeModal';
 import EditUserModal from '../modals/EditUserModal';
+import BrokerPerformanceModal from '../modals/BrokerPerformanceModal';
 
 const BrokersTable = () => {
   const [users, setUsers] = useState<any[]>([]);
@@ -11,6 +12,7 @@ const BrokersTable = () => {
   // Modal State
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [editingUser, setEditingUser] = useState<any>(null);
+  const [performanceBroker, setPerformanceBroker] = useState<any>(null);
 
   const fetchUsers = async () => {
     try {
@@ -87,7 +89,7 @@ const BrokersTable = () => {
                 <td style={{ padding: '12px' }}><span style={{ backgroundColor: '#8957e533', color: '#8957e5', padding: '4px 8px', borderRadius: '12px', fontSize: '12px' }}>Broker</span></td>
                 <td style={{ padding: '12px', display: 'flex', gap: '8px' }}>
                   <button onClick={() => setEditingUser(user)} style={{ backgroundColor: '#21262d', color: '#fff', border: '1px solid #30363d', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>✏️ Edit</button>
-                  <button style={{ backgroundColor: '#238636', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>📊 Performance</button>
+                  <button onClick={() => setPerformanceBroker(user)} style={{ backgroundColor: '#238636', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>📊 Performance</button>
                   <button 
                     onClick={() => setSelectedUser(user)}
                     style={{ backgroundColor: '#da3633', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}
@@ -122,6 +124,13 @@ const BrokersTable = () => {
           user={editingUser}
           onClose={() => setEditingUser(null)}
           onSuccess={() => { setEditingUser(null); fetchUsers(); }}
+        />
+      )}
+
+      {performanceBroker && (
+        <BrokerPerformanceModal
+          broker={performanceBroker}
+          onClose={() => setPerformanceBroker(null)}
         />
       )}
     </div>

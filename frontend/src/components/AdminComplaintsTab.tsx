@@ -15,6 +15,7 @@ interface Complaint {
   coordinates: { lat: number; lon?: number; lng?: number } | null;
   status: string;
   createdAt?: string;
+  ownerId?: { name: string; email: string; phone?: string };
 }
 
 // 🚀 1. إضافة الـ Interface عشان الـ TypeScript يتعرف على الـ Prop الجديدة
@@ -203,6 +204,12 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
                     {complaint.createdAt ? new Date(complaint.createdAt).toLocaleDateString() : ''}
                   </span>
                 </div>
+                {complaint.ownerId && (
+                  <div style={{ fontSize: '13px', color: '#c9d1d9', marginTop: '-4px', marginBottom: '4px' }}>
+                    👤 <strong>{complaint.ownerId.name}</strong> 
+                    {complaint.ownerId.phone ? ` 📞 ${complaint.ownerId.phone}` : ''}
+                  </div>
+                )}
                 <p style={{ margin: 0, color: '#c9d1d9', fontSize: '15px', lineHeight: '1.5' }}>{complaint.description}</p>
                 <button 
                   onClick={() => handleZoomToMap(complaint)}

@@ -199,3 +199,31 @@ exports.adminRejectRequest = async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 };
+
+exports.getMyBookingRequests = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    const userRequests = await BookingRequest.find({ userId }).populate('userId', 'name phone email').lean();
+    
+    const ownerUnits = await Unit.find({ ownerId: userId });
+    let unitIds = [];
+    ownerUnits.forEach(u => {
+      if (u.arcgisId) unitIds.push(u.arcgisId);
+      if (u.globalId && !unitIds.includes(u.globalId)) unitIds.push(u.globalId);
+    });
+    
+    const unitRequests = await BookingRequest.find({
+      unitId: { $in: unitIds },
+      userId: { $ne: userId } 
+    }).populate('userId', 'name phone email').lean();
+
+    const allRequests = [...userRequests, ...unitRequests];
+    allRequests.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    res.status(200).json(allRequests);
+  } catch (error) {
+    console.error("Error getting my booking requests:", error);
+    res.status(500).json({ error: "An error occurred while fetching your requests" });
+  }
+};

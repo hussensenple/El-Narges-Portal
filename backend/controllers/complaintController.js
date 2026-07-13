@@ -6,7 +6,7 @@ const { sendComplaintEmail } = require('../utils/emailService');
 const submitComplaint = async (req, res) => {
   try {
     const { arcgisId, title, type, description, coordinates } = req.body;
-    const ownerId = req.user.id; 
+    const ownerId = req.user.id;
 
     // التأكد إن المستخدم فعلاً مالك (Owner)
     const user = await User.findById(ownerId);
@@ -24,10 +24,10 @@ const submitComplaint = async (req, res) => {
     });
 
     await newComplaint.save();
-    
+
     // إرسال الإشعار اللحظي للأدمن
     req.app.get('io').emit('newComplaint');
-    
+
     res.status(201).json({ msg: 'تم إرسال شكوتك بنجاح، سيتم مراجعتها في أقرب وقت.' });
   } catch (error) {
     console.error("Complaint Submission Error:", error);
@@ -41,7 +41,7 @@ const getAllComplaints = async (req, res) => {
     const complaints = await Complaint.find()
       .populate('ownerId', 'name email phone')
       .sort({ createdAt: -1 });
-      
+
     res.status(200).json(complaints);
   } catch (error) {
     res.status(500).json({ error: 'حدث خطأ أثناء جلب الشكاوى' });
@@ -73,8 +73,21 @@ const resolveComplaint = async (req, res) => {
   }
 };
 
+// 4. جلب الشكاوى الخاصة بالمالك الحالي
+const getMyComplaints = async (req, res) => {
+  try {
+    const ownerId = req.user.id;
+    const complaints = await Complaint.find({ ownerId }).sort({ createdAt: -1 });
+    res.status(200).json(complaints);
+  } catch (error) {
+    console.error("Get My Complaints Error:", error);
+    res.status(500).json({ error: 'حدث خطأ أثناء جلب الشكاوى الخاصة بك' });
+  }
+};
+
 module.exports = {
   submitComplaint,
   getAllComplaints,
-  resolveComplaint
+  resolveComplaint,
+  getMyComplaints
 };

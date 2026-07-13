@@ -5,8 +5,13 @@ const User = require('../models/User'); // 👈 استيراد موديل الم
 const auth = require('../middleware/authMiddleware');
 
 // 🚀 استيراد دالة الموافقة من الكنترولر اللي لسه معدلينه
-const { approveRequest, brokerReviewRequest } = require('../controllers/bookingController');
+const { approveRequest, brokerReviewRequest, getMyBookingRequests } = require('../controllers/bookingController');
 const Unit = require('../models/Unit'); 
+
+// ==========================================
+// 0. مسار طلباتي (للمالك)
+// ==========================================
+router.get('/my-requests', auth, getMyBookingRequests); 
 
 // ==========================================
 // 1. مسار تقديم طلب حجز جديد (من العميل)

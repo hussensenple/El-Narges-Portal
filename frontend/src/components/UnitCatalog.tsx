@@ -18,6 +18,7 @@ const UnitCatalog = ({ view, onClose }: UnitCatalogProps) => {
   const auth = useContext(AuthContext);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [bookingUnit, setBookingUnit] = useState<Graphic | null>(null);
+  const [designImage, setDesignImage] = useState<string | null>(null);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -354,9 +355,14 @@ const UnitCatalog = ({ view, onClose }: UnitCatalogProps) => {
                   
                   <div>💰 Price: <strong style={{ color: '#fff' }}>{formattedPrice}</strong></div>
                 </div>
-                <button onClick={(e) => handleBuyClick(e, unit)} disabled={!isAvailable} style={{ width: '100%', padding: '10px', backgroundColor: isAvailable ? '#1f6feb' : '#21262d', color: isAvailable ? '#fff' : '#8b949e', border: 'none', borderRadius: '6px', cursor: isAvailable ? 'pointer' : 'not-allowed', fontWeight: 'bold' }}>
-                  {isAvailable ? "Proceed to Buy" : "Not Available"}
-                </button>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button onClick={(e) => { e.stopPropagation(); setDesignImage(`/${unit.attributes.Image_Name || 'A.png'}`); }} style={{ flex: 1, padding: '10px', backgroundColor: '#21262d', color: '#c9d1d9', border: '1px solid #30363d', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', fontSize: '13px' }}>
+                    📐 Design
+                  </button>
+                  <button onClick={(e) => handleBuyClick(e, unit)} disabled={!isAvailable} style={{ flex: 2, padding: '10px', backgroundColor: isAvailable ? '#1f6feb' : '#21262d', color: isAvailable ? '#fff' : '#8b949e', border: 'none', borderRadius: '6px', cursor: isAvailable ? 'pointer' : 'not-allowed', fontWeight: 'bold' }}>
+                    {isAvailable ? "Proceed to Buy" : "Not Available"}
+                  </button>
+                </div>
               </div>
             );
           })}
@@ -384,6 +390,15 @@ const UnitCatalog = ({ view, onClose }: UnitCatalogProps) => {
               </button>
               <button onClick={() => setBookingUnit(null)} disabled={isLoading} style={{ flex: 1, padding: '10px', backgroundColor: '#21262d', color: '#8b949e', border: '1px solid #30363d', borderRadius: '6px', cursor: 'pointer' }}>Cancel</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {designImage && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 3000 }} onClick={() => setDesignImage(null)}>
+          <div style={{ position: 'relative', backgroundColor: '#161b22', padding: '15px', borderRadius: '12px', border: '1px solid #30363d', maxWidth: '90%', maxHeight: '90%', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
+            <button onClick={() => setDesignImage(null)} style={{ position: 'absolute', top: '-12px', right: '-12px', background: '#f85149', border: 'none', color: '#fff', fontSize: '18px', cursor: 'pointer', width: '30px', height: '30px', borderRadius: '50%', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+            <img src={designImage} alt="Property Design" style={{ maxWidth: '100%', maxHeight: '80vh', objectFit: 'contain', borderRadius: '8px' }} />
           </div>
         </div>
       )}

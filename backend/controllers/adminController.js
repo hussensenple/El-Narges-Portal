@@ -7,9 +7,19 @@ exports.getDashboardStats = async (req, res) => {
   try {
     const UNITS_URL = 'https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WFL1/FeatureServer/37';
     const VILLAS_URL = 'https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WSL3/FeatureServer/8';
+    const BUILDINGS_URL = 'https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WFL1/FeatureServer/1';
 
-    const statsQuery = {
-      where: '1=1',
+    const { extent } = req.query;
+    let parsedExtent = null;
+    if (extent) {
+      try {
+        parsedExtent = JSON.parse(extent);
+      } catch (e) {
+        console.error('Error parsing extent:', e);
+      }
+    }
+
+    const baseStatsQuery = {
       groupByFieldsForStatistics: 'Status',
       outStatistics: JSON.stringify([
         {statisticType: 'count', onStatisticField: 'OBJECTID', outStatisticFieldName: 'count'},
@@ -18,10 +28,52 @@ exports.getDashboardStats = async (req, res) => {
       f: 'json'
     };
 
-    const [unitsRes, villasRes] = await Promise.all([
-      axios.get(`${UNITS_URL}/query`, { params: statsQuery }),
-      axios.get(`${VILLAS_URL}/query`, { params: statsQuery })
-    ]);
+    let unitsRes, villasRes;
+
+    if (parsedExtent) {
+      const geometry = JSON.stringify(parsedExtent);
+      
+      const villaQuery = { ...baseStatsQuery, geometry, geometryType: 'esriGeometryEnvelope', spatialRel: 'esriSpatialRelIntersects', where: '1=1' };
+      
+      const buildingsQuery = {
+        geometry,
+        geometryType: 'esriGeometryEnvelope',
+        spatialRel: 'esriSpatialRelIntersects',
+        outFields: 'GlobalID,globalid',
+        returnGeometry: false,
+        where: '1=1',
+        f: 'json'
+      };
+      
+      // START VILLAS AND BUILDINGS IN PARALLEL
+      const villasPromise = axios.post(`${VILLAS_URL}/query`, new URLSearchParams(villaQuery).toString(), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
+      const buildingsPromise = axios.post(`${BUILDINGS_URL}/query`, new URLSearchParams(buildingsQuery).toString(), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
+      
+      const buildRes = await buildingsPromise;
+      const buildingIds = (buildRes.data.features || []).map(f => f.attributes.GlobalID || f.attributes.globalid).filter(id => id);
+      
+      let unitsWhere = '1=2'; // false condition
+      if (buildRes.data.exceededTransferLimit || buildingIds.length >= 1000) {
+        // If we hit the max record count, it means the user zoomed out to view almost everything.
+        // Fall back to global stats for units to avoid inaccurate data and huge IN clauses.
+        unitsWhere = '1=1';
+      } else if (buildingIds.length > 0) {
+        const idList = buildingIds.map(id => `'${id}'`).join(',');
+        unitsWhere = `BuildingID_FK IN (${idList})`;
+      }
+      const unitQuery = { ...baseStatsQuery, where: unitsWhere };
+
+      const unitsPromise = axios.post(`${UNITS_URL}/query`, new URLSearchParams(unitQuery).toString(), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
+
+      unitsRes = await unitsPromise;
+      villasRes = await villasPromise;
+    } else {
+      const globalQuery = { ...baseStatsQuery, where: '1=1' };
+      [unitsRes, villasRes] = await Promise.all([
+        axios.get(`${UNITS_URL}/query`, { params: globalQuery }),
+        axios.get(`${VILLAS_URL}/query`, { params: globalQuery })
+      ]);
+    }
 
     let aptAvailable = 0, aptReserved = 0, aptSold = 0;
     let villaAvailable = 0, villaReserved = 0, villaSold = 0;

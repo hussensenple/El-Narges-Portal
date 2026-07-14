@@ -12,6 +12,8 @@ const AdminPortal = () => {
   const [activeTab, setActiveTab] = useState<'analytics' | 'requests' | 'complaints' | 'roles' | 'properties'>('analytics');
   const [complaintsCount, setComplaintsCount] = useState(0);
   const [requests, setRequests] = useState([]);
+  const [selectedRequests, setSelectedRequests] = useState<string[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const fetchRequests = async () => {
     try {
@@ -19,7 +21,12 @@ const AdminPortal = () => {
       const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin/pending`, {
         headers: { 'x-auth-token': token }
       });
-      setRequests(res.data);
+      const sortedData = res.data.sort((a: any, b: any) => {
+        const dateA = new Date(a.createdAt || 0).getTime();
+        const dateB = new Date(b.createdAt || 0).getTime();
+        return dateB - dateA;
+      });
+      setRequests(sortedData);
     } catch (error) {
       console.error("Error fetching requests:", error);
     }
@@ -64,6 +71,61 @@ const AdminPortal = () => {
       } catch (error) {
         alert("❌ An error occurred during rejection.");
       }
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedRequests.length === requests.length) {
+      setSelectedRequests([]);
+    } else {
+      setSelectedRequests(requests.map((r: any) => r._id));
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    if (selectedRequests.includes(id)) {
+      setSelectedRequests(selectedRequests.filter(reqId => reqId !== id));
+    } else {
+      setSelectedRequests([...selectedRequests, id]);
+    }
+  };
+
+  const handleBulkApprove = async () => {
+    if (selectedRequests.length === 0) return alert("Select requests first");
+    if (window.confirm(`Are you sure you want to approve ${selectedRequests.length} requests? The map will be updated immediately.`)) {
+      setIsProcessing(true);
+      const token = localStorage.getItem('token');
+      const promises = selectedRequests.map(id => 
+        axios.post(`${import.meta.env.VITE_API_URL}/api/admin/approve/${id}`, {}, { headers: { 'x-auth-token': token } })
+          .then(() => 1)
+          .catch(() => { console.error(`Failed to approve ${id}`); return 0; })
+      );
+      const results = await Promise.all(promises);
+      const successCount = results.reduce((acc, val) => acc + val, 0);
+      alert(`✅ Approved ${successCount} out of ${selectedRequests.length} requests!`);
+      setSelectedRequests([]);
+      fetchRequests();
+      setIsProcessing(false);
+    }
+  };
+
+  const handleBulkReject = async () => {
+    if (selectedRequests.length === 0) return alert("Select requests first");
+    const reason = window.prompt(`Enter reason for rejecting ${selectedRequests.length} requests:`);
+    if (reason !== null) {
+      setIsProcessing(true);
+      const token = localStorage.getItem('token');
+      const promises = selectedRequests.map(id => 
+        axios.post(`${import.meta.env.VITE_API_URL}/api/admin/reject/${id}`, { reason }, { headers: { 'x-auth-token': token } })
+          .then(() => 1)
+          .catch(() => { console.error(`Failed to reject ${id}`); return 0; })
+      );
+      const results = await Promise.all(promises);
+      const successCount = results.reduce((acc, val) => acc + val, 0);
+      alert(`❌ Rejected ${successCount} out of ${selectedRequests.length} requests!`);
+      setSelectedRequests([]);
+      fetchRequests();
+      setIsProcessing(false);
     }
   };
 
@@ -140,13 +202,33 @@ const AdminPortal = () => {
         {/* التابة 2: Requests */}
         <div style={{ display: activeTab === 'requests' ? 'block' : 'none', padding: '20px', height: '100%', overflowY: 'auto' }}>
           <div style={{ padding: '20px' }}>
-            <h2 style={{ marginBottom: '20px', color: '#58a6ff' }}>Pending Requests</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ margin: 0, color: '#58a6ff' }}>Pending Requests</h2>
+              {selectedRequests.length > 0 && (
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button onClick={handleBulkApprove} disabled={isProcessing} style={{ backgroundColor: '#238636', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: isProcessing ? 'not-allowed' : 'pointer', fontWeight: 'bold', opacity: isProcessing ? 0.7 : 1 }}>
+                    {isProcessing ? 'Processing...' : `Approve Selected (${selectedRequests.length})`}
+                  </button>
+                  <button onClick={handleBulkReject} disabled={isProcessing} style={{ backgroundColor: '#da3633', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: isProcessing ? 'not-allowed' : 'pointer', fontWeight: 'bold', opacity: isProcessing ? 0.7 : 1 }}>
+                    {isProcessing ? 'Processing...' : `Reject Selected (${selectedRequests.length})`}
+                  </button>
+                </div>
+              )}
+            </div>
             {requests.length === 0 ? (
               <p style={{ color: '#8b949e' }}>No pending requests.</p>
             ) : (
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', backgroundColor: '#161b22', borderRadius: '8px', overflow: 'hidden' }}>
                 <thead>
                   <tr style={{ backgroundColor: '#21262d', color: '#c9d1d9' }}>
+                    <th style={{ padding: '12px', width: '40px' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={requests.length > 0 && selectedRequests.length === requests.length}
+                        onChange={toggleSelectAll}
+                        style={{ cursor: 'pointer' }}
+                      />
+                    </th>
                     <th style={{ padding: '12px' }}>Unit ID</th>
                     <th style={{ padding: '12px' }}>Customer Name</th>
                     <th style={{ padding: '12px' }}>Phone</th>
@@ -155,7 +237,15 @@ const AdminPortal = () => {
                 </thead>
                 <tbody>
                   {requests.map((req: { _id: string, objectId?: number, unitId: string, userId?: { name: string, phone: string } }) => (
-                    <tr key={req._id} style={{ borderTop: '1px solid #30363d' }}>
+                    <tr key={req._id} style={{ borderTop: '1px solid #30363d', backgroundColor: selectedRequests.includes(req._id) ? '#1f6feb22' : 'transparent' }}>
+                      <td style={{ padding: '12px' }}>
+                        <input 
+                          type="checkbox" 
+                          checked={selectedRequests.includes(req._id)}
+                          onChange={() => toggleSelect(req._id)}
+                          style={{ cursor: 'pointer' }}
+                        />
+                      </td>
                       <td style={{ padding: '12px' }}>#{req.objectId || req.unitId}</td>
                       <td style={{ padding: '12px' }}>{req.userId?.name}</td>
                       <td style={{ padding: '12px' }}>{req.userId?.phone}</td>

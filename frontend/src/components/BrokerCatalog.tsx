@@ -62,16 +62,18 @@ const BrokerCatalog = ({ view, onClose }: BrokerCatalogProps) => {
     if (!view) return;
     try {
       if (unit.sourceLayer === 'Units' || unit.unitName !== 'فيلا') {
-        const unitsLayer = view.map.layers.find((l: any) => l.title === 'Units');
-        if (!unitsLayer) {
-          alert("Units layer not found.");
-          return;
+        let bldgFK = unit.buildingFK || unit.BuildingID_FK;
+        if (!bldgFK) {
+          const UNITS_URL = 'https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WFL1/FeatureServer/37';
+          const res = await axios.get(`${UNITS_URL}/query`, {
+            params: {
+              where: `OBJECTID=${unit.objectId || unit.arcgisId}`,
+              outFields: 'BuildingID_FK',
+              f: 'json'
+            }
+          });
+          bldgFK = res.data.features?.[0]?.attributes?.BuildingID_FK;
         }
-        const q = unitsLayer.createQuery();
-        q.where = `OBJECTID = ${unit.objectId || unit.arcgisId}`;
-        q.outFields = ['BuildingID_FK'];
-        const res = await unitsLayer.queryFeatures(q);
-        const bldgFK = res.features?.[0]?.attributes?.BuildingID_FK;
 
         if (bldgFK) {
           const bldgLayer = view.map.layers.find((l: any) => l.title === 'Buildings_Global' || l.title === 'Buildings');

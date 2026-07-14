@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 import { PieChart, Pie, Cell, Tooltip as PieTooltip, Legend as PieLegend, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as BarTooltip, Legend as BarLegend, ResponsiveContainer } from 'recharts';
 import MapViewer from '../MapViewer';
 import BrokerPerformanceModal from './modals/BrokerPerformanceModal';
+import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
 
 const renderCustomizedLabel = (props: any) => {
   const { cx, percent, index, x, y } = props;
@@ -19,12 +20,16 @@ const AdminDashboardTab = () => {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [selectedBroker, setSelectedBroker] = useState<any>(null);
+  const [mapExtent, setMapExtent] = useState<any>(null);
+  const extentRef = useRef<any>(null);
 
-  const fetchStats = async () => {
+  const fetchStats = async (extent?: any) => {
     try {
       const token = localStorage.getItem('token');
+      const params = extent ? { extent: JSON.stringify(extent) } : {};
       const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin/dashboard-stats`, {
-        headers: { 'x-auth-token': token }
+        headers: { 'x-auth-token': token },
+        params
       });
       setStats(res.data);
     } catch (error) {
@@ -41,13 +46,30 @@ const AdminDashboardTab = () => {
     const socket = io(import.meta.env.VITE_API_URL);
     socket.on('requestUpdated', () => {
       console.log('Real-time update triggered for dashboard stats');
-      fetchStats();
+      fetchStats(extentRef.current);
     });
 
     return () => {
       socket.disconnect();
     };
   }, []);
+
+  useEffect(() => {
+    if (!mapExtent) return;
+    extentRef.current = mapExtent;
+    fetchStats(mapExtent);
+  }, [mapExtent]);
+
+  const handleViewReady = (view: any) => {
+    reactiveUtils.watch(
+      () => view.stationary,
+      (isStationary) => {
+        if (isStationary && view.extent) {
+          setMapExtent(view.extent.toJSON());
+        }
+      }
+    );
+  };
 
   const COLORS = ['#8957e5', '#3fb950'];
   
@@ -137,7 +159,7 @@ const AdminDashboardTab = () => {
         {/* CENTER COLUMN: 3D Map */}
         <div style={{ flex: 2, backgroundColor: '#21262d', borderRadius: '16px', border: '1px solid #30363d', overflow: 'hidden', position: 'relative' }}>
           <MapViewer 
-            onViewReady={() => {}} 
+            onViewReady={handleViewReady} 
             isLayersOpen={false} 
             isWeatherOpen={false} 
             setIsWeatherOpen={() => {}} 

@@ -328,7 +328,7 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
                 style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #30363d', backgroundColor: '#010409', color: '#fff', direction: 'ltr' }}
                 placeholder="Search for an apartment, ask about prices..." 
               />
-              <button onClick={handleSend} style={{ padding: '10px 16px', backgroundColor: '#238636', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>Send</button>
+              <button onClick={() => handleSend()} style={{ padding: '10px 16px', backgroundColor: '#238636', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>Send</button>
             </div>
           </div>
         )}

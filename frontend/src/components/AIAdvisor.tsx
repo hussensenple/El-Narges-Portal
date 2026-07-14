@@ -105,12 +105,12 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
     }
   };
   
-  const handleSend = async () => {
-    if (!input.trim()) return;
+  const handleSend = async (overrideInput?: string) => {
+    const userMsg = overrideInput || input;
+    if (!userMsg.trim()) return;
 
-    const userMsg = input;
     setMessages(prev => [...prev, { sender: 'user', text: userMsg }]);
-    setInput('');
+    if (!overrideInput) setInput('');
     setIsLoading(true);
 
     try {
@@ -286,6 +286,38 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
                 </div>
               ))}
               {isLoading && <div style={{ fontSize: '13px', color: '#8b949e', alignSelf: 'flex-start' }}>Thinking...</div>}
+              {messages.length === 1 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: 'auto', padding: '0 4px' }}>
+                  <span style={{ fontSize: '12px', color: '#8b949e' }}>Example questions:</span>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {[
+                      "What are the payment plans?", 
+                      "What is the ROI for apartments?",
+                      "What is the cancellation policy?",
+                      "Are pets allowed in the compound?",
+                      "Show me villas under 30 million"
+                    ].map((q, idx) => (
+                      <button 
+                        key={idx}
+                        onClick={() => handleSend(q)}
+                        style={{
+                          backgroundColor: '#21262d',
+                          color: '#58a6ff',
+                          border: '1px solid #30363d',
+                          borderRadius: '16px',
+                          padding: '6px 12px',
+                          fontSize: '12px',
+                          cursor: 'pointer',
+                          transition: 'background-color 0.2s',
+                          textAlign: 'left'
+                        }}
+                      >
+                        {q}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             
             <div style={{ padding: '12px', borderTop: '1px solid #30363d', display: 'flex', gap: '8px', backgroundColor: '#0d1117' }}>

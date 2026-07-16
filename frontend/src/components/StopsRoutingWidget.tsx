@@ -6,11 +6,8 @@ import FeatureSet from '@arcgis/core/rest/support/FeatureSet';
 import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
 import Point from '@arcgis/core/geometry/Point';
 import SceneView from '@arcgis/core/views/SceneView';
-import esriConfig from "@arcgis/core/config"; // 👈 استدعاء إعدادات Esri
-
-// 👈 ضع الـ API Key الخاص بك هنا (الذي يبدأ بـ AAPK)
-esriConfig.apiKey = "AAPTalXA9GcZ5lZfym8hKak90bg..wGOn5mTNFbEDgQTSt91zZ3JRiK5hffTjYdmL1ERTSPKglXpsx21W9RNlgzgoJF0Jz2FSdRc_kgkQKBh7X5t02_GyVncvhTB8KHXfFs1UpjrO_P_Si65XTQXNm5Ad_12WXsc1fjlDCgbbBvTDxYSAA495unWWkWQI47Y_XAhMLQaVT-wFHLzecsgMw-jJNUuxC1NWVSjSgp6-dtfQswbqkkwKXrGQ6asF2YrQ9PLmQhL_98RwBQ..AT1_e4bvhm43";
-
+import esriConfig from "@arcgis/core/config";
+import esriId from "@arcgis/core/identity/IdentityManager"; // 👈 استدعاء مدير الهوية ضروري هنا
 
 // 🎨 أيقونات SVG عصرية (Dark Theme)
 const Icons = {
@@ -18,7 +15,7 @@ const Icons = {
   PinAdd: () => <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle><line x1="12" y1="2" x2="12" y2="6"></line><line x1="8" y1="6" x2="16" y2="6"></line></svg>,
   Cancel: () => <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>,
   Play: () => <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>,
-  Trash: () => <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>,
+  Trash: () => <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2-2v2"></path></svg>,
   Car: () => <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a2 2 0 0 0-1.6-.8H5a2 2 0 0 0-2 2v7.4"></path><circle cx="6.5" cy="16.5" r="2.5"></circle><circle cx="16.5" cy="16.5" r="2.5"></circle></svg>,
   Truck: () => <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="12" height="14" rx="1"></rect><path d="M14 9h4l3 3v7h-7"></path><circle cx="6.5" cy="19.5" r="1.5"></circle><circle cx="17.5" cy="19.5" r="1.5"></circle></svg>,
   DirUp: () => <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>,
@@ -36,13 +33,13 @@ interface StopsRoutingWidgetProps {
 const StopsRoutingWidget = ({ view }: StopsRoutingWidgetProps) => {
   const [isCalculating, setIsCalculating] = useState<boolean>(false);
   const [isActive, setIsActive] = useState<boolean>(false);
-  
+
   const [stops, setStops] = useState<Graphic[]>([]);
   const stopsRef = useRef<Graphic[]>([]);
-  
+
   const [routingMode, setRoutingMode] = useState<string>("default");
   const [travelMode, setTravelMode] = useState<string>("Driving");
-  
+
   const [routeLayer, setRouteLayer] = useState<GraphicsLayer | null>(null);
   const [stopsLayer, setStopsLayer] = useState<GraphicsLayer | null>(null);
   const [highlightLayer, setHighlightLayer] = useState<GraphicsLayer | null>(null);
@@ -50,7 +47,8 @@ const StopsRoutingWidget = ({ view }: StopsRoutingWidgetProps) => {
   const [routeResult, setRouteResult] = useState<string | null>(null);
   const [directions, setDirections] = useState<any[]>([]);
 
-  const routingServiceUrl = "https://route-api.arcgis.com/arcgis/rest/services/World/Route/NAServer/Route_World";
+  // 🚀 شيلنا كلمة api من هنا عشان الرابط يدعم تسجيل الدخول المباشر
+  const routingServiceUrl = "https://route.arcgis.com/arcgis/rest/services/World/Route/NAServer/Route_World";
 
   useEffect(() => {
     stopsRef.current = stops;
@@ -59,17 +57,17 @@ const StopsRoutingWidget = ({ view }: StopsRoutingWidgetProps) => {
   useEffect(() => {
     if (view && view.map) {
       const rLayer = new GraphicsLayer({
-        title: "Proposed Route", 
+        title: "Proposed Route",
         elevationInfo: { mode: "relative-to-scene", offset: 2 },
         listMode: "hide"
       });
 
       const hLayer = new GraphicsLayer({
-        title: "Highlighted Directions", 
-        elevationInfo: { mode: "relative-to-scene", offset: 2.5 }, 
+        title: "Highlighted Directions",
+        elevationInfo: { mode: "relative-to-scene", offset: 2.5 },
         listMode: "hide"
       });
-      
+
       const sLayer = new GraphicsLayer({
         title: "Stops",
         elevationInfo: { mode: "relative-to-scene", offset: 3 },
@@ -106,7 +104,7 @@ const StopsRoutingWidget = ({ view }: StopsRoutingWidgetProps) => {
         spatialReference: view.spatialReference
       });
 
-      const stopColor = currentStopsCount === 0 ? [46, 204, 113] : [88, 166, 255]; 
+      const stopColor = currentStopsCount === 0 ? [46, 204, 113] : [88, 166, 255];
 
       const stopGraphic = new Graphic({
         geometry: stopPoint,
@@ -127,7 +125,7 @@ const StopsRoutingWidget = ({ view }: StopsRoutingWidgetProps) => {
 
       stopsLayer.add(stopGraphic);
       stopsLayer.listMode = "show";
-      
+
       setStops(prevStops => [...prevStops, stopGraphic]);
     });
 
@@ -135,7 +133,7 @@ const StopsRoutingWidget = ({ view }: StopsRoutingWidgetProps) => {
       clickHandle.remove();
       (view as any).cursor = "default";
     };
-  }, [view, isActive, stopsLayer]); 
+  }, [view, isActive, stopsLayer]);
 
   const calculateRoute = async () => {
     if (stops.length < 2 || !routeLayer) {
@@ -144,7 +142,7 @@ const StopsRoutingWidget = ({ view }: StopsRoutingWidgetProps) => {
     }
 
     setIsCalculating(true);
-    routeLayer.removeAll(); 
+    routeLayer.removeAll();
     if (highlightLayer) highlightLayer.removeAll();
     setRouteResult(null);
     setDirections([]);
@@ -153,15 +151,15 @@ const StopsRoutingWidget = ({ view }: StopsRoutingWidgetProps) => {
 
     const routeParams = new RouteParameters({
       stops: new FeatureSet({ features: clonedStops }),
-      returnDirections: true, 
-      directionsLengthUnits: "meters", 
+      returnDirections: true,
+      directionsLengthUnits: "meters",
       returnRoutes: true
     });
 
     routeParams.impedanceAttribute = "TravelTime";
 
     if (routingMode !== "default") {
-      routeParams.findBestSequence = true; 
+      routeParams.findBestSequence = true;
       if (routingMode === "optimize") {
         routeParams.preserveFirstStop = false;
         routeParams.preserveLastStop = false;
@@ -173,17 +171,23 @@ const StopsRoutingWidget = ({ view }: StopsRoutingWidgetProps) => {
         routeParams.preserveLastStop = true;
       }
     } else {
-      routeParams.findBestSequence = false; 
+      routeParams.findBestSequence = false;
     }
 
+    // 🚨 التريكة السحرية: إخفاء الـ API Key العام مؤقتاً لإجبار ظهور شاشة تسجيل الدخول
+    const currentGlobalKey = esriConfig.apiKey;
+    esriConfig.apiKey = "";
+
     try {
+      // 🔐 نطلب تسجيل الدخول باستخدام النافذة المدمجة الكلاسيكية
+      await esriId.getCredential(routingServiceUrl);
+
       const data = await route.solve(routingServiceUrl, routeParams);
-      
+
       if (data.routeResults && data.routeResults.length > 0) {
         const routeGraphic = data.routeResults[0].route;
         const resultDirections = data.routeResults[0].directions;
-        
-        // 👈 ضفنا الحماية هنا: لو routeGraphic مش موجود، وقف وماتكملش
+
         if (!routeGraphic) return;
 
         let routeColor = travelMode === "Trucking" ? [243, 156, 18, 0.9] : [46, 204, 113, 0.9];
@@ -194,35 +198,34 @@ const StopsRoutingWidget = ({ view }: StopsRoutingWidgetProps) => {
           symbolLayers: [{
             type: "path",
             profile: "circle",
-            width: routeWidth, 
-            material: { color: routeColor } 
+            width: routeWidth,
+            material: { color: routeColor }
           }]
         } as any;
 
-        // 👈 حماية تانية للـ routeLayer
         if (routeLayer) {
           routeLayer.add(routeGraphic);
-          routeLayer.listMode = "show"; 
+          routeLayer.listMode = "show";
         }
 
         const totalKm = routeGraphic.attributes?.Total_Kilometers || 0;
         let baseTimeFloat = 0;
-        
+
         if (resultDirections && resultDirections.totalTime) {
-           baseTimeFloat = resultDirections.totalTime;
+          baseTimeFloat = resultDirections.totalTime;
         } else {
-           baseTimeFloat = routeGraphic.attributes?.Total_TravelTime || routeGraphic.attributes?.Total_Minutes || 0;
+          baseTimeFloat = routeGraphic.attributes?.Total_TravelTime || routeGraphic.attributes?.Total_Minutes || 0;
         }
 
         let finalTimeFloat = baseTimeFloat;
         if (travelMode === "Trucking") {
-          finalTimeFloat = baseTimeFloat * 1.4; 
+          finalTimeFloat = baseTimeFloat * 1.4;
         }
-        
+
         const meters = Math.round(totalKm * 1000);
         let minutes = Math.floor(finalTimeFloat);
         let seconds = Math.round((finalTimeFloat - minutes) * 60);
-        
+
         if (seconds === 60) { minutes += 1; seconds = 0; }
 
         let timeString = `${minutes} min`;
@@ -236,8 +239,10 @@ const StopsRoutingWidget = ({ view }: StopsRoutingWidgetProps) => {
       }
     } catch (error) {
       console.error("Route calculation failed:", error);
-      alert("Error calculating the route. The stops might be outside the road network.");
+      alert("⚠️ Error calculating the route. The stops might be outside the road network, or you cancelled the sign-in.");
     } finally {
+      // 🚨 إرجاع الـ API Key العام مرة أخرى لضمان عمل الخريطة
+      esriConfig.apiKey = currentGlobalKey;
       setIsCalculating(false);
       setIsActive(false);
     }
@@ -246,24 +251,24 @@ const StopsRoutingWidget = ({ view }: StopsRoutingWidgetProps) => {
   const clearRoute = () => {
     setStops([]);
     setRouteResult(null);
-    setDirections([]); 
-    
+    setDirections([]);
+
     if (routeLayer) {
-      routeLayer.removeAll(); 
-      routeLayer.listMode = "hide"; 
+      routeLayer.removeAll();
+      routeLayer.listMode = "hide";
     }
     if (highlightLayer) highlightLayer.removeAll();
     if (stopsLayer) {
-      stopsLayer.removeAll(); 
-      stopsLayer.listMode = "hide"; 
+      stopsLayer.removeAll();
+      stopsLayer.listMode = "hide";
     }
-    
+
     setIsActive(false);
   };
 
   const handleMouseEnter = (dirFeature: any) => {
     if (!highlightLayer || !dirFeature.geometry) return;
-    
+
     highlightLayer.removeAll();
     const highlightGraphic = new Graphic({
       geometry: dirFeature.geometry,
@@ -272,8 +277,8 @@ const StopsRoutingWidget = ({ view }: StopsRoutingWidgetProps) => {
         symbolLayers: [{
           type: "path",
           profile: "circle",
-          width: 7, 
-          material: { color: [255, 235, 59, 0.9] } 
+          width: 7,
+          material: { color: [255, 235, 59, 0.9] }
         }]
       } as any
     });
@@ -285,15 +290,15 @@ const StopsRoutingWidget = ({ view }: StopsRoutingWidgetProps) => {
   };
 
   const getThemeColor = () => {
-    if (travelMode === "Trucking") return "#f39c12"; 
-    return "#2ecc71"; 
+    if (travelMode === "Trucking") return "#f39c12";
+    return "#2ecc71";
   };
 
   return (
-    <div className="widget-multi-stop-routing" style={{ 
+    <div className="widget-multi-stop-routing" style={{
       backgroundColor: '#0d1117',
-      height: 'auto', 
-      maxHeight: 'calc(100vh - 160px)', 
+      height: 'auto',
+      maxHeight: 'calc(100vh - 160px)',
       overflowY: 'auto',
       overflowX: 'hidden',
       fontFamily: "'Inter', 'Segoe UI', Roboto, sans-serif",
@@ -305,7 +310,7 @@ const StopsRoutingWidget = ({ view }: StopsRoutingWidgetProps) => {
       boxSizing: 'border-box',
       boxShadow: '0 8px 24px rgba(0,0,0,0.4)'
     }}>
-      
+
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         @keyframes pulse-anim { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(0.98); } 100% { opacity: 1; transform: scale(1); } }
@@ -326,7 +331,7 @@ const StopsRoutingWidget = ({ view }: StopsRoutingWidgetProps) => {
       </div>
 
       {/* زر تحديد النقاط */}
-      <button 
+      <button
         className={`action-btn ${isActive ? 'is-selecting' : ''}`}
         onClick={() => setIsActive(!isActive)}
         disabled={!view}
@@ -353,8 +358,8 @@ const StopsRoutingWidget = ({ view }: StopsRoutingWidgetProps) => {
           <label style={{ fontSize: '11px', fontWeight: 600, color: '#8b949e', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
             {travelMode === 'Trucking' ? <Icons.Truck /> : <Icons.Car />} Travel Mode:
           </label>
-          <select 
-            value={travelMode} 
+          <select
+            value={travelMode}
             onChange={(e) => setTravelMode(e.target.value)}
             className="modern-select"
             style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}
@@ -365,8 +370,8 @@ const StopsRoutingWidget = ({ view }: StopsRoutingWidgetProps) => {
         </div>
         <div style={{ flex: 1 }}>
           <label style={{ fontSize: '11px', fontWeight: 600, color: '#8b949e', display: 'block', marginBottom: '6px' }}>Routing Strategy:</label>
-          <select 
-            value={routingMode} 
+          <select
+            value={routingMode}
             onChange={(e) => setRoutingMode(e.target.value)}
             className="modern-select"
             style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}
@@ -380,14 +385,14 @@ const StopsRoutingWidget = ({ view }: StopsRoutingWidgetProps) => {
 
       {/* أزرار الحساب والمسح */}
       <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-        <button 
+        <button
           onClick={calculateRoute}
           disabled={stops.length < 2 || isCalculating}
           className={`action-btn ${travelMode === "Trucking" ? 'trucking' : ''}`}
           style={{
-            flex: 2, padding: '12px', 
+            flex: 2, padding: '12px',
             backgroundColor: stops.length < 2 ? '#21262d' : (travelMode === "Trucking" ? '#f39c12' : '#2ecc71'),
-            color: stops.length < 2 ? '#8b949e' : 'white', 
+            color: stops.length < 2 ? '#8b949e' : 'white',
             border: 'none', borderRadius: '8px', fontWeight: 600, fontSize: '13px',
             cursor: stops.length < 2 ? 'not-allowed' : 'pointer',
             display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', fontFamily: 'inherit'
@@ -397,7 +402,7 @@ const StopsRoutingWidget = ({ view }: StopsRoutingWidgetProps) => {
             {isCalculating ? <span style={{ animation: 'pulse-anim 1s infinite' }}>Calculating...</span> : <><Icons.Play /> Calculate Route</>}
           </span>
         </button>
-        <button 
+        <button
           className="clear-btn"
           onClick={clearRoute}
           style={{
@@ -431,13 +436,13 @@ const StopsRoutingWidget = ({ view }: StopsRoutingWidgetProps) => {
             const maneuver = dir.attributes.maneuverType || "";
             const text = dir.attributes.text;
             const length = Math.round(dir.attributes.length);
-            
+
             let stepTimeFloat = dir.attributes.time;
             if (travelMode === "Trucking") stepTimeFloat = stepTimeFloat * 1.4;
 
             const timeMins = Math.floor(stepTimeFloat);
             const timeSecs = Math.round((stepTimeFloat - timeMins) * 60);
-            
+
             let timeStr = "";
             if (timeMins > 0) timeStr += `${timeMins} min `;
             timeStr += `${timeSecs} sec`;
@@ -450,15 +455,15 @@ const StopsRoutingWidget = ({ view }: StopsRoutingWidgetProps) => {
             else if (maneuver.includes("U-Turn")) IconComponent = Icons.DirUTurn;
 
             return (
-              <div 
-                key={idx} 
+              <div
+                key={idx}
                 onMouseEnter={() => handleMouseEnter(dir)}
                 onMouseLeave={handleMouseLeave}
-                style={{ 
-                  display: 'flex', alignItems: 'center', padding: '12px 16px', 
-                  borderBottom: idx === directions.length - 1 ? 'none' : '1px solid #30363d', 
-                  backgroundColor: idx % 2 === 0 ? '#161b22' : '#0d1117', 
-                  cursor: 'pointer', transition: 'background-color 0.2s' 
+                style={{
+                  display: 'flex', alignItems: 'center', padding: '12px 16px',
+                  borderBottom: idx === directions.length - 1 ? 'none' : '1px solid #30363d',
+                  backgroundColor: idx % 2 === 0 ? '#161b22' : '#0d1117',
+                  cursor: 'pointer', transition: 'background-color 0.2s'
                 }}
                 onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#21262d')}
                 onMouseOut={(e) => (e.currentTarget.style.backgroundColor = idx % 2 === 0 ? '#161b22' : '#0d1117')}

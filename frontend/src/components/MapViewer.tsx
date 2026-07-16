@@ -11,7 +11,7 @@ import BrokerMapPopup from './BrokerMapPopup';
 import { AuthContext } from '../context/AuthContext';
 import esriConfig from "@arcgis/core/config";
 
-esriConfig.apiKey = import.meta.env.VITE_ARCGIS_API_KEY || "AAPTalXA9GcZ5lZfym8hKak90bg..wGOn5mTNFbEDgQTSt91zZ3JRiK5hffTjYdmL1ERTSPKglXpsx21W9RNlgzgoJF0Jz2FSdRc_kgkQKBh7X5t02_GyVncvhTB8KHXfFs1UpjrO_P_Si65XTQXNm5Ad_12WXsc1fjlDCgbbBvTDxYSAA495unWWkWQI47Y_XAhMLQaVT-wFHLzecsgMw-jJNUuxC1NWVSjSgp6-dtfQswbqkkwKXrGQ6asF2YrQ9PLmQhL_98RwBQ..AT1_e4bvhm43";
+esriConfig.apiKey = "AAPTaDbfhBZWiLu4_n_GjVYQ4HQ..-oEYWQVVvlTpQ_TFGjK-E8ZrlsazlpUdEUWIyfTs7fWlDap2D2J5MRQ-ndh0wSxvs8SGPRRuyfUnPUXa5de5nEivBXil92Sf70IklSV8GjW8geEUXSpwf5mVEPP5OcP70UZy0qflYRW6qc0vZZ1dPWRuifw3I8gY_rYJ639ugGPqrg76GNTkEXLB8pv1--d2iPUK4KJIgi1U0PuGLkI1nGIEx1h00mHrRxrP7vTL54bWkeESKA..AT1_iFeRcV9B";
 
 interface MapViewerProps {
   onViewReady: (view: SceneView) => void;
@@ -220,7 +220,7 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
                 setSelectedVillaData(null);
               }
             }
-            
+
             if (!hitSomething) {
               setSelectedBuildingId(null);
               setSelectedVillaData(null);
@@ -255,15 +255,16 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
     try {
       setSelectedBuildingId(null);
       setSelectedVillaData(null);
-      
+
       if ((window as any).viewUnitHighlightHandle) {
         (window as any).viewUnitHighlightHandle.remove();
         (window as any).viewUnitHighlightHandle = null;
       }
-      
+
       if (viewInstance && viewInstance.map) {
-        if (viewInstance.map.initialViewProperties && viewInstance.map.initialViewProperties.viewpoint) {
-          viewInstance.goTo(viewInstance.map.initialViewProperties.viewpoint).catch(() => {});
+        const webMap = viewInstance.map as any;
+        if (webMap.initialViewProperties && webMap.initialViewProperties.viewpoint) {
+          viewInstance.goTo(webMap.initialViewProperties.viewpoint).catch(() => { });
         }
         if (viewInstance.popup && typeof viewInstance.popup.close === 'function') {
           viewInstance.popup.close();
@@ -285,9 +286,9 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
             headers: { 'x-auth-token': auth.token || localStorage.getItem('token') }
           });
           const units = res.data;
-          
+
           if (!units || units.length === 0) return;
-          
+
           const getLayerIds = (sourceLayer: string) => {
             const filtered = units.filter((u: any) => u.sourceLayer === sourceLayer);
             const objIds: number[] = [];
@@ -319,11 +320,11 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
               if (apartments.guidIds.length > 0) {
                 whereClause += ` OR GlobalID IN (${apartments.guidIds.join(',')})`;
               }
-              
+
               const arcgisRes = await axios.default.get(`${UNITS_URL}/query`, {
                 params: { where: whereClause, outFields: 'BuildingID_FK', returnDistinctValues: true, f: 'json' }
               });
-              
+
               if (arcgisRes.data.features) {
                 arcgisRes.data.features.forEach((f: any) => {
                   if (f.attributes.BuildingID_FK) {
@@ -341,13 +342,13 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
 
           const applyEffect = async (layerTitle: string, data: { objIds: number[], guidIds: string[] }) => {
             if (data.objIds.length === 0 && data.guidIds.length === 0) return;
-            
+
             const layer = viewInstance.map.layers.find((l: any) => l.title === layerTitle) as any;
             if (layer) {
               const layerView = await viewInstance.whenLayerView(layer) as any;
-              
+
               const finalObjectIds = [...data.objIds];
-              
+
               if (data.guidIds.length > 0) {
                 const whereQuery = `GlobalID IN (${data.guidIds.join(',')})`;
                 try {
@@ -388,7 +389,7 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
         }
       });
     }
-    
+
     // Cleanup runs when viewInstance or auth changes (e.g. logout or different broker logs in)
     return () => {
       highlightHandles.forEach(h => {

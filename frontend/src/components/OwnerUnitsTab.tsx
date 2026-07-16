@@ -435,7 +435,7 @@ const OwnerUnitsTab = ({ onClose, view }: OwnerUnitsTabProps) => {
                             <td style={{ padding: '16px', color: '#58a6ff', fontWeight: 'bold' }}>{displayType}</td>
                             <td style={{ padding: '16px', color: '#c9d1d9', fontFamily: 'monospace' }}>{displayId}</td>
                             <td style={{ padding: '16px' }}>
-                              <span style={{ backgroundColor: '#2ea04322', color: '#2ea043', padding: '6px 12px', borderRadius: '16px', fontSize: '13px', fontWeight: 'bold', border: '1px solid #2ea04355' }}>
+                              <span style={{ backgroundColor: '#2ea04322', color: '#2ea043', padding: '6px 12px', borderRadius: '16px', fontSize: '13px', fontWeight: 'bold', border: '1px solid #2ea04355', whiteSpace: 'nowrap' }}>
                                 ✅ Owned
                               </span>
                             </td>
@@ -507,7 +507,7 @@ const OwnerUnitsTab = ({ onClose, view }: OwnerUnitsTabProps) => {
                             <td style={{ padding: '16px', color: '#c9d1d9' }}>{req.customerPhone}</td>
                             <td style={{ padding: '16px', color: '#c9d1d9', fontFamily: 'monospace' }}>{req.unitId}</td>
                             <td style={{ padding: '16px' }}>
-                              <span style={{ backgroundColor: statusStyles.bg, color: statusStyles.color, padding: '6px 12px', borderRadius: '16px', fontSize: '13px', fontWeight: 'bold', border: `1px solid ${statusStyles.border}` }}>
+                              <span style={{ backgroundColor: statusStyles.bg, color: statusStyles.color, padding: '6px 12px', borderRadius: '16px', fontSize: '13px', fontWeight: 'bold', border: `1px solid ${statusStyles.border}`, whiteSpace: 'nowrap' }}>
                                 {statusStyles.text}
                               </span>
                             </td>
@@ -571,7 +571,7 @@ const OwnerUnitsTab = ({ onClose, view }: OwnerUnitsTabProps) => {
                               <td style={{ padding: '16px', color: '#58a6ff', fontWeight: 'bold' }}>{complaint.title}</td>
                               <td style={{ padding: '16px', color: '#c9d1d9', fontFamily: 'monospace' }}>{complaint.arcgisId}</td>
                               <td style={{ padding: '16px' }}>
-                                <span style={{ backgroundColor: statusStyles.bg, color: statusStyles.color, padding: '6px 12px', borderRadius: '16px', fontSize: '13px', fontWeight: 'bold', border: `1px solid ${statusStyles.border}` }}>
+                                <span style={{ backgroundColor: statusStyles.bg, color: statusStyles.color, padding: '6px 12px', borderRadius: '16px', fontSize: '13px', fontWeight: 'bold', border: `1px solid ${statusStyles.border}`, whiteSpace: 'nowrap' }}>
                                   {statusStyles.text}
                                 </span>
                               </td>

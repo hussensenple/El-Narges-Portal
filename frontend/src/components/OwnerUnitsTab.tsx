@@ -27,6 +27,8 @@ interface Complaint {
 interface BookingReq {
   _id: string;
   unitId: string;
+  sourceLayer?: string;
+  buildingFK?: string;
   customerName: string;
   customerPhone: string;
   status: string;
@@ -112,6 +114,186 @@ const OwnerUnitsTab = ({ onClose, view }: OwnerUnitsTabProps) => {
   const handleComplaintClick = (arcgisId: string) => {
     setSelectedArcgisId(arcgisId);
     setShowComplaintForm(true);
+  };
+
+  const handleViewMyUnit = async (unit: any) => {
+    if (!view || !view.map) {
+      alert("Map is not ready yet.");
+      return;
+    }
+    
+    let sourceLayer = unit.sourceLayer;
+    if (!sourceLayer) {
+      if (unit.unitType === 'Villa' || unit.unitName === 'Villa') {
+        sourceLayer = 'Villas_Global';
+      } else if (unit.unitType === 'Apartment' || unit.unitName === 'Apartment') {
+        sourceLayer = 'Units';
+      } else {
+        sourceLayer = 'Units'; // default assumption
+      }
+    }
+    
+    const cleanId = String(unit.globalId || unit.arcgisId || '').replace(/[{}]/g, '').trim();
+    
+    const getWhereClause = (id: string) => {
+      if (/^\d+$/.test(id)) {
+        return `OBJECTID = ${id}`;
+      }
+      const idUpper = id.toUpperCase();
+      const idLower = id.toLowerCase();
+      return `GlobalID = '{${idUpper}}' OR GlobalID = '${idUpper}' OR GlobalID = '{${idLower}}' OR GlobalID = '${idLower}' OR GlobalID = '{${id}}' OR GlobalID = '${id}'`;
+    };
+
+    try {
+      if (sourceLayer === 'Villas_Global') {
+        const layer = view.map.layers.find((l: any) => l.title === "Villas_Global");
+        if (layer) {
+          const query = layer.createQuery();
+          query.where = getWhereClause(cleanId);
+          query.returnGeometry = true;
+          
+          const extentRes = await layer.queryExtent(query);
+          if (extentRes && extentRes.extent) {
+            view.goTo({ target: extentRes.extent, tilt: 60, zoom: 20 }, { animate: true, duration: 1500 });
+          }
+          
+          const objectIds = await layer.queryObjectIds(query);
+          if (objectIds && objectIds.length > 0) {
+            const layerView = await view.whenLayerView(layer) as any;
+            if ((window as any).viewUnitHighlightHandle) {
+              (window as any).viewUnitHighlightHandle.remove();
+            }
+            (window as any).viewUnitHighlightHandle = layerView.highlight(objectIds);
+          }
+        }
+      } else if (sourceLayer === 'Units') {
+        let foreignKey = unit.buildingIdFk || unit.buildingFK;
+        
+        if (!foreignKey) {
+          const unitsTable = view.map.tables?.find((t:any) => t.title === "Units") || view.map.layers.find((l:any) => l.title === "Units");
+          if (unitsTable) {
+            const query = unitsTable.createQuery();
+            query.where = getWhereClause(cleanId);
+            query.outFields = ["BuildingID_FK"];
+            const results = await unitsTable.queryFeatures(query);
+            if (results.features && results.features.length > 0) {
+              foreignKey = results.features[0].attributes.BuildingID_FK;
+            }
+          }
+        }
+        
+        if (foreignKey) {
+          const buildingLayer = view.map.layers.find((l: any) => l.title === "Buildings_Global");
+          if (buildingLayer) {
+            try {
+              const bQuery = buildingLayer.createQuery();
+              const cleanFk = String(foreignKey).replace(/[{}]/g, '').trim();
+              bQuery.where = getWhereClause(cleanFk);
+              bQuery.returnGeometry = true;
+              
+              const extentRes = await buildingLayer.queryExtent(bQuery);
+              if (extentRes && extentRes.extent) {
+                view.goTo({ target: extentRes.extent, tilt: 60, zoom: 20 }, { animate: true, duration: 1500 });
+              }
+              
+              const objectIds = await buildingLayer.queryObjectIds(bQuery);
+              if (objectIds && objectIds.length > 0) {
+                const layerView = await view.whenLayerView(buildingLayer);
+                if ((window as any).viewUnitHighlightHandle) {
+                  (window as any).viewUnitHighlightHandle.remove();
+                }
+                (window as any).viewUnitHighlightHandle = layerView.highlight(objectIds);
+              }
+            } catch (err) {
+              console.error("Error highlighting building:", err);
+            }
+          }
+        } else {
+          alert("Building information is missing for this unit.");
+        }
+
+      }
+      
+      onClose();
+    } catch (error) {
+      console.error("Error viewing unit:", error);
+    }
+  };
+
+  const handleViewUnit = async (req: BookingReq) => {
+    if (!view || !view.map) {
+      alert("Map is not ready yet.");
+      return;
+    }
+    
+    const sourceLayer = req.sourceLayer;
+    
+    const getWhereClause = (id: string) => {
+      if (/^\d+$/.test(id)) {
+        return `OBJECTID = ${id}`;
+      }
+      const idUpper = id.toUpperCase();
+      const idLower = id.toLowerCase();
+      return `GlobalID = '{${idUpper}}' OR GlobalID = '${idUpper}' OR GlobalID = '{${idLower}}' OR GlobalID = '${idLower}' OR GlobalID = '{${id}}' OR GlobalID = '${id}'`;
+    };
+
+    try {
+      if (sourceLayer === 'Villas_Global') {
+        const layer = view.map.layers.find((l: any) => l.title === "Villas_Global");
+        if (layer) {
+          const query = layer.createQuery();
+          const cleanId = String(req.unitId).replace(/[{}]/g, '').trim();
+          query.where = getWhereClause(cleanId);
+          query.returnGeometry = true;
+          
+          const extentRes = await layer.queryExtent(query);
+          if (extentRes && extentRes.extent) {
+            view.goTo({ target: extentRes.extent, tilt: 60, zoom: 20 }, { animate: true, duration: 1500 });
+          }
+          
+          const objectIds = await layer.queryObjectIds(query);
+          if (objectIds && objectIds.length > 0) {
+            const layerView = await view.whenLayerView(layer) as any;
+            if ((window as any).viewUnitHighlightHandle) {
+              (window as any).viewUnitHighlightHandle.remove();
+            }
+            (window as any).viewUnitHighlightHandle = layerView.highlight(objectIds);
+          }
+        }
+      } else if (sourceLayer === 'Units') {
+        const foreignKey = req.buildingFK;
+        
+        if (foreignKey) {
+          const buildingLayer = view.map.layers.find((l: any) => l.title === "Buildings_Global");
+          if (buildingLayer) {
+            const query = buildingLayer.createQuery();
+            const cleanId = String(foreignKey).replace(/[{}]/g, '').trim();
+            query.where = getWhereClause(cleanId);
+            query.returnGeometry = true;
+            
+            const extentRes = await buildingLayer.queryExtent(query);
+            if (extentRes && extentRes.extent) {
+              view.goTo({ target: extentRes.extent, tilt: 60, zoom: 20 }, { animate: true, duration: 1500 });
+            }
+            
+            const objectIds = await buildingLayer.queryObjectIds(query);
+            if (objectIds && objectIds.length > 0) {
+              const layerView = await view.whenLayerView(buildingLayer) as any;
+              if ((window as any).viewUnitHighlightHandle) {
+                (window as any).viewUnitHighlightHandle.remove();
+              }
+              (window as any).viewUnitHighlightHandle = layerView.highlight(objectIds);
+            }
+          }
+        } else {
+          alert("Building information is missing for this unit.");
+        }
+      }
+      
+      onClose();
+    } catch (error) {
+      console.error("Error viewing unit:", error);
+    }
   };
 
   return createPortal(
@@ -257,7 +439,7 @@ const OwnerUnitsTab = ({ onClose, view }: OwnerUnitsTabProps) => {
                                 ✅ Owned
                               </span>
                             </td>
-                            <td style={{ padding: '16px' }}>
+                            <td style={{ padding: '16px', display: 'flex', gap: '8px' }}>
                               <button
                                 onClick={() => handleComplaintClick(arcgisId)}
                                 style={{ padding: '6px 12px', backgroundColor: '#da3633', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', transition: 'background 0.2s', pointerEvents: 'auto' }}
@@ -265,6 +447,14 @@ const OwnerUnitsTab = ({ onClose, view }: OwnerUnitsTabProps) => {
                                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#da3633'}
                               >
                                 🛠️ Submit Complaint
+                              </button>
+                              <button
+                                onClick={() => handleViewMyUnit(unit)}
+                                style={{ padding: '6px 12px', backgroundColor: '#1f6feb', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', transition: 'background 0.2s', pointerEvents: 'auto' }}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#388bfd'}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#1f6feb'}
+                              >
+                                👁️ View Unit
                               </button>
                             </td>
                           </tr>
@@ -292,6 +482,7 @@ const OwnerUnitsTab = ({ onClose, view }: OwnerUnitsTabProps) => {
                         <th style={{ padding: '16px', color: '#fff' }}>Phone</th>
                         <th style={{ padding: '16px', color: '#fff' }}>Unit ID</th>
                         <th style={{ padding: '16px', color: '#fff' }}>Status</th>
+                        <th style={{ padding: '16px', color: '#fff' }}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -319,6 +510,16 @@ const OwnerUnitsTab = ({ onClose, view }: OwnerUnitsTabProps) => {
                               <span style={{ backgroundColor: statusStyles.bg, color: statusStyles.color, padding: '6px 12px', borderRadius: '16px', fontSize: '13px', fontWeight: 'bold', border: `1px solid ${statusStyles.border}` }}>
                                 {statusStyles.text}
                               </span>
+                            </td>
+                            <td style={{ padding: '16px' }}>
+                              <button
+                                onClick={() => handleViewUnit(req)}
+                                style={{ padding: '8px 16px', backgroundColor: '#1f6feb', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px', transition: 'background 0.2s', pointerEvents: 'auto' }}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#388bfd'}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#1f6feb'}
+                              >
+                                👁️ View Unit
+                              </button>
                             </td>
                           </tr>
                         );

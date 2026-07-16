@@ -295,7 +295,8 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
                       "What is the ROI for apartments?",
                       "What is the cancellation policy?",
                       "Are pets allowed in the compound?",
-                      "Show me villas under 30 million"
+                      "Show me villas under 70 million",
+                      "Show me apartments under 10 million"
                     ].map((q, idx) => (
                       <button 
                         key={idx}

@@ -111,8 +111,11 @@ const UnitCatalog = ({ view, onClose }: UnitCatalogProps) => {
           const objectIds = await villaLayer.queryObjectIds(query);
           if (objectIds && objectIds.length > 0) {
             const layerView = await view.whenLayerView(villaLayer) as any;
-            if (highlightHandleRef.current) highlightHandleRef.current.remove();
-            highlightHandleRef.current = layerView.highlight(objectIds);
+            if ((window as any).viewUnitHighlightHandle) {
+              (window as any).viewUnitHighlightHandle.remove();
+            }
+            (window as any).viewUnitHighlightHandle = layerView.highlight(objectIds);
+            highlightHandleRef.current = (window as any).viewUnitHighlightHandle;
           }
         } catch (err) {
           console.error("Error zooming to Villa:", err);
@@ -143,8 +146,11 @@ const UnitCatalog = ({ view, onClose }: UnitCatalogProps) => {
             const objectIds = await buildingLayer.queryObjectIds(query);
             if (objectIds && objectIds.length > 0) {
               const layerView = await view.whenLayerView(buildingLayer) as any;
-              if (highlightHandleRef.current) highlightHandleRef.current.remove();
-              highlightHandleRef.current = layerView.highlight(objectIds);
+              if ((window as any).viewUnitHighlightHandle) {
+                (window as any).viewUnitHighlightHandle.remove();
+              }
+              (window as any).viewUnitHighlightHandle = layerView.highlight(objectIds);
+              highlightHandleRef.current = (window as any).viewUnitHighlightHandle;
             }
           } catch (err) {
             console.error("Error highlighting 3D building:", err);

@@ -18,6 +18,12 @@ const userSchema = new mongoose.Schema({
     type: String, 
     required: true 
   },
+  secondaryEmail: {
+    type: String
+  },
+  secondaryPhone: {
+    type: String
+  },
   role: { 
     type: String, 
     enum: ['user', 'owner', 'broker', 'engineer', 'admin'],

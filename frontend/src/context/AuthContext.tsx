@@ -7,6 +7,8 @@ interface User {
   role: string;
   phone: string; 
   email: string;
+  secondaryEmail?: string;
+  secondaryPhone?: string;
 }
 
 // تعريف الدوال اللي هنستخدمها في الأبلكيشن كله
@@ -15,6 +17,7 @@ interface AuthContextType {
   token: string | null;
   login: (userData: User, authToken: string) => void;
   logout: () => void;
+  updateUser: (userData: User) => void;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -50,8 +53,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem('user');
   };
 
+  const updateUser = (userData: User) => {
+    setUser(userData);
+    localStorage.setItem('user', JSON.stringify(userData));
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    <AuthContext.Provider value={{ user, token, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

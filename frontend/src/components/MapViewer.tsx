@@ -7,6 +7,7 @@ import BasemapGallery from '@arcgis/core/widgets/BasemapGallery';
 import '@arcgis/core/assets/esri/themes/dark/main.css';
 import WeatherWidget from './WeatherWidget';
 import BuildingSidebar from './BuildingSidebar';
+import BrokerMapPopup from './BrokerMapPopup';
 import { AuthContext } from '../context/AuthContext';
 import esriConfig from "@arcgis/core/config";
 
@@ -30,7 +31,7 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
   const [selectedVillaData, setSelectedVillaData] = useState<any | null>(null);
 
   const auth = useContext(AuthContext);
-  const canSeeSidebar = auth?.user && (auth.user.role === 'user' || auth.user.role === 'owner');
+  const canSeeSidebar = auth?.user && (auth.user.role === 'user' || auth.user.role === 'owner' || auth.user.role === 'broker');
 
   useEffect(() => {
     if (mapDiv.current) {
@@ -176,6 +177,7 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
         view.on("click", async (event) => {
           try {
             const response = await view.hitTest(event);
+            let hitSomething = false;
 
             // Check villa click first
             const villaResult = response.results.find((res: any) =>
@@ -183,6 +185,7 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
               res.graphic.layer.title === "Villas_Global"
             );
             if (villaResult) {
+              hitSomething = true;
               const graphic = (villaResult as any).graphic;
               const layer = graphic.layer;
               const query = layer.createQuery();
@@ -191,7 +194,7 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
               const result = await layer.queryFeatures(query);
               if (result.features.length > 0) {
                 const attrs = result.features[0].attributes;
-                setSelectedVillaData(attrs);
+                setSelectedVillaData(prev => prev && prev.OBJECTID === attrs.OBJECTID ? null : attrs);
                 setSelectedBuildingId(null);
               }
               return;
@@ -203,6 +206,7 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
               (res.graphic.layer.title === "Buildings_Global" || res.graphic.layer.title === "Buildings")
             );
             if (buildingResult) {
+              hitSomething = true;
               const graphic = (buildingResult as any).graphic;
               const objectId = graphic.attributes.OBJECTID;
               const layer = graphic.layer;
@@ -212,12 +216,18 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
               const result = await layer.queryFeatures(query);
               if (result.features.length > 0) {
                 const globalId = result.features[0].attributes.GlobalID || result.features[0].attributes.globalid;
-                setSelectedBuildingId(globalId || null);
+                setSelectedBuildingId(prev => prev === globalId ? null : (globalId || null));
                 setSelectedVillaData(null);
               }
-            } else {
+            }
+            
+            if (!hitSomething) {
               setSelectedBuildingId(null);
               setSelectedVillaData(null);
+              if ((window as any).viewUnitHighlightHandle) {
+                (window as any).viewUnitHighlightHandle.remove();
+                (window as any).viewUnitHighlightHandle = null;
+              }
             }
           } catch (err) {
             console.error("hitTest or query error", err);
@@ -240,6 +250,155 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
       };
     }
   }, []);
+
+  useEffect(() => {
+    try {
+      setSelectedBuildingId(null);
+      setSelectedVillaData(null);
+      
+      if ((window as any).viewUnitHighlightHandle) {
+        (window as any).viewUnitHighlightHandle.remove();
+        (window as any).viewUnitHighlightHandle = null;
+      }
+      
+      if (viewInstance && viewInstance.map) {
+        if (viewInstance.map.initialViewProperties && viewInstance.map.initialViewProperties.viewpoint) {
+          viewInstance.goTo(viewInstance.map.initialViewProperties.viewpoint).catch(() => {});
+        }
+        if (viewInstance.popup && typeof viewInstance.popup.close === 'function') {
+          viewInstance.popup.close();
+        }
+      }
+    } catch (err) {
+      console.error("Error resetting map view:", err);
+    }
+  }, [auth?.user, viewInstance]);
+
+  useEffect(() => {
+    let highlightHandles: any[] = [];
+    let layerViewsToClean: any[] = [];
+
+    if (viewInstance && auth?.user?.role === 'broker') {
+      import('axios').then(async (axios) => {
+        try {
+          const res = await axios.default.get(`${import.meta.env.VITE_API_URL}/api/users/broker-units`, {
+            headers: { 'x-auth-token': auth.token || localStorage.getItem('token') }
+          });
+          const units = res.data;
+          
+          if (!units || units.length === 0) return;
+          
+          const getLayerIds = (sourceLayer: string) => {
+            const filtered = units.filter((u: any) => u.sourceLayer === sourceLayer);
+            const objIds: number[] = [];
+            const guidIds: string[] = [];
+
+            filtered.forEach((u: any) => {
+              if (u.objectId) {
+                objIds.push(Number(u.objectId));
+              } else if (u.globalId) {
+                const cleanId = String(u.globalId).replace(/[{}]/g, '').trim();
+                guidIds.push(`'{${cleanId.toUpperCase()}}'`, `'${cleanId.toUpperCase()}'`, `'{${cleanId.toLowerCase()}}'`, `'${cleanId.toLowerCase()}'`, `'{${cleanId}}'`, `'${cleanId}'`);
+              }
+            });
+            return { objIds, guidIds };
+          };
+
+          const villas = getLayerIds('Villas_Global');
+          const apartments = getLayerIds('Units');
+
+          // We must resolve Apartment OBJECTIDs into Building GlobalIDs
+          const resolvedBuildingGuids: string[] = [];
+          if (apartments.objIds.length > 0 || apartments.guidIds.length > 0) {
+            try {
+              const UNITS_URL = 'https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WFL1/FeatureServer/37';
+              let whereClause = "1=0";
+              if (apartments.objIds.length > 0) {
+                whereClause = `OBJECTID IN (${apartments.objIds.join(',')})`;
+              }
+              if (apartments.guidIds.length > 0) {
+                whereClause += ` OR GlobalID IN (${apartments.guidIds.join(',')})`;
+              }
+              
+              const arcgisRes = await axios.default.get(`${UNITS_URL}/query`, {
+                params: { where: whereClause, outFields: 'BuildingID_FK', returnDistinctValues: true, f: 'json' }
+              });
+              
+              if (arcgisRes.data.features) {
+                arcgisRes.data.features.forEach((f: any) => {
+                  if (f.attributes.BuildingID_FK) {
+                    const cleanId = String(f.attributes.BuildingID_FK).replace(/[{}]/g, '').trim();
+                    resolvedBuildingGuids.push(`'{${cleanId.toUpperCase()}}'`, `'${cleanId.toUpperCase()}'`, `'{${cleanId.toLowerCase()}}'`, `'${cleanId.toLowerCase()}'`, `'{${cleanId}}'`, `'${cleanId}'`);
+                  }
+                });
+              }
+            } catch (err) {
+              console.error("Error resolving building FKs for apartments", err);
+            }
+          }
+
+          const resolvedBuildings = { objIds: [], guidIds: resolvedBuildingGuids };
+
+          const applyEffect = async (layerTitle: string, data: { objIds: number[], guidIds: string[] }) => {
+            if (data.objIds.length === 0 && data.guidIds.length === 0) return;
+            
+            const layer = viewInstance.map.layers.find((l: any) => l.title === layerTitle) as any;
+            if (layer) {
+              const layerView = await viewInstance.whenLayerView(layer) as any;
+              
+              const finalObjectIds = [...data.objIds];
+              
+              if (data.guidIds.length > 0) {
+                const whereQuery = `GlobalID IN (${data.guidIds.join(',')})`;
+                try {
+                  const query = layer.createQuery();
+                  query.where = whereQuery;
+                  const queriedIds = await layer.queryObjectIds(query);
+                  if (queriedIds && queriedIds.length > 0) {
+                    finalObjectIds.push(...queriedIds);
+                  }
+                } catch (err) {
+                  console.error("Error querying missing objectIds:", err);
+                }
+              }
+
+              console.log(`[Broker Effect] Layer: ${layerTitle} | ObjectIds count: ${finalObjectIds.length}`);
+
+              if (finalObjectIds.length > 0) {
+                const handle = layerView.highlight(finalObjectIds);
+                highlightHandles.push(handle);
+                layerViewsToClean.push(layerView);
+
+                layerView.featureEffect = {
+                  filter: {
+                    objectIds: finalObjectIds
+                  },
+                  excludedEffect: "grayscale(80%) opacity(30%)"
+                };
+              }
+            }
+          };
+
+          await applyEffect("Villas_Global", villas);
+          await applyEffect("Buildings_Global", resolvedBuildings);
+          await applyEffect("Buildings", resolvedBuildings);
+
+        } catch (error) {
+          console.error("Error fetching broker units for map:", error);
+        }
+      });
+    }
+    
+    // Cleanup runs when viewInstance or auth changes (e.g. logout or different broker logs in)
+    return () => {
+      highlightHandles.forEach(h => {
+        if (h && typeof h.remove === 'function') h.remove();
+      });
+      layerViewsToClean.forEach(lv => {
+        if (lv) lv.featureEffect = null;
+      });
+    };
+  }, [viewInstance, auth]);
 
   return (
     <div style={{ height: '100%', width: '100%', position: 'relative' }}>
@@ -302,15 +461,26 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
       </div>
 
       {/* Sidebar: Building mode */}
-      {canSeeSidebar && selectedBuildingId && (
-        <BuildingSidebar
-          buildingId={selectedBuildingId}
-          onClose={() => setSelectedBuildingId(null)}
-        />
+      {canSeeSidebar && (selectedBuildingId || selectedVillaData) && (
+        auth?.user?.role === 'broker' ? (
+          <BrokerMapPopup
+            buildingId={selectedBuildingId || undefined}
+            villaData={selectedVillaData}
+            onClose={() => {
+              setSelectedBuildingId(null);
+              setSelectedVillaData(null);
+            }}
+          />
+        ) : selectedBuildingId ? (
+          <BuildingSidebar
+            buildingId={selectedBuildingId}
+            onClose={() => setSelectedBuildingId(null)}
+          />
+        ) : null
       )}
 
       {/* Sidebar: Villa mode */}
-      {canSeeSidebar && selectedVillaData && (
+      {canSeeSidebar && selectedVillaData && auth?.user?.role !== 'broker' && (
         <BuildingSidebar
           villaData={selectedVillaData}
           onClose={() => setSelectedVillaData(null)}

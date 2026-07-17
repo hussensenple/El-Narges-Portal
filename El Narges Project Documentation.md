@@ -85,7 +85,9 @@
   sourceLayer: { type: String, required: true },
   customerName: { type: String },
   customerPhone: { type: String },
-  status: { type: String, enum: ['Pending', 'Reserved', 'Approved', 'Rejected', 'Declined'], default: 'Pending' }
+  status: { type: String, enum: ['Pending', 'Reserved', 'Approved', 'Rejected', 'Declined'], default: 'Pending' },
+  rejectionReason: { type: String }, // 'Served By Another Client', 'Management Decision', 'Client Unresponsive', etc.
+  rejectionNotes: { type: String }
 }
 ```
 

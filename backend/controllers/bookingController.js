@@ -7,7 +7,7 @@ const { sendBookingEmail } = require('../utils/emailService');
 exports.brokerReviewRequest = async (req, res) => {
   try {
     const { requestId } = req.params;
-    const { action, reason } = req.body; // 'raise' or 'decline'
+    const { action, reason, notes } = req.body; // 'raise' or 'decline'
     
     const request = await BookingRequest.findById(requestId).populate('userId', 'name email');
     if (!request) return res.status(404).json({ msg: "Request not found" });
@@ -38,9 +38,12 @@ exports.brokerReviewRequest = async (req, res) => {
       return res.status(200).json({ msg: "Request raised to admin successfully" });
     } else if (action === 'decline') {
       request.status = 'Declined';
+      request.rejectionReason = reason;
+      request.rejectionNotes = notes;
       await request.save();
 
-      await sendBookingEmail(request.userId.email, request.userId.name, 'Declined', request.objectId || request.unitId, reason);
+      const additionalMessage = notes ? `${reason} - ${notes}` : reason;
+      await sendBookingEmail(request.userId.email, request.userId.name, 'Declined', request.objectId || request.unitId, additionalMessage);
 
       const io = req.app.get('socketio');
       if (io) io.emit('newBookingRequest');
@@ -143,12 +146,20 @@ exports.approveRequest = async (req, res) => {
     // 6. Send Approval Email
     await sendBookingEmail(request.userId.email, request.userId.name, 'Approved', request.objectId || request.unitId);
 
-    // 7. Delete or Reject all other requests for this unit
-    await BookingRequest.deleteMany({
+    // 7. Auto-reject all other requests for this unit
+    const competingRequests = await BookingRequest.find({
       unitId: request.unitId,
       _id: { $ne: request._id }
-    });
-    console.log("🟢 All other requests for this unit have been removed.");
+    }).populate('userId', 'name email');
+
+    for (const compReq of competingRequests) {
+      compReq.status = 'Rejected';
+      compReq.rejectionReason = 'Served By Another Client';
+      await compReq.save();
+      
+      await sendBookingEmail(compReq.userId.email, compReq.userId.name, 'Rejected', compReq.objectId || compReq.unitId, 'Served By Another Client');
+    }
+    console.log("🟢 All other competing requests for this unit have been auto-rejected.");
 
     const io = req.app.get('socketio');
     if (io) io.emit('newBookingRequest');
@@ -164,12 +175,14 @@ exports.approveRequest = async (req, res) => {
 exports.adminRejectRequest = async (req, res) => {
   try {
     const { requestId } = req.params;
-    const { reason } = req.body;
+    const { reason, notes } = req.body;
     
     const request = await BookingRequest.findById(requestId).populate('userId', 'name email');
     if (!request) return res.status(404).json({ msg: "Request not found" });
 
     request.status = 'Rejected';
+    request.rejectionReason = reason;
+    request.rejectionNotes = notes;
     await request.save();
 
     const unitGlobalId = String(request.unitId).replace(/[{}]/g, '').trim();
@@ -188,7 +201,8 @@ exports.adminRejectRequest = async (req, res) => {
     }
 
     // Send Rejection Email
-    await sendBookingEmail(request.userId.email, request.userId.name, 'Rejected', request.objectId || request.unitId, reason);
+    const additionalMessage = notes ? `${reason} - ${notes}` : reason;
+    await sendBookingEmail(request.userId.email, request.userId.name, 'Rejected', request.objectId || request.unitId, additionalMessage);
 
     const io = req.app.get('socketio');
     if (io) io.emit('newBookingRequest');

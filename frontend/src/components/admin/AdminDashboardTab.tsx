@@ -4,6 +4,7 @@ import { io } from 'socket.io-client';
 import { PieChart, Pie, Cell, Tooltip as PieTooltip, Legend as PieLegend, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as BarTooltip, Legend as BarLegend, ResponsiveContainer } from 'recharts';
 import MapViewer from '../MapViewer';
 import BrokerPerformanceModal from './modals/BrokerPerformanceModal';
+import OwnerPropertiesModal from './modals/OwnerPropertiesModal';
 import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
 
 const renderCustomizedLabel = (props: any) => {
@@ -20,7 +21,10 @@ const AdminDashboardTab = () => {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [selectedBroker, setSelectedBroker] = useState<any>(null);
+  const [owners, setOwners] = useState<any[]>([]);
+  const [selectedOwner, setSelectedOwner] = useState<any>(null);
   const [mapExtent, setMapExtent] = useState<any>(null);
+  const [mapView, setMapView] = useState<any>(null);
   const extentRef = useRef<any>(null);
 
   const fetchStats = async (extent?: any) => {
@@ -39,14 +43,94 @@ const AdminDashboardTab = () => {
     }
   };
 
+  const fetchOwners = async () => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/roles/owner`);
+      const ownersList = res.data;
+
+      // Collect unit IDs to query prices
+      const aptIds: number[] = [];
+      const villaIds: string[] = [];
+
+      ownersList.forEach((owner: any) => {
+        owner.ownedUnits?.forEach((unit: any) => {
+          if (unit.sourceLayer === 'Units' && unit.objectId) {
+            aptIds.push(unit.objectId);
+          } else if (unit.sourceLayer === 'Villas_Global' && unit.arcgisId) {
+            villaIds.push(unit.arcgisId);
+          }
+        });
+      });
+
+      const priceMap: { [key: string]: number } = {};
+      const promises: Promise<void>[] = [];
+
+      const UNITS_URL = 'https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WFL1/FeatureServer/37';
+      const VILLAS_URL = 'https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WSL3/FeatureServer/8';
+
+      if (aptIds.length > 0) {
+        const where = `OBJECTID IN (${aptIds.join(',')})`;
+        promises.push(
+          axios.get(`${UNITS_URL}/query`, { params: { where, outFields: 'OBJECTID,Price', f: 'json' } })
+            .then(r => {
+              r.data.features?.forEach((f: any) => {
+                if (f.attributes.Price) {
+                  priceMap[`Units_${f.attributes.OBJECTID}`] = Number(f.attributes.Price);
+                }
+              });
+            })
+        );
+      }
+
+      if (villaIds.length > 0) {
+        const formattedVillaIds = villaIds.map(id => `'${id}'`).join(',');
+        const where = `GlobalID IN (${formattedVillaIds})`;
+        promises.push(
+          axios.get(`${VILLAS_URL}/query`, { params: { where, outFields: 'GlobalID,Price', f: 'json' } })
+            .then(r => {
+              r.data.features?.forEach((f: any) => {
+                if (f.attributes.Price) {
+                  priceMap[`Villas_Global_${f.attributes.GlobalID}`] = Number(f.attributes.Price);
+                }
+              });
+            })
+        );
+      }
+
+      try {
+        await Promise.all(promises);
+      } catch (err) {
+        console.error('Error fetching prices from ArcGIS for owners:', err);
+      }
+
+      const ownersWithPrices = ownersList.map((owner: any) => {
+        let totalPrice = 0;
+        owner.ownedUnits?.forEach((unit: any) => {
+          const key = unit.sourceLayer === 'Villas_Global' 
+            ? `Villas_Global_${unit.arcgisId}` 
+            : `Units_${unit.objectId}`;
+          totalPrice += priceMap[key] || 0;
+        });
+        return { ...owner, totalPrice };
+      });
+
+      const sortedOwners = ownersWithPrices.sort((a: any, b: any) => (b.totalPrice || 0) - (a.totalPrice || 0));
+      setOwners(sortedOwners);
+    } catch (error) {
+      console.error('Error fetching owners:', error);
+    }
+  };
+
   useEffect(() => {
     fetchStats();
+    fetchOwners();
 
     // 🔴 Real-time WebSocket connection
     const socket = io(import.meta.env.VITE_API_URL);
     socket.on('requestUpdated', () => {
       console.log('Real-time update triggered for dashboard stats');
       fetchStats(extentRef.current);
+      fetchOwners();
     });
 
     return () => {
@@ -61,6 +145,7 @@ const AdminDashboardTab = () => {
   }, [mapExtent]);
 
   const handleViewReady = (view: any) => {
+    setMapView(view);
     reactiveUtils.watch(
       () => view.stationary,
       (isStationary) => {
@@ -72,7 +157,17 @@ const AdminDashboardTab = () => {
   };
 
   const COLORS = ['#8957e5', '#3fb950'];
-  
+
+  // Mock Top Selling Regions data for further edits
+  const mockRegions = [
+    { name: 'District El-Narges 1', sales: 45, percentage: 32 },
+    { name: 'District El-Narges 2', sales: 32, percentage: 23 },
+    { name: 'District El-Narges 3', sales: 28, percentage: 20 },
+    { name: 'District El-Narges 4', sales: 19, percentage: 14 },
+    { name: 'District El-Narges 5', sales: 12, percentage: 9 },
+    { name: 'District El-Narges 6', sales: 4, percentage: 2 }
+  ];
+
   if (loading) {
     return <div style={{ padding: '40px', textAlign: 'center', color: '#8b949e' }}>Loading Analytics...</div>;
   }
@@ -83,60 +178,75 @@ const AdminDashboardTab = () => {
 
   return (
     <div style={{ padding: '15px', display: 'flex', flexDirection: 'column', gap: '15px', height: 'calc(100% - 15px)', overflow: 'hidden' }}>
-      
-      {/* Top Indicators Row */}
-      <div style={{ display: 'flex', gap: '15px' }}>
-        <div style={{ flex: 1, backgroundColor: '#21262d', padding: '10px 15px', borderRadius: '16px', border: '1px solid #30363d', textAlign: 'center' }}>
-          <h4 style={{ margin: '0 0 5px 0', color: '#8b949e', fontSize: '14px' }}>Total Revenue (M EGP)</h4>
-          <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#ffc658' }}>$ {stats.indicators.totalRevenue}</div>
-        </div>
-        <div style={{ flex: 1, backgroundColor: '#21262d', padding: '10px 15px', borderRadius: '16px', border: '1px solid #30363d', textAlign: 'center' }}>
-          <h4 style={{ margin: '0 0 5px 0', color: '#8b949e', fontSize: '14px' }}>Total Sold Units</h4>
-          <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#da3633' }}>{stats.indicators.totalSoldUnits}</div>
-        </div>
-        <div style={{ flex: 1, backgroundColor: '#21262d', padding: '10px 15px', borderRadius: '16px', border: '1px solid #30363d', textAlign: 'center' }}>
-          <h4 style={{ margin: '0 0 5px 0', color: '#8b949e', fontSize: '14px' }}>Total Reserved Units</h4>
-          <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#d29922' }}>{stats.indicators.totalReservedUnits}</div>
-        </div>
-        <div style={{ flex: 1, backgroundColor: '#21262d', padding: '10px 15px', borderRadius: '16px', border: '1px solid #30363d', textAlign: 'center' }}>
-          <h4 style={{ margin: '0 0 5px 0', color: '#8b949e', fontSize: '14px' }}>Total Available Units</h4>
-          <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#3fb950' }}>{stats.indicators.totalAvailableUnits}</div>
-        </div>
-      </div>
 
-      {/* Main Content Area (3 Columns spanning remaining height) */}
+      {/* Main Content Area (3 Columns spanning full height now) */}
       <div style={{ display: 'flex', gap: '15px', flex: 1, overflow: 'hidden' }}>
-        
-        {/* LEFT COLUMN: Bar Chart + Recent Sales */}
+
+        {/* LEFT COLUMN: Top Selling Regions + Top Owners + Recent Sales */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '15px', overflow: 'hidden' }}>
-          
-          {/* Bar Chart */}
-          <div style={{ flex: 1, backgroundColor: '#21262d', padding: '15px', borderRadius: '16px', border: '1px solid #30363d', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-            <h4 style={{ marginTop: 0, marginBottom: '10px', color: '#fff', textAlign: 'center', fontSize: '14px' }}>Property Status</h4>
-            <div style={{ flex: 1 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={stats.barChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#30363d" />
-                  <XAxis dataKey="name" stroke="#8b949e" tick={{fontSize: 12}} />
-                  <YAxis stroke="#8b949e" allowDecimals={false} tick={{fontSize: 12}} domain={[0, 300]} allowDataOverflow={true} />
-                  <BarTooltip contentStyle={{ backgroundColor: '#0d1117', border: '1px solid #30363d', color: '#fff' }} cursor={{fill: '#30363d'}} />
-                  <BarLegend wrapperStyle={{fontSize: '12px'}} />
-                  <Bar dataKey="Available" fill="#3fb950" />
-                  <Bar dataKey="Sold" fill="#da3633" />
-                  <Bar dataKey="Reserved" fill="#d29922" />
-                </BarChart>
-              </ResponsiveContainer>
+
+          {/* Top Selling Regions (Scroll down list) */}
+          <div style={{ flex: 1, backgroundColor: '#21262d', padding: '15px', borderRadius: '16px', border: '1px solid #30363d', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
+            <h4 style={{ marginTop: 0, marginBottom: '10px', color: '#fff', textAlign: 'left', borderBottom: '1px solid #30363d', paddingBottom: '8px', fontSize: '14px' }}>
+              📍 Top Selling Regions
+            </h4>
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {mockRegions.map((region, idx) => (
+                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#161b22', padding: '10px', borderRadius: '8px', border: '1px solid #30363d' }}>
+                  <div>
+                    <span style={{ color: '#e6edf3', fontWeight: 'bold', fontSize: '13px', display: 'block' }}>{region.name}</span>
+                    <span style={{ color: '#8b949e', fontSize: '10px' }}>Rank #{idx + 1}</span>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <span style={{ display: 'block', color: '#58a6ff', fontWeight: 'bold', fontSize: '13px' }}>{region.sales} Sales</span>
+                    <span style={{ color: '#8b949e', fontSize: '10px' }}>{region.percentage}% share</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Top Owners (Scroll down list) */}
+          <div style={{ flex: 1, backgroundColor: '#21262d', padding: '15px', borderRadius: '16px', border: '1px solid #30363d', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
+            <h4 style={{ marginTop: 0, marginBottom: '10px', color: '#fff', textAlign: 'left', borderBottom: '1px solid #30363d', paddingBottom: '8px', fontSize: '14px' }}>
+              👑 Top Owners
+            </h4>
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {owners.length > 0 ? (
+                owners.map((owner, idx) => (
+                  <div
+                    key={owner._id}
+                    onClick={() => setSelectedOwner(owner)}
+                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#161b22', padding: '10px', borderRadius: '8px', border: '1px solid #30363d', cursor: 'pointer', transition: 'background-color 0.2s' }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1f242c'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#161b22'}
+                  >
+                    <div>
+                      <span style={{ color: '#e6edf3', fontWeight: 'bold', fontSize: '13px', display: 'block' }}>{owner.name}</span>
+                      <span style={{ color: '#8b949e', fontSize: '10px' }}>{owner.phone}</span>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ display: 'block', color: '#ffc658', fontWeight: 'bold', fontSize: '13px' }}>
+                        {owner.totalPrice !== undefined && owner.totalPrice > 0 ? (owner.totalPrice / 1000000).toFixed(2) + ' M EGP' : '—'}
+                      </span>
+                      <span style={{ color: '#8b949e', fontSize: '10px' }}>{owner.ownedUnits?.length || 0} units</span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div style={{ color: '#8b949e', textAlign: 'center', padding: '10px', fontSize: '13px' }}>No owners found.</div>
+              )}
             </div>
           </div>
 
           {/* Recent Sales List */}
-          <div style={{ flex: 1, backgroundColor: '#21262d', padding: '15px', borderRadius: '16px', border: '1px solid #30363d', display: 'flex', flexDirection: 'column', overflowY: 'auto', minHeight: 0 }}>
+          <div style={{ flex: 1, backgroundColor: '#21262d', padding: '15px', borderRadius: '16px', border: '1px solid #30363d', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
             <h4 style={{ marginTop: 0, marginBottom: '10px', color: '#fff', textAlign: 'left', borderBottom: '1px solid #30363d', paddingBottom: '8px', fontSize: '14px' }}>
               🛒 Recent Sales
             </h4>
-            {stats.recentSales && stats.recentSales.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {stats.recentSales.map((sale: any) => (
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {stats.recentSales && stats.recentSales.length > 0 ? (
+                stats.recentSales.map((sale: any) => (
                   <div key={sale._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#161b22', padding: '10px', borderRadius: '6px', border: '1px solid #30363d' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                       <span style={{ color: '#e6edf3', fontWeight: 'bold', fontSize: '13px' }}>{sale.customerName}</span>
@@ -147,31 +257,56 @@ const AdminDashboardTab = () => {
                       <span style={{ color: '#8b949e', fontSize: '10px' }}>{new Date(sale.date).toLocaleDateString()}</span>
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div style={{ color: '#8b949e', textAlign: 'center', padding: '10px', fontSize: '13px' }}>No recent sales.</div>
-            )}
+                ))
+              ) : (
+                <div style={{ color: '#8b949e', textAlign: 'center', padding: '10px', fontSize: '13px' }}>No recent sales.</div>
+              )}
+            </div>
           </div>
 
         </div>
 
-        {/* CENTER COLUMN: 3D Map */}
-        <div style={{ flex: 2, backgroundColor: '#21262d', borderRadius: '16px', border: '1px solid #30363d', overflow: 'hidden', position: 'relative' }}>
-          <MapViewer 
-            onViewReady={handleViewReady} 
-            isLayersOpen={false} 
-            isWeatherOpen={false} 
-            setIsWeatherOpen={() => {}} 
-            isBasemapOpen={false} 
-          />
+        {/* CENTER COLUMN: Indicators row + 3D Map */}
+        <div style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: '15px', overflow: 'hidden' }}>
+
+          {/* Indicators row aligned directly with the map frame */}
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <div style={{ flex: 1, backgroundColor: '#21262d', padding: '10px 15px', borderRadius: '16px', border: '1px solid #30363d', textAlign: 'center' }}>
+              <h4 style={{ margin: '0 0 5px 0', color: '#8b949e', fontSize: '12px' }}>Total Revenue (M EGP)</h4>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffc658' }}>$ {stats.indicators.totalRevenue}</div>
+            </div>
+            <div style={{ flex: 1, backgroundColor: '#21262d', padding: '10px 15px', borderRadius: '16px', border: '1px solid #30363d', textAlign: 'center' }}>
+              <h4 style={{ margin: '0 0 5px 0', color: '#8b949e', fontSize: '12px' }}>Total Sold Units</h4>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#da3633' }}>{stats.indicators.totalSoldUnits}</div>
+            </div>
+            <div style={{ flex: 1, backgroundColor: '#21262d', padding: '10px 15px', borderRadius: '16px', border: '1px solid #30363d', textAlign: 'center' }}>
+              <h4 style={{ margin: '0 0 5px 0', color: '#8b949e', fontSize: '12px' }}>Total Reserved Units</h4>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#d29922' }}>{stats.indicators.totalReservedUnits}</div>
+            </div>
+            <div style={{ flex: 1, backgroundColor: '#21262d', padding: '10px 15px', borderRadius: '16px', border: '1px solid #30363d', textAlign: 'center' }}>
+              <h4 style={{ margin: '0 0 5px 0', color: '#8b949e', fontSize: '12px' }}>Total Available Units</h4>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#3fb950' }}>{stats.indicators.totalAvailableUnits}</div>
+            </div>
+          </div>
+
+          {/* 3D Map Container */}
+          <div style={{ flex: 1, backgroundColor: '#21262d', borderRadius: '16px', border: '1px solid #30363d', overflow: 'hidden', position: 'relative' }}>
+            <MapViewer 
+              onViewReady={handleViewReady} 
+              isLayersOpen={false} 
+              isWeatherOpen={false} 
+              setIsWeatherOpen={() => {}} 
+              isBasemapOpen={false} 
+            />
+          </div>
+
         </div>
 
-        {/* RIGHT COLUMN: Pie Chart + Top Brokers */}
+        {/* RIGHT COLUMN: Charts + Top Brokers */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '15px', overflow: 'hidden' }}>
-          
-          {/* Pie Chart */}
-          <div style={{ flex: 1, backgroundColor: '#21262d', padding: '15px', borderRadius: '16px', border: '1px solid #30363d', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+
+          {/* Pie Chart: Sold Units Ratio */}
+          <div style={{ flex: 1.2, backgroundColor: '#21262d', padding: '15px', borderRadius: '16px', border: '1px solid #30363d', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
             <h4 style={{ marginTop: 0, marginBottom: '10px', color: '#fff', textAlign: 'center', fontSize: '14px' }}>Sold Units Ratio</h4>
             <div style={{ flex: 1 }}>
               <ResponsiveContainer width="100%" height="100%">
@@ -200,21 +335,48 @@ const AdminDashboardTab = () => {
             </div>
           </div>
 
+          {/* Bar Chart: Property Status */}
+          <div style={{ flex: 1.2, backgroundColor: '#21262d', padding: '15px', borderRadius: '16px', border: '1px solid #30363d', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+            <h4 style={{ marginTop: 0, marginBottom: '10px', color: '#fff', textAlign: 'center', fontSize: '14px' }}>Property Status</h4>
+            <div style={{ flex: 1 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={stats.barChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#30363d" />
+                  <XAxis dataKey="name" stroke="#8b949e" tick={{fontSize: 12}} />
+                  <YAxis stroke="#8b949e" allowDecimals={false} tick={{fontSize: 12}} domain={[0, 300]} allowDataOverflow={true} />
+                  <BarTooltip contentStyle={{ backgroundColor: '#0d1117', border: '1px solid #30363d', color: '#fff' }} cursor={{fill: '#30363d'}} />
+                  <BarLegend wrapperStyle={{fontSize: '12px'}} />
+                  <Bar dataKey="Available" fill="#3fb950" />
+                  <Bar dataKey="Sold" fill="#da3633" />
+                  <Bar dataKey="Reserved" fill="#d29922" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
           {/* Top Brokers Leaderboard */}
-          <div style={{ flex: 1, backgroundColor: '#21262d', padding: '15px', borderRadius: '16px', border: '1px solid #30363d', display: 'flex', flexDirection: 'column', overflowY: 'auto', minHeight: 0 }}>
+          <div style={{ flex: 1, backgroundColor: '#21262d', padding: '15px', borderRadius: '16px', border: '1px solid #30363d', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
             <h4 style={{ marginTop: 0, marginBottom: '10px', color: '#fff', textAlign: 'left', borderBottom: '1px solid #30363d', paddingBottom: '8px', fontSize: '14px' }}>
               🏆 Top Brokers
             </h4>
-            {stats.topBrokers && stats.topBrokers.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {stats.topBrokers.map((broker: any, index: number) => (
-                  <div 
-                    key={broker._id} 
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {stats.topBrokers && stats.topBrokers.length > 0 ? (
+                stats.topBrokers.map((broker: any, index: number) => (
+                  <div
+                    key={broker._id}
                     onClick={() => setSelectedBroker(broker)}
-                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#161b22', padding: '10px', borderRadius: '12px', border: '1px solid #30363d', cursor: 'pointer' }}
+                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#161b22', padding: '10px 12px', borderRadius: '12px', border: '1px solid #30363d', cursor: 'pointer', transition: 'background-color 0.2s' }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1f242c'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#161b22'}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <div style={{ backgroundColor: index === 0 ? '#d29922' : index === 1 ? '#8b949e' : index === 2 ? '#b06500' : '#30363d', color: '#fff', width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold' }}>
+                    {/* Left: rank circle + name */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{
+                        backgroundColor: index === 0 ? '#d29922' : index === 1 ? '#8b949e' : index === 2 ? '#b06500' : '#30363d',
+                        color: '#fff', width: '28px', height: '28px', borderRadius: '50%',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '12px', fontWeight: 'bold', flexShrink: 0
+                      }}>
                         {index + 1}
                       </div>
                       <div>
@@ -222,26 +384,28 @@ const AdminDashboardTab = () => {
                         <span style={{ color: '#8b949e', fontSize: '10px' }}>Req: {broker.totalRequests}</span>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '10px', textAlign: 'center' }}>
+
+                    {/* Right: three stat columns */}
+                    <div style={{ display: 'flex', gap: '14px', textAlign: 'center' }}>
                       <div>
-                        <span style={{ display: 'block', color: '#3fb950', fontWeight: 'bold', fontSize: '12px' }}>{broker.sold}</span>
-                        <span style={{ color: '#8b949e', fontSize: '9px', textTransform: 'uppercase' }}>Sold</span>
+                        <span style={{ display: 'block', color: '#3fb950', fontWeight: 'bold', fontSize: '15px', lineHeight: 1.1 }}>{broker.sold}</span>
+                        <span style={{ color: '#8b949e', fontSize: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Sold</span>
                       </div>
                       <div>
-                        <span style={{ display: 'block', color: '#d29922', fontWeight: 'bold', fontSize: '12px' }}>{broker.raisedToAdmin}</span>
-                        <span style={{ color: '#8b949e', fontSize: '9px', textTransform: 'uppercase' }}>Raised</span>
+                        <span style={{ display: 'block', color: '#d29922', fontWeight: 'bold', fontSize: '15px', lineHeight: 1.1 }}>{broker.raisedToAdmin}</span>
+                        <span style={{ color: '#8b949e', fontSize: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Raised</span>
                       </div>
                       <div>
-                        <span style={{ display: 'block', color: '#f85149', fontWeight: 'bold', fontSize: '12px' }}>{broker.declined}</span>
-                        <span style={{ color: '#8b949e', fontSize: '9px', textTransform: 'uppercase' }}>Declined</span>
+                        <span style={{ display: 'block', color: '#f85149', fontWeight: 'bold', fontSize: '15px', lineHeight: 1.1 }}>{broker.declined}</span>
+                        <span style={{ color: '#8b949e', fontSize: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Declined</span>
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div style={{ color: '#8b949e', textAlign: 'center', padding: '10px', fontSize: '13px' }}>No brokers found.</div>
-            )}
+                ))
+              ) : (
+                <div style={{ color: '#8b949e', textAlign: 'center', padding: '10px', fontSize: '13px' }}>No brokers found.</div>
+              )}
+            </div>
           </div>
 
         </div>
@@ -250,6 +414,10 @@ const AdminDashboardTab = () => {
 
       {selectedBroker && (
         <BrokerPerformanceModal broker={selectedBroker} onClose={() => setSelectedBroker(null)} />
+      )}
+
+      {selectedOwner && (
+        <OwnerPropertiesModal owner={selectedOwner} view={mapView} onClose={() => setSelectedOwner(null)} />
       )}
 
     </div>

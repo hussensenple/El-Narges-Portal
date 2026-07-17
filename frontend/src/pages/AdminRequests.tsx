@@ -58,16 +58,57 @@ const AdminPortal = () => {
     }
   };
 
-  const handleReject = async (id: string) => {
-    const reason = window.prompt("Please enter the reason for rejection:");
-    if (reason !== null) {
+  const [rejectModalState, setRejectModalState] = useState<{ id: string | null, isBulk: boolean } | null>(null);
+  const [rejectReason, setRejectReason] = useState<string>('');
+  const [rejectNotes, setRejectNotes] = useState<string>('');
+  const adminRejectReasonsList = ['Served By Another Client', 'Management Decision', 'Downpayment Delay'];
+
+  const openRejectModal = (id: string | null, isBulk: boolean) => {
+    if (isBulk && selectedRequests.length === 0) {
+      alert("Select requests first");
+      return;
+    }
+    setRejectModalState({ id, isBulk });
+    setRejectReason('');
+    setRejectNotes('');
+  };
+
+  const closeRejectModal = () => {
+    setRejectModalState(null);
+    setRejectReason('');
+    setRejectNotes('');
+  };
+
+  const submitReject = async () => {
+    if (!rejectReason) {
+      alert("Please select a reason for rejection.");
+      return;
+    }
+
+    if (rejectModalState?.isBulk) {
+      setIsProcessing(true);
+      const token = localStorage.getItem('token');
+      const promises = selectedRequests.map(id => 
+        axios.post(`${import.meta.env.VITE_API_URL}/api/admin/reject/${id}`, { reason: rejectReason, notes: rejectNotes }, { headers: { 'x-auth-token': token } })
+          .then(() => 1)
+          .catch(() => { console.error(`Failed to reject ${id}`); return 0; })
+      );
+      const results = await Promise.all(promises);
+      const successCount = results.reduce((acc, val) => acc + val, 0);
+      alert(`❌ Rejected ${successCount} out of ${selectedRequests.length} requests!`);
+      setSelectedRequests([]);
+      fetchRequests();
+      setIsProcessing(false);
+      closeRejectModal();
+    } else if (rejectModalState?.id) {
       try {
         const token = localStorage.getItem('token');
-        await axios.post(`${import.meta.env.VITE_API_URL}/api/admin/reject/${id}`, { reason }, {
+        await axios.post(`${import.meta.env.VITE_API_URL}/api/admin/reject/${rejectModalState.id}`, { reason: rejectReason, notes: rejectNotes }, {
           headers: { 'x-auth-token': token }
         });
         alert("❌ Request rejected successfully!");
         fetchRequests(); 
+        closeRejectModal();
       } catch (error) {
         alert("❌ An error occurred during rejection.");
       }
@@ -109,25 +150,7 @@ const AdminPortal = () => {
     }
   };
 
-  const handleBulkReject = async () => {
-    if (selectedRequests.length === 0) return alert("Select requests first");
-    const reason = window.prompt(`Enter reason for rejecting ${selectedRequests.length} requests:`);
-    if (reason !== null) {
-      setIsProcessing(true);
-      const token = localStorage.getItem('token');
-      const promises = selectedRequests.map(id => 
-        axios.post(`${import.meta.env.VITE_API_URL}/api/admin/reject/${id}`, { reason }, { headers: { 'x-auth-token': token } })
-          .then(() => 1)
-          .catch(() => { console.error(`Failed to reject ${id}`); return 0; })
-      );
-      const results = await Promise.all(promises);
-      const successCount = results.reduce((acc, val) => acc + val, 0);
-      alert(`❌ Rejected ${successCount} out of ${selectedRequests.length} requests!`);
-      setSelectedRequests([]);
-      fetchRequests();
-      setIsProcessing(false);
-    }
-  };
+
 
   return (
     <div style={{ backgroundColor: '#0d1117', color: '#c9d1d9', height: '100vh', display: 'flex', flexDirection: 'column', fontFamily: 'sans-serif' }}>
@@ -209,7 +232,7 @@ const AdminPortal = () => {
                   <button onClick={handleBulkApprove} disabled={isProcessing} style={{ backgroundColor: '#238636', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: isProcessing ? 'not-allowed' : 'pointer', fontWeight: 'bold', opacity: isProcessing ? 0.7 : 1 }}>
                     {isProcessing ? 'Processing...' : `Approve Selected (${selectedRequests.length})`}
                   </button>
-                  <button onClick={handleBulkReject} disabled={isProcessing} style={{ backgroundColor: '#da3633', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: isProcessing ? 'not-allowed' : 'pointer', fontWeight: 'bold', opacity: isProcessing ? 0.7 : 1 }}>
+                  <button onClick={() => openRejectModal(null, true)} disabled={isProcessing} style={{ backgroundColor: '#da3633', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: isProcessing ? 'not-allowed' : 'pointer', fontWeight: 'bold', opacity: isProcessing ? 0.7 : 1 }}>
                     {isProcessing ? 'Processing...' : `Reject Selected (${selectedRequests.length})`}
                   </button>
                 </div>
@@ -251,7 +274,7 @@ const AdminPortal = () => {
                       <td style={{ padding: '12px' }}>{req.userId?.phone}</td>
                       <td style={{ padding: '12px' }}>
                         <button onClick={() => handleApprove(req._id)} style={{ marginRight: '10px', backgroundColor: '#238636', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>Approve</button>
-                        <button onClick={() => handleReject(req._id)} style={{ backgroundColor: '#da3633', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>Reject</button>
+                        <button onClick={() => openRejectModal(req._id, false)} style={{ backgroundColor: '#da3633', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>Reject</button>
                       </td>
                     </tr>
                   ))}
@@ -280,6 +303,58 @@ const AdminPortal = () => {
         <div style={{ display: activeTab === 'properties' ? 'block' : 'none', height: '100%' }}>
           <PropertyManagementTab />
         </div>
+
+      {rejectModalState && (
+        <div style={{ position: 'fixed', inset: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 3000 }}>
+          <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)' }} onClick={closeRejectModal} />
+          <div style={{ position: 'relative', width: '400px', backgroundColor: '#161b22', borderRadius: '12px', border: '1px solid #30363d', display: 'flex', flexDirection: 'column', zIndex: 3001, overflow: 'hidden' }}>
+            <div style={{ padding: '15px 20px', borderBottom: '1px solid #30363d', backgroundColor: '#0d1117' }}>
+              <h3 style={{ margin: 0, color: '#f85149' }}>
+                {rejectModalState.isBulk ? `Reject ${selectedRequests.length} Requests` : 'Reject Request'}
+              </h3>
+            </div>
+            <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', color: '#c9d1d9', fontSize: '14px', fontWeight: 'bold' }}>Reason for Rejection *</label>
+                <select 
+                  value={rejectReason} 
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  style={{ width: '100%', padding: '10px', backgroundColor: '#0d1117', color: '#fff', border: '1px solid #30363d', borderRadius: '6px' }}
+                >
+                  <option value="" disabled>Select a reason...</option>
+                  {adminRejectReasonsList.map(r => (
+                    <option key={r} value={r}>{r}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', color: '#c9d1d9', fontSize: '14px', fontWeight: 'bold' }}>Extra Notes (Optional)</label>
+                <textarea 
+                  value={rejectNotes}
+                  onChange={(e) => setRejectNotes(e.target.value)}
+                  placeholder="Provide any additional details..."
+                  style={{ width: '100%', padding: '10px', backgroundColor: '#0d1117', color: '#fff', border: '1px solid #30363d', borderRadius: '6px', minHeight: '80px', resize: 'vertical' }}
+                />
+              </div>
+            </div>
+            <div style={{ padding: '15px 20px', borderTop: '1px solid #30363d', display: 'flex', justifyContent: 'flex-end', gap: '10px', backgroundColor: '#0d1117' }}>
+              <button 
+                onClick={closeRejectModal} 
+                style={{ backgroundColor: 'transparent', border: '1px solid #8b949e', color: '#8b949e', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={submitReject} 
+                disabled={!rejectReason || isProcessing}
+                style={{ backgroundColor: rejectReason ? '#da3633' : '#444c56', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: rejectReason ? 'pointer' : 'not-allowed', fontWeight: 'bold' }}
+              >
+                {isProcessing ? 'Processing...' : 'Confirm Reject'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       </div>
     </div>

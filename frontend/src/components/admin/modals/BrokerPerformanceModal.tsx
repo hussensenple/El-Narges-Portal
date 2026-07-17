@@ -29,7 +29,7 @@ const BrokerPerformanceModal: React.FC<BrokerPerformanceModalProps> = ({ broker,
 
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-      <div style={{ backgroundColor: '#0d1117', padding: '30px', borderRadius: '12px', width: '900px', maxWidth: '95vw', border: '1px solid #30363d', color: '#fff', maxHeight: '90vh', overflowY: 'auto' }}>
+      <div style={{ backgroundColor: '#0d1117', padding: '30px', borderRadius: '12px', width: '1100px', maxWidth: '96vw', border: '1px solid #30363d', color: '#fff', maxHeight: '92vh', overflowY: 'auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <h2 style={{ margin: 0, color: '#8957e5' }}>📊 Performance Dashboard: {broker.name}</h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#8b949e', fontSize: '24px', cursor: 'pointer' }}>&times;</button>
@@ -40,23 +40,47 @@ const BrokerPerformanceModal: React.FC<BrokerPerformanceModalProps> = ({ broker,
         ) : data ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
 
-            {/* Indicators Section */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '15px' }}>
-              <div style={{ flex: 1, backgroundColor: '#21262d', padding: '15px', borderRadius: '8px', border: '1px solid #30363d', textAlign: 'center' }}>
+            {/* Indicators Section — all 5 in a single row */}
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'nowrap' }}>
+              <div style={{ flex: 1, minWidth: 0, backgroundColor: '#21262d', padding: '15px', borderRadius: '8px', border: '1px solid #30363d', textAlign: 'center' }}>
                 <h4 style={{ margin: '0 0 10px 0', color: '#8b949e' }}>Available Units</h4>
                 <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#3fb950' }}>{data.indicators.availableUnits}</div>
               </div>
-              <div style={{ flex: 1, backgroundColor: '#21262d', padding: '15px', borderRadius: '8px', border: '1px solid #30363d', textAlign: 'center' }}>
+              <div style={{ flex: 1, minWidth: 0, backgroundColor: '#21262d', padding: '15px', borderRadius: '8px', border: '1px solid #30363d', textAlign: 'center' }}>
                 <h4 style={{ margin: '0 0 10px 0', color: '#8b949e' }}>Reserved Units</h4>
                 <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#d29922' }}>{data.indicators.reservedUnits}</div>
               </div>
-              <div style={{ flex: 1, backgroundColor: '#21262d', padding: '15px', borderRadius: '8px', border: '1px solid #30363d', textAlign: 'center' }}>
+              <div style={{ flex: 1, minWidth: 0, backgroundColor: '#21262d', padding: '15px', borderRadius: '8px', border: '1px solid #30363d', textAlign: 'center' }}>
                 <h4 style={{ margin: '0 0 10px 0', color: '#8b949e' }}>Sold Units</h4>
                 <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#da3633' }}>{data.indicators.soldUnits}</div>
               </div>
-              <div style={{ flex: 1, backgroundColor: '#21262d', padding: '15px', borderRadius: '8px', border: '1px solid #30363d', textAlign: 'center' }}>
+              <div style={{ flex: 1, minWidth: 0, backgroundColor: '#21262d', padding: '15px', borderRadius: '8px', border: '1px solid #30363d', textAlign: 'center' }}>
                 <h4 style={{ margin: '0 0 10px 0', color: '#8b949e' }}>Total Revenue (M EGP)</h4>
                 <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#ffc658' }}>$ {data.indicators.revenueMEGP}</div>
+              </div>
+              {/* Commission Card — 1.5% of total revenue */}
+              <div style={{
+                flex: 1,
+                minWidth: 0,
+                background: 'linear-gradient(135deg, #1a2a1a 0%, #21262d 100%)',
+                padding: '15px',
+                borderRadius: '8px',
+                border: '1px solid #2ea043',
+                textAlign: 'center',
+                position: 'relative',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  position: 'absolute', top: 0, left: 0, right: 0,
+                  height: '3px',
+                  background: 'linear-gradient(90deg, #2ea043, #56d364)'
+                }} />
+                <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#56d364', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '6px' }}>Commission</div>
+                <h4 style={{ margin: '0 0 10px 0', color: '#8b949e' }}>1.5% of Revenue</h4>
+                <div style={{ fontSize: '26px', fontWeight: 'bold', color: '#56d364' }}>
+                  💰 {(data.indicators.revenueMEGP * 15).toLocaleString(undefined, { maximumFractionDigits: 1 })}
+                </div>
+                <div style={{ fontSize: '11px', color: '#8b949e', marginTop: '4px' }}>Thousand EGP</div>
               </div>
             </div>
 
@@ -66,7 +90,7 @@ const BrokerPerformanceModal: React.FC<BrokerPerformanceModalProps> = ({ broker,
               {/* Pie Chart */}
               <div style={{ flex: 1, backgroundColor: '#21262d', padding: '20px', borderRadius: '8px', border: '1px solid #30363d' }}>
                 <h4 style={{ marginTop: 0, marginBottom: '20px', color: '#fff', textAlign: 'center' }}>Requests Conversion</h4>
-                <div style={{ height: '300px' }}>
+                <div style={{ height: '420px' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -92,7 +116,7 @@ const BrokerPerformanceModal: React.FC<BrokerPerformanceModalProps> = ({ broker,
               {/* Bar Chart */}
               <div style={{ flex: 1, backgroundColor: '#21262d', padding: '20px', borderRadius: '8px', border: '1px solid #30363d' }}>
                 <h4 style={{ marginTop: 0, marginBottom: '20px', color: '#fff', textAlign: 'center' }}>Client Requests by Property Type</h4>
-                <div style={{ height: '300px' }}>
+                <div style={{ height: '420px' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                       data={data.barChartData}

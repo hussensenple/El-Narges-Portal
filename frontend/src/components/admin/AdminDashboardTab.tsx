@@ -5,6 +5,7 @@ import { PieChart, Pie, Cell, Tooltip as PieTooltip, Legend as PieLegend, BarCha
 import MapViewer from '../MapViewer';
 import BrokerPerformanceModal from './modals/BrokerPerformanceModal';
 import OwnerPropertiesModal from './modals/OwnerPropertiesModal';
+import TopOwnersChartModal from './modals/TopOwnersChartModal';
 import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
 
 const renderCustomizedLabel = (props: any) => {
@@ -23,6 +24,7 @@ const AdminDashboardTab = () => {
   const [selectedBroker, setSelectedBroker] = useState<any>(null);
   const [owners, setOwners] = useState<any[]>([]);
   const [selectedOwner, setSelectedOwner] = useState<any>(null);
+  const [isTopOwnersChartOpen, setIsTopOwnersChartOpen] = useState(false);
   const [mapExtent, setMapExtent] = useState<any>(null);
   const [mapView, setMapView] = useState<any>(null);
   const extentRef = useRef<any>(null);
@@ -208,9 +210,18 @@ const AdminDashboardTab = () => {
 
           {/* Top Owners (Scroll down list) */}
           <div style={{ flex: 1, backgroundColor: '#21262d', padding: '15px', borderRadius: '16px', border: '1px solid #30363d', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
-            <h4 style={{ marginTop: 0, marginBottom: '10px', color: '#fff', textAlign: 'left', borderBottom: '1px solid #30363d', paddingBottom: '8px', fontSize: '14px' }}>
-              👑 Top Owners
-            </h4>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #30363d', paddingBottom: '8px', marginBottom: '10px' }}>
+              <h4 style={{ margin: 0, color: '#fff', fontSize: '14px' }}>
+                👑 Top Owners
+              </h4>
+              <button 
+                onClick={() => setIsTopOwnersChartOpen(true)}
+                style={{ backgroundColor: 'transparent', border: 'none', cursor: 'pointer', fontSize: '16px' }}
+                title="View Top Owners Chart"
+              >
+                📊
+              </button>
+            </div>
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {owners.length > 0 ? (
                 owners.map((owner, idx) => (
@@ -420,6 +431,12 @@ const AdminDashboardTab = () => {
         <OwnerPropertiesModal owner={selectedOwner} view={mapView} onClose={() => setSelectedOwner(null)} />
       )}
 
+      {isTopOwnersChartOpen && (
+        <TopOwnersChartModal 
+          owners={owners} 
+          onClose={() => setIsTopOwnersChartOpen(false)} 
+        />
+      )}
     </div>
   );
 };

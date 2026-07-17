@@ -6,10 +6,11 @@ import PropertyManagementTab from '../components/admin/PropertyManagementTab';
 import AdminDashboardTab from '../components/admin/AdminDashboardTab';
 
 import RolesWidget from '../components/admin/RolesWidget';
+import RejectionAnalysisTab from '../components/admin/RejectionAnalysisTab';
 
 const AdminPortal = () => {
 // حالة التابات بعد دمج الشكاوى (شغلك) والصلاحيات (شغل صاحبك)
-  const [activeTab, setActiveTab] = useState<'analytics' | 'requests' | 'complaints' | 'roles' | 'properties'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'requests' | 'complaints' | 'roles' | 'properties' | 'rejections'>('analytics');
   const [complaintsCount, setComplaintsCount] = useState(0);
   const [requests, setRequests] = useState([]);
   const [selectedRequests, setSelectedRequests] = useState<string[]>([]);
@@ -212,6 +213,16 @@ const AdminPortal = () => {
           🏢 Property Management
         </button>
 
+        <button 
+          onClick={() => setActiveTab('rejections')}
+          style={{
+            backgroundColor: activeTab === 'rejections' ? '#1f6feb' : 'transparent',
+            color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s'
+          }}
+        >
+          📉 Analyze Rejections
+        </button>
+
       </div>
 
       {/* 🖥️ منطقة عرض المحتوى (Content Area) */}
@@ -302,6 +313,11 @@ const AdminPortal = () => {
         {/* التابة الرابعة: إدارة العقارات */}
         <div style={{ display: activeTab === 'properties' ? 'block' : 'none', height: '100%' }}>
           <PropertyManagementTab />
+        </div>
+
+        {/* التابة الخامسة: تحليل الرفضات */}
+        <div style={{ display: activeTab === 'rejections' ? 'flex' : 'none', height: '100%', flexDirection: 'column' }}>
+          <RejectionAnalysisTab />
         </div>
 
       {rejectModalState && (

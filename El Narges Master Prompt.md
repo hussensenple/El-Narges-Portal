@@ -120,8 +120,9 @@ Located under `frontend/src/components/admin/` and `frontend/src/pages/AdminRequ
   - **Right Column (Analytics & Leaderboards):** Stacks the Pie Chart (Sold Units Ratio), Bar Chart (Property Status), and Top Brokers widget vertically. The Top Brokers widget features a custom UI mimicking a leaderboard (gold/silver/bronze rank circles, with SOLD/RAISED/DECLINED counts).
   - **Left Column (Regions, Owners & Sales):** Stacks the scrollable Top Selling Regions list (at the top), Top Owners list (sorted descending by total money paid for their properties via ArcGIS query, with large gold text for the paid amount), and Recent Sales list (at the bottom).
 - `RolesWidget.tsx` — Quick role switcher widget
+- `RejectionAnalysisTab.tsx` — Two-panel view for analyzing rejection reasons (filterable list + live recharts bar chart)
 - **Tables:** `OwnersTable.tsx`, `BrokersTable.tsx`, `EngineersTable.tsx`, `AdminsTable.tsx`, `UsersTable.tsx`
-- **Modals:** `PropertyAssignCatalog.tsx`, `EditUserModal.tsx`, `RoleChangeModal.tsx`, `BrokerPerformanceModal.tsx`, `OwnerPropertiesModal.tsx` (displays properties owned by selected user in top owners list, with map location sync matching owner dashboard design)
+- **Modals:** `PropertyAssignCatalog.tsx`, `EditUserModal.tsx`, `RoleChangeModal.tsx`, `BrokerPerformanceModal.tsx`, `OwnerPropertiesModal.tsx` (displays properties owned by selected user in top owners list, with map location sync matching owner dashboard design), `TopOwnersChartModal.tsx` (displays recharts bar chart of top 25 owners by paid amount)
 
 ---
 

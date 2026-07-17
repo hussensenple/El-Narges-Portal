@@ -19,6 +19,20 @@ router.get('/pending', async (req, res) => {
   }
 });
 
+// 1b. Rejection Analysis — all rejected/declined requests sorted newest first
+router.get('/rejection-analysis', async (req, res) => {
+  try {
+    const rejections = await BookingRequest.find({
+      status: { $in: ['Rejected', 'Declined'] }
+    })
+      .populate('userId', 'name email')
+      .sort({ updatedAt: -1 });
+    res.json(rejections);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch rejection data' });
+  }
+});
+
 // 2. 🚀 توجيه زرار الموافقة للكنترولر الصح (اللي بيحدث MongoDB و AGOL ويرقي العميل)
 router.post('/approve/:requestId', async (req, res, next) => {
   try {

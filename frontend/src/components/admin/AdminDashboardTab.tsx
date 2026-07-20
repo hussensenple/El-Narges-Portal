@@ -125,8 +125,8 @@ const AdminDashboardTab = () => {
       const ownersWithPrices = ownersList.map((owner: any) => {
         let totalPrice = 0;
         owner.ownedUnits?.forEach((unit: any) => {
-          const key = unit.sourceLayer === 'Villas_Global' 
-            ? `Villas_Global_${unit.arcgisId}` 
+          const key = unit.sourceLayer === 'Villas_Global'
+            ? `Villas_Global_${unit.arcgisId}`
             : `Units_${unit.objectId}`;
           totalPrice += priceMap[key] || 0;
         });
@@ -240,7 +240,7 @@ const AdminDashboardTab = () => {
               <h4 style={{ margin: 0, color: '#fff', fontSize: '14px' }}>
                 👑 Top Owners
               </h4>
-              <button 
+              <button
                 onClick={() => setIsTopOwnersChartOpen(true)}
                 style={{ backgroundColor: 'transparent', border: 'none', cursor: 'pointer', fontSize: '16px' }}
                 title="View Top Owners Chart"
@@ -250,7 +250,7 @@ const AdminDashboardTab = () => {
             </div>
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {owners.length > 0 ? (
-                owners.map((owner, idx) => (
+                owners.map(owner => (
                   <div
                     key={owner._id}
                     onClick={() => setSelectedOwner(owner)}
@@ -309,31 +309,31 @@ const AdminDashboardTab = () => {
           {/* Indicators row aligned directly with the map frame */}
           <div style={{ display: 'flex', gap: '10px' }}>
             <div style={{ flex: 1, backgroundColor: '#21262d', padding: '10px 15px', borderRadius: '16px', border: '1px solid #30363d', textAlign: 'center' }}>
-              <h4 style={{ margin: '0 0 5px 0', color: '#8b949e', fontSize: '12px' }}>Total Revenue (M EGP)</h4>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffc658' }}>EGP {stats.indicators.totalRevenue}</div>
-            </div>
-            <div style={{ flex: 1, backgroundColor: '#21262d', padding: '10px 15px', borderRadius: '16px', border: '1px solid #30363d', textAlign: 'center' }}>
-              <h4 style={{ margin: '0 0 5px 0', color: '#8b949e', fontSize: '12px' }}>Total Sold Units</h4>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#da3633' }}>{stats.indicators.totalSoldUnits}</div>
+              <h4 style={{ margin: '0 0 5px 0', color: '#8b949e', fontSize: '12px' }}>Total Available Units</h4>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#3fb950' }}>{stats.indicators.totalAvailableUnits}</div>
             </div>
             <div style={{ flex: 1, backgroundColor: '#21262d', padding: '10px 15px', borderRadius: '16px', border: '1px solid #30363d', textAlign: 'center' }}>
               <h4 style={{ margin: '0 0 5px 0', color: '#8b949e', fontSize: '12px' }}>Total Reserved Units</h4>
               <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#d29922' }}>{stats.indicators.totalReservedUnits}</div>
             </div>
             <div style={{ flex: 1, backgroundColor: '#21262d', padding: '10px 15px', borderRadius: '16px', border: '1px solid #30363d', textAlign: 'center' }}>
-              <h4 style={{ margin: '0 0 5px 0', color: '#8b949e', fontSize: '12px' }}>Total Available Units</h4>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#3fb950' }}>{stats.indicators.totalAvailableUnits}</div>
+              <h4 style={{ margin: '0 0 5px 0', color: '#8b949e', fontSize: '12px' }}>Total Sold Units</h4>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#da3633' }}>{stats.indicators.totalSoldUnits}</div>
+            </div>
+            <div style={{ flex: 1, backgroundColor: '#21262d', padding: '10px 15px', borderRadius: '16px', border: '1px solid #30363d', textAlign: 'center' }}>
+              <h4 style={{ margin: '0 0 5px 0', color: '#8b949e', fontSize: '12px' }}>Total Revenue</h4>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffc658' }}>{Number(stats.indicators.totalRevenue).toFixed(2)} M EGY</div>
             </div>
           </div>
 
           {/* 3D Map Container */}
           <div style={{ flex: 1, backgroundColor: '#21262d', borderRadius: '16px', border: '1px solid #30363d', overflow: 'hidden', position: 'relative' }}>
-            <MapViewer 
-              onViewReady={handleViewReady} 
-              isLayersOpen={false} 
-              isWeatherOpen={false} 
-              setIsWeatherOpen={() => {}} 
-              isBasemapOpen={false} 
+            <MapViewer
+              onViewReady={handleViewReady}
+              isLayersOpen={false}
+              isWeatherOpen={false}
+              setIsWeatherOpen={() => { }}
+              isBasemapOpen={false}
             />
           </div>
 
@@ -366,7 +366,7 @@ const AdminDashboardTab = () => {
                     ))}
                   </Pie>
                   <PieTooltip contentStyle={{ backgroundColor: '#0d1117', border: '1px solid #30363d', color: '#fff', fontSize: '12px' }} />
-                  <PieLegend verticalAlign="bottom" height={24} wrapperStyle={{fontSize: '12px'}} />
+                  <PieLegend verticalAlign="bottom" height={24} wrapperStyle={{ fontSize: '12px' }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -379,10 +379,10 @@ const AdminDashboardTab = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={stats.barChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#30363d" />
-                  <XAxis dataKey="name" stroke="#8b949e" tick={{fontSize: 12}} />
-                  <YAxis stroke="#8b949e" allowDecimals={false} tick={{fontSize: 12}} domain={[0, 300]} allowDataOverflow={true} />
-                  <BarTooltip contentStyle={{ backgroundColor: '#0d1117', border: '1px solid #30363d', color: '#fff' }} cursor={{fill: '#30363d'}} />
-                  <BarLegend wrapperStyle={{fontSize: '12px'}} />
+                  <XAxis dataKey="name" stroke="#8b949e" tick={{ fontSize: 12 }} />
+                  <YAxis stroke="#8b949e" allowDecimals={false} tick={{ fontSize: 12 }} domain={[0, 300]} allowDataOverflow={true} />
+                  <BarTooltip contentStyle={{ backgroundColor: '#0d1117', border: '1px solid #30363d', color: '#fff' }} cursor={{ fill: '#30363d' }} />
+                  <BarLegend wrapperStyle={{ fontSize: '12px' }} />
                   <Bar dataKey="Available" fill="#3fb950" />
                   <Bar dataKey="Sold" fill="#da3633" />
                   <Bar dataKey="Reserved" fill="#d29922" />
@@ -458,9 +458,9 @@ const AdminDashboardTab = () => {
       )}
 
       {isTopOwnersChartOpen && (
-        <TopOwnersChartModal 
-          owners={owners} 
-          onClose={() => setIsTopOwnersChartOpen(false)} 
+        <TopOwnersChartModal
+          owners={owners}
+          onClose={() => setIsTopOwnersChartOpen(false)}
         />
       )}
 

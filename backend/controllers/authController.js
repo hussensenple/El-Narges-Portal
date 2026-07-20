@@ -5,8 +5,8 @@ const jwt = require('jsonwebtoken'); // مكتبة عمل التوكن (عشان
 // 1. دالة إنشاء حساب جديد (Register)
 const register = async (req, res) => {
   try {
-    // بنستقبل الداتا من الـ Frontend (وضفنا الـ role)
-    const { name, email, phone, password, role } = req.body;
+    // بنستقبل الداتا من الـ Frontend (وضفنا الـ role والـ location)
+    const { name, email, phone, password, role, countryStatus, governorate } = req.body;
 
     // التأكد إن مفيش حد مسجل بنفس التليفون أو الإيميل قبل كده
     const existingUser = await User.findOne({ $or: [{ phone }, { email }] });
@@ -28,7 +28,9 @@ const register = async (req, res) => {
       email,
       phone,
       password: hashedPassword,
-      role: userRole // ضفنا الـ Role هنا
+      role: userRole,
+      countryStatus,
+      governorate
     });
 
     await newUser.save();

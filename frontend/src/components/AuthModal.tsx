@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 
@@ -17,6 +17,41 @@ const AuthModal = ({ onClose, onSuccess }: AuthModalProps) => {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   
+  const [countryStatus, setCountryStatus] = useState('Egypt');
+  const [governorate, setGovernorate] = useState('');
+  const [governoratesList, setGovernoratesList] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchGovernorates = async () => {
+      try {
+        const url = 'https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Heatmap_WFL1/FeatureServer/0/query';
+        const res = await axios.get(url, {
+          params: {
+            where: '1=1',
+            outFields: '*',
+            returnGeometry: false,
+            f: 'json'
+          }
+        });
+        if (res.data && res.data.features && res.data.features.length > 0) {
+          const fields = Object.keys(res.data.features[0].attributes);
+          const nameField = fields.find(f => f.toLowerCase().includes('name') || f.toLowerCase().includes('gov') || f.toLowerCase().includes('ar')) || fields.find(f => typeof res.data.features[0].attributes[f] === 'string');
+          const govs = [...new Set(res.data.features.map((f: any) => nameField ? f.attributes[nameField] : undefined))].filter(Boolean) as string[];
+          setGovernoratesList(govs);
+          if (govs.length > 0) setGovernorate(govs[0]);
+        } else {
+          throw new Error('Secured layer or no data');
+        }
+      } catch (err) {
+        console.warn('Falling back to static governorates list due to AGOL security/error');
+        const fallbackGovs = ['Cairo', 'Giza', 'Alexandria', 'Dakahlia', 'Red Sea', 'Beheira', 'Fayoum', 'Gharbia', 'Ismailia', 'Menofia', 'Minya', 'Qaliubiya', 'New Valley', 'Suez', 'Aswan', 'Assiut', 'Beni Suef', 'Port Said', 'Damietta', 'Sharkia', 'South Sinai', 'Kafr Al sheikh', 'Matrouh', 'Luxor', 'Qena', 'North Sinai', 'Sohag'];
+        setGovernoratesList(fallbackGovs);
+        setGovernorate(fallbackGovs[0]);
+      }
+    };
+    fetchGovernorates();
+  }, []);
+
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -56,7 +91,7 @@ const AuthModal = ({ onClose, onSuccess }: AuthModalProps) => {
 
     try {
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
-      const payload = isLogin ? { phone, password } : { name, email, phone, password };
+      const payload = isLogin ? { phone, password } : { name, email, phone, password, countryStatus, governorate: countryStatus === 'Egypt' ? governorate : '' };
       
       const res = await axios.post(`${import.meta.env.VITE_API_URL}${endpoint}`, payload);
 
@@ -106,6 +141,20 @@ const AuthModal = ({ onClose, onSuccess }: AuthModalProps) => {
               <div>
                 <input type="email" placeholder="Email (@gmail.com)" value={email} onChange={e => handleValidation('email', e.target.value)} required style={{ width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '6px', backgroundColor: '#0d1117', color: '#fff', border: getBorderStyle(validity.email), outline: 'none' }} />
                 {validity.email === false && <span style={{ color: '#ff7b72', fontSize: '11px', display: 'block', marginTop: '4px' }}>Must be a valid @gmail.com address.</span>}
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <select value={countryStatus} onChange={(e) => setCountryStatus(e.target.value)} style={{ flex: 1, padding: '12px', borderRadius: '6px', backgroundColor: '#0d1117', color: '#fff', border: '1px solid #30363d', outline: 'none' }}>
+                  <option value="Egypt">Inside Egypt</option>
+                  <option value="Outside Egypt">Outside Egypt</option>
+                </select>
+
+                {countryStatus === 'Egypt' && (
+                  <select value={governorate} onChange={(e) => setGovernorate(e.target.value)} required style={{ flex: 1, padding: '12px', borderRadius: '6px', backgroundColor: '#0d1117', color: '#fff', border: '1px solid #30363d', outline: 'none' }}>
+                    {governoratesList.map(gov => (
+                      <option key={gov} value={gov}>{gov}</option>
+                    ))}
+                  </select>
+                )}
               </div>
             </>
           )}

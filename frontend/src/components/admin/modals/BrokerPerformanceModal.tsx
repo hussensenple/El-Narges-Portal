@@ -56,7 +56,7 @@ const BrokerPerformanceModal: React.FC<BrokerPerformanceModalProps> = ({ broker,
               </div>
               <div style={{ flex: 1, minWidth: 0, backgroundColor: '#21262d', padding: '15px', borderRadius: '8px', border: '1px solid #30363d', textAlign: 'center' }}>
                 <h4 style={{ margin: '0 0 10px 0', color: '#8b949e' }}>Total Revenue (M EGP)</h4>
-                <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#ffc658' }}>$ {data.indicators.revenueMEGP}</div>
+                <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#ffc658' }}>EGP {data.indicators.revenueMEGP}</div>
               </div>
               {/* Commission Card — 1.5% of total revenue */}
               <div style={{

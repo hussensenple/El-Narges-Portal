@@ -6,6 +6,8 @@ import MapViewer from '../MapViewer';
 import BrokerPerformanceModal from './modals/BrokerPerformanceModal';
 import OwnerPropertiesModal from './modals/OwnerPropertiesModal';
 import TopOwnersChartModal from './modals/TopOwnersChartModal';
+import RegionClientsModal from './modals/RegionClientsModal';
+import RegionsWebMapModal from './modals/RegionsWebMapModal';
 import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
 
 const renderCustomizedLabel = (props: any) => {
@@ -28,6 +30,9 @@ const AdminDashboardTab = () => {
   const [mapExtent, setMapExtent] = useState<any>(null);
   const [mapView, setMapView] = useState<any>(null);
   const extentRef = useRef<any>(null);
+  const [regionsStats, setRegionsStats] = useState<any[]>([]);
+  const [selectedRegion, setSelectedRegion] = useState<any>(null);
+  const [isRegionsChartOpen, setIsRegionsChartOpen] = useState(false);
 
   const fetchStats = async (extent?: any) => {
     try {
@@ -42,6 +47,18 @@ const AdminDashboardTab = () => {
       console.error('Error fetching admin dashboard stats:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRegionsStats = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin/regions-stats`, {
+        headers: { 'x-auth-token': token }
+      });
+      setRegionsStats(res.data);
+    } catch (error) {
+      console.error('Error fetching regions stats:', error);
     }
   };
 
@@ -126,6 +143,7 @@ const AdminDashboardTab = () => {
   useEffect(() => {
     fetchStats();
     fetchOwners();
+    fetchRegionsStats();
 
     // 🔴 Real-time WebSocket connection
     const socket = io(import.meta.env.VITE_API_URL);
@@ -133,6 +151,7 @@ const AdminDashboardTab = () => {
       console.log('Real-time update triggered for dashboard stats');
       fetchStats(extentRef.current);
       fetchOwners();
+      fetchRegionsStats();
     });
 
     return () => {
@@ -160,16 +179,6 @@ const AdminDashboardTab = () => {
 
   const COLORS = ['#8957e5', '#3fb950'];
 
-  // Mock Top Selling Regions data for further edits
-  const mockRegions = [
-    { name: 'District El-Narges 1', sales: 45, percentage: 32 },
-    { name: 'District El-Narges 2', sales: 32, percentage: 23 },
-    { name: 'District El-Narges 3', sales: 28, percentage: 20 },
-    { name: 'District El-Narges 4', sales: 19, percentage: 14 },
-    { name: 'District El-Narges 5', sales: 12, percentage: 9 },
-    { name: 'District El-Narges 6', sales: 4, percentage: 2 }
-  ];
-
   if (loading) {
     return <div style={{ padding: '40px', textAlign: 'center', color: '#8b949e' }}>Loading Analytics...</div>;
   }
@@ -189,22 +198,39 @@ const AdminDashboardTab = () => {
 
           {/* Top Selling Regions (Scroll down list) */}
           <div style={{ flex: 1, backgroundColor: '#21262d', padding: '15px', borderRadius: '16px', border: '1px solid #30363d', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
-            <h4 style={{ marginTop: 0, marginBottom: '10px', color: '#fff', textAlign: 'left', borderBottom: '1px solid #30363d', paddingBottom: '8px', fontSize: '14px' }}>
-              📍 Top Selling Regions
-            </h4>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #30363d', paddingBottom: '8px', marginBottom: '10px' }}>
+              <h4 style={{ margin: 0, color: '#fff', fontSize: '14px' }}>📍 Top Selling Regions</h4>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <button
+                  title="Open Regions Map"
+                  onClick={() => setIsRegionsChartOpen(true)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', padding: '2px 4px' }}
+                >🗺️</button>
+              </div>
+            </div>
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {mockRegions.map((region, idx) => (
-                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#161b22', padding: '10px', borderRadius: '8px', border: '1px solid #30363d' }}>
+              {regionsStats.length > 0 ? regionsStats.map((region, idx) => (
+                <div
+                  key={region.governorate}
+                  onClick={() => setSelectedRegion(region)}
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#161b22', padding: '10px', borderRadius: '8px', border: '1px solid #30363d', cursor: 'pointer', transition: 'background 0.2s' }}
+                  onMouseEnter={e => e.currentTarget.style.backgroundColor = '#1f242c'}
+                  onMouseLeave={e => e.currentTarget.style.backgroundColor = '#161b22'}
+                >
                   <div>
-                    <span style={{ color: '#e6edf3', fontWeight: 'bold', fontSize: '13px', display: 'block' }}>{region.name}</span>
+                    <span style={{ color: '#e6edf3', fontWeight: 'bold', fontSize: '13px', display: 'block' }}>{region.governorate}</span>
                     <span style={{ color: '#8b949e', fontSize: '10px' }}>Rank #{idx + 1}</span>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <span style={{ display: 'block', color: '#58a6ff', fontWeight: 'bold', fontSize: '13px' }}>{region.sales} Sales</span>
-                    <span style={{ color: '#8b949e', fontSize: '10px' }}>{region.percentage}% share</span>
+                    <span style={{ display: 'block', color: '#58a6ff', fontWeight: 'bold', fontSize: '13px' }}>{region.count} Clients</span>
+                    <span style={{ color: '#8b949e', fontSize: '10px' }}>
+                      {regionsStats.length > 0 ? `${Math.round((region.count / regionsStats.reduce((a: number, r: any) => a + r.count, 0)) * 100)}% share` : ''}
+                    </span>
                   </div>
                 </div>
-              ))}
+              )) : (
+                <div style={{ color: '#8b949e', textAlign: 'center', padding: '20px 0', fontSize: '12px' }}>No regional data yet. Data will appear once users register with a governorate and submit requests.</div>
+              )}
             </div>
           </div>
 
@@ -284,7 +310,7 @@ const AdminDashboardTab = () => {
           <div style={{ display: 'flex', gap: '10px' }}>
             <div style={{ flex: 1, backgroundColor: '#21262d', padding: '10px 15px', borderRadius: '16px', border: '1px solid #30363d', textAlign: 'center' }}>
               <h4 style={{ margin: '0 0 5px 0', color: '#8b949e', fontSize: '12px' }}>Total Revenue (M EGP)</h4>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffc658' }}>$ {stats.indicators.totalRevenue}</div>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffc658' }}>EGP {stats.indicators.totalRevenue}</div>
             </div>
             <div style={{ flex: 1, backgroundColor: '#21262d', padding: '10px 15px', borderRadius: '16px', border: '1px solid #30363d', textAlign: 'center' }}>
               <h4 style={{ margin: '0 0 5px 0', color: '#8b949e', fontSize: '12px' }}>Total Sold Units</h4>
@@ -435,6 +461,21 @@ const AdminDashboardTab = () => {
         <TopOwnersChartModal 
           owners={owners} 
           onClose={() => setIsTopOwnersChartOpen(false)} 
+        />
+      )}
+
+      {selectedRegion && (
+        <RegionClientsModal
+          region={selectedRegion}
+          view={mapView}
+          onClose={() => setSelectedRegion(null)}
+        />
+      )}
+
+      {isRegionsChartOpen && (
+        <RegionsWebMapModal
+          regionsStats={regionsStats}
+          onClose={() => setIsRegionsChartOpen(false)}
         />
       )}
     </div>

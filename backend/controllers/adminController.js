@@ -190,3 +190,37 @@ exports.getDashboardStats = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch dashboard stats' });
   }
 };
+
+exports.getRegionsStats = async (req, res) => {
+  try {
+    const raisedRequests = await BookingRequest.find({
+      status: { $in: ['Reserved', 'Approved', 'Rejected'] }
+    });
+    const userIds = [...new Set(raisedRequests.map(r => r.userId.toString()))];
+
+    const clients = await User.find({
+      $or: [
+        { role: 'owner' },
+        { _id: { $in: userIds } }
+      ]
+    }).select('name email phone governorate countryStatus role ownedUnits').populate('ownedUnits');
+
+    const stats = {};
+    clients.forEach(client => {
+      if (client.countryStatus === 'Egypt' && client.governorate) {
+        const gov = client.governorate;
+        if (!stats[gov]) {
+          stats[gov] = { governorate: gov, count: 0, clients: [] };
+        }
+        stats[gov].count += 1;
+        stats[gov].clients.push(client);
+      }
+    });
+
+    const sortedStats = Object.values(stats).sort((a, b) => b.count - a.count);
+    res.status(200).json(sortedStats);
+  } catch (error) {
+    console.error('getRegionsStats error:', error);
+    res.status(500).json({ error: 'Failed to fetch regional stats' });
+  }
+};

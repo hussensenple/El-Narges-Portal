@@ -24,6 +24,14 @@ const userSchema = new mongoose.Schema({
   secondaryPhone: {
     type: String
   },
+  countryStatus: {
+    type: String,
+    enum: ['Egypt', 'Outside Egypt'],
+    default: 'Egypt'
+  },
+  governorate: {
+    type: String
+  },
   role: { 
     type: String, 
     enum: ['user', 'owner', 'broker', 'engineer', 'admin'],

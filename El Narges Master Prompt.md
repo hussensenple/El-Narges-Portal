@@ -85,7 +85,7 @@ The `User` model (MongoDB) has a `role` field. Valid roles: `'user'`, `'owner'`,
 - A `broker` who is demoted has all their assigned units (`brokerId`) unlinked.
 
 **Core MongoDB Models:**
-- `User`: `{ name, phone, email, password, role, ownedUnits: [ObjectId ref Unit] }`
+- `User`: `{ name, phone, email, password, role, governorate, countryStatus, ownedUnits: [ObjectId ref Unit] }`
 - `Unit`: `{ globalId, arcgisId, unitName, status, ownerName, ownerEmail, ownerPhone, ownerId, brokerId }` + `strict: false`
 - `BookingRequest`: `{ userId, unitId, objectId, sourceLayer, buildingFK, customerName, customerPhone, customerGmail, status }`
 - `Complaint`: `{ title, arcgisId, type (internal/external), description, coordinates: {lat, lon}, status, ownerId }`
@@ -110,6 +110,7 @@ The `User` model (MongoDB) has a `role` field. Valid roles: `'user'`, `'owner'`,
 | `/:role` | GET | Lists all users of a given role with profile data |
 | `/user-units/:userId?role=owner\|broker` | GET | Gets units assigned to a specific user |
 | `/broker/:userId/performance` | GET | Returns broker KPIs (pie chart, bar chart, revenue in M EGP) |
+| `/regions-stats` | GET | Analyzes user governorates and returns regional market share data with populated ownedUnits |
 | `/:userId` | DELETE | Deletes user and cleans up all related data |
 
 ### Frontend Admin Portal
@@ -122,7 +123,7 @@ Located under `frontend/src/components/admin/` and `frontend/src/pages/AdminRequ
 - `RolesWidget.tsx` — Quick role switcher widget
 - `RejectionAnalysisTab.tsx` — Two-panel view for analyzing rejection reasons (filterable list + live recharts bar chart)
 - **Tables:** `OwnersTable.tsx`, `BrokersTable.tsx`, `EngineersTable.tsx`, `AdminsTable.tsx`, `UsersTable.tsx`
-- **Modals:** `PropertyAssignCatalog.tsx`, `EditUserModal.tsx`, `RoleChangeModal.tsx`, `BrokerPerformanceModal.tsx`, `OwnerPropertiesModal.tsx` (displays properties owned by selected user in top owners list, with map location sync matching owner dashboard design), `TopOwnersChartModal.tsx` (displays recharts bar chart of top 25 owners by paid amount)
+- **Modals:** `PropertyAssignCatalog.tsx`, `EditUserModal.tsx`, `RoleChangeModal.tsx`, `BrokerPerformanceModal.tsx`, `OwnerPropertiesModal.tsx` (displays properties owned by selected user in top owners list, with map location sync matching owner dashboard design), `TopOwnersChartModal.tsx` (displays recharts bar chart of top 25 owners by paid amount), `RegionClientsModal.tsx` (lists clients inside a region), `RegionsWebMapModal.tsx` (displays ArcGIS Web Map choropleth shaded by client distribution).
 
 ---
 

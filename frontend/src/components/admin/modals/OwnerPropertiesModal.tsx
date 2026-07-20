@@ -126,7 +126,7 @@ const OwnerPropertiesModal: React.FC<OwnerPropertiesModalProps> = ({ owner, view
   };
 
   return (
-    <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1002, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+    <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1300, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
       <div style={{ backgroundColor: '#0d1117', padding: '24px', borderRadius: '12px', width: '600px', maxWidth: '90vw', border: '1px solid #30363d', color: '#fff', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
         
         {/* Header */}

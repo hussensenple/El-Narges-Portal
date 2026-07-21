@@ -40,7 +40,7 @@ app.use('/api/weather', require('./routes/weatherRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/complaints', require('./routes/complaintRoutes'));
 app.use('/api/roles', require('./routes/rolesRoutes')); // 🚀 مسارات إدارة الأدوار الجديدة
-
+app.use('/api/technicians', require('./routes/technicianRoutes'));
 // ==========================================
 // 2. مسار تجريبي (Test Route)
 // ==========================================

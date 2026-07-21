@@ -15,6 +15,12 @@ import AuthModal from './components/AuthModal';
 import UserRequestsModal from './components/UserRequestsModal';
 import AccountSettingsModal from './components/AccountSettingsModal';
 import BrokerPerformanceModal from './components/admin/modals/BrokerPerformanceModal';
+import EngineerPortalModal from './components/EngineerPortalModal';
+import ActiveTasksModal from './components/ActiveTasksModal';
+import ShowAllIssuesButton from './components/ShowAllIssuesButton';
+import TechniciansModal from './components/TechniciansModal';
+import UtilityNetworkModal from './components/UtilityNetworkModal';
+import ChatbotWidget from './components/ChatbotWidget';
 
 
 const Icons = {
@@ -31,7 +37,8 @@ const Icons = {
   Fullscreen: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>,
   Requests: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>,
   Settings: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
-  Performance: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><rect x="3" y="2" width="18" height="20" rx="2" ry="2" fill="none"/></svg>
+  Performance: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><rect x="3" y="2" width="18" height="20" rx="2" ry="2" fill="none"/></svg>,
+  Technicians: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
 };
 
 const CustomerInterface = () => {
@@ -50,6 +57,10 @@ const CustomerInterface = () => {
   const [isUserRequestsOpen, setIsUserRequestsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isPerformanceOpen, setIsPerformanceOpen] = useState(false);
+  const [isEngineerPortalOpen, setIsEngineerPortalOpen] = useState(false);
+  const [isActiveTasksOpen, setIsActiveTasksOpen] = useState(false);
+  const [isTechniciansModalOpen, setIsTechniciansModalOpen] = useState(false);
+  const [isUtilityNetworkOpen, setIsUtilityNetworkOpen] = useState(false);
 
   const auth = useContext(AuthContext); 
   const isAuthenticated = !!auth?.user;
@@ -172,6 +183,59 @@ const CustomerInterface = () => {
           </button>
         )}
 
+        {/* Engineer Portal Button */}
+        {auth?.user?.role === 'engineer' && (
+          <button
+            title="New Complaints"
+            onClick={() => setIsEngineerPortalOpen(!isEngineerPortalOpen)}
+            className={`map-icon-btn ${isEngineerPortalOpen ? 'active' : 'inactive'}`}
+            style={{ color: isEngineerPortalOpen ? '#fff' : '#e34c26', borderColor: '#e34c26' }}
+          >
+            <Icons.Requests />
+          </button>
+        )}
+
+        {/* Active Tasks Button (Engineer) */}
+        {auth?.user?.role === 'engineer' && (
+          <button
+            title="Active Tasks"
+            onClick={() => setIsActiveTasksOpen(!isActiveTasksOpen)}
+            className={`map-icon-btn ${isActiveTasksOpen ? 'active' : 'inactive'}`}
+            style={{ color: isActiveTasksOpen ? '#fff' : '#d29922', borderColor: '#d29922' }}
+          >
+            <Icons.Requests />
+          </button>
+        )}
+
+        {/* Manage Technicians Button (Engineer) */}
+        {auth?.user?.role === 'engineer' && (
+          <button
+            title="Manage Technicians"
+            onClick={() => setIsTechniciansModalOpen(!isTechniciansModalOpen)}
+            className={`map-icon-btn ${isTechniciansModalOpen ? 'active' : 'inactive'}`}
+            style={{ color: isTechniciansModalOpen ? '#fff' : '#1f6feb', borderColor: '#1f6feb' }}
+          >
+            <Icons.Technicians />
+          </button>
+        )}
+
+        {/* Utility Network Button (Engineer) */}
+        {auth?.user?.role === 'engineer' && (
+          <button
+            title="Utility Network"
+            onClick={() => setIsUtilityNetworkOpen(!isUtilityNetworkOpen)}
+            className={`map-icon-btn ${isUtilityNetworkOpen ? 'active' : 'inactive'}`}
+            style={{ color: isUtilityNetworkOpen ? '#fff' : '#8957e5', borderColor: '#8957e5' }}
+          >
+            ⚡
+          </button>
+        )}
+
+        {/* Show All Issues Map Button (Engineer & Admin) */}
+        {(auth?.user?.role === 'engineer' || auth?.user?.role === 'admin') && mapView && (
+          <ShowAllIssuesButton view={mapView} />
+        )}
+
         {/* Last one on the left (user's "أخر واحد") */}
         {auth?.user && (
           <span style={{ fontSize: '13px', color: '#fff', backgroundColor: 'rgba(22,27,34,0.85)', padding: '12px 16px', borderRadius: '10px', border: '1px solid #30363d', fontFamily: 'sans-serif', backdropFilter: 'blur(10px)' }}>
@@ -221,7 +285,7 @@ const CustomerInterface = () => {
           {is3DView ? <Icons.Map2D /> : <Icons.Map3D />}
         </button>
 
-        {is3DView && isAuthenticated && auth?.user?.role !== 'broker' && (
+        {is3DView && isAuthenticated && auth?.user?.role !== 'broker' && auth?.user?.role !== 'engineer' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start' }}>
             <button title="GIS Tools" onClick={() => setIsToolsMenuOpen(!isToolsMenuOpen)} className={`map-icon-btn ${isToolsMenuOpen ? 'active' : 'inactive'}`}>
               <Icons.GisTools />
@@ -256,7 +320,7 @@ const CustomerInterface = () => {
 
       {showLoginModal && <AuthModal onClose={() => setShowLoginModal(false)} onSuccess={() => setShowLoginModal(false)} />}
 
-      {is3DView && isAuthenticated && (
+      {is3DView && isAuthenticated && auth?.user?.role !== 'broker' && auth?.user?.role !== 'engineer' && (
         <button 
           title="Property Catalog"
           onClick={() => {
@@ -273,7 +337,7 @@ const CustomerInterface = () => {
         </button>
       )}
 
-      {isCatalogOpen && is3DView && isAuthenticated && auth?.user?.role !== 'broker' && (
+      {isCatalogOpen && is3DView && isAuthenticated && auth?.user?.role !== 'broker' && auth?.user?.role !== 'engineer' && (
         <>
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 999 }} onClick={() => setIsCatalogOpen(false)} />
           <UnitCatalog view={mapView} onClose={() => setIsCatalogOpen(false)} />
@@ -306,7 +370,26 @@ const CustomerInterface = () => {
         />
       )}
 
-      {is3DView && isAuthenticated && auth?.user?.role !== 'broker' && <AIAdvisor view={mapView} />}
+      {isEngineerPortalOpen && auth?.user?.role === 'engineer' && (
+        <EngineerPortalModal view={mapView} onClose={() => setIsEngineerPortalOpen(false)} />
+      )}
+
+      {isActiveTasksOpen && auth?.user?.role === 'engineer' && (
+        <ActiveTasksModal view={mapView} onClose={() => setIsActiveTasksOpen(false)} />
+      )}
+
+      {isTechniciansModalOpen && (
+        <TechniciansModal onClose={() => setIsTechniciansModalOpen(false)} />
+      )}
+
+      {isUtilityNetworkOpen && auth?.user?.role === 'engineer' && (
+        <UtilityNetworkModal onClose={() => setIsUtilityNetworkOpen(false)} />
+      )}
+
+      {is3DView && isAuthenticated && auth?.user?.role !== 'broker' && auth?.user?.role !== 'engineer' && <AIAdvisor view={mapView} />}
+      {/* Customer Support Chatbot UI */}
+      {auth?.user?.role === 'engineer' && <ChatbotWidget />}
+
     </div>
   );
 };

@@ -97,6 +97,7 @@
   title: { type: String, required: true },
   arcgisId: { type: String, default: 'N/A' },
   type: { type: String, enum: ['internal', 'external'], default: 'internal' },
+  images: [{ type: String }],
   description: { type: String, required: true },
   coordinates: { lat: { type: Number }, lon: { type: Number } },
   status: { type: String, default: 'Pending' },
@@ -107,7 +108,7 @@
 ### هـ. ملفات الأدوار (Profiles)
 - **AdminProfile, BrokerProfile, EngineerProfile**: 
   - جميعها تحتوي على `userId` (مرجع للمستخدم) و `manualId` (الرقم التعريفي اليدوي).
-  - الـ EngineerProfile يحتوي إضافياً على `age`, `speciality`, `graduationYear`.
+  - الـ EngineerProfile يحتوي إضافياً على `age`, `graduationYear` (ويسمح بمهندس واحد فقط في النظام).
 
 ### و. تحليل الرفضات (Rejection Analysis)
 - **RejectionAnalysisTab**: واجهة في لوحة الإدارة لتحليل أسباب رفض الطلبات.
@@ -131,3 +132,13 @@
 
 ### 3. دليل العقارات (Property Catalog)
 يتم جلب البيانات المعروضة في الكروت (Cards) بشكل مباشر من الـ Backend الخاص بـ MongoDB بدلاً من ذاكرة ArcGIS المؤقتة (Cache). هذا يضمن أن تكون البيانات حديثة جداً (مثلاً وحدة تم بيعها للتو تظهر كـ Sold فوراً بناءً على وجود `ownerId`).
+
+### 4. إدارة الوحدات من الخريطة ثلاثية الأبعاد
+يمكن للإدارة (`admin`) والمهندس (`engineer`) النقر على أي مبنى أو وحدة سكنية مباشرة من الخريطة ثلاثية الأبعاد `MapViewer`. سيؤدي ذلك إلى فتح شريط جانبي مخصص (`AdminUnitSidebar` / `EngineerUnitSidebar`) يعرض بيانات الوحدة كاملة، وحالة الإشغال، وبيانات المالك، مع إمكانية إدارة وتغيير حالات الشكاوى (الداخلية والخارجية) الخاصة بالمالك مباشرة واستعراض المخطط المعماري للوحدة.
+
+### 5. إدارة الشكاوى والمهام (Engineer Tools)
+يحتوي حساب المهندس على مجموعة متكاملة من الأدوات للتحكم في الصيانة:
+- **إدارة الفنيين (Technicians Management):** يمكن للمهندس إضافة وحذف الفنيين وتحديد تخصصاتهم ومتابعة عدد المهام النشطة لكل فني.
+- **إدارة المهام (Active Tasks):** يتم تحويل الشكاوى الجديدة وتكليف الفنيين بها عبر هذه الواجهة. الشكاوى المحلولة (Solved/Resolved) تُحفظ في قائمة تاريخية ولا تظهر كنقاط نشطة على الخريطة.
+- **الشبكة الخدمية (Utility Network):** مجهزة كواجهة (Placeholder) للإضافات المستقبلية لربط وإدارة شبكات المياه والكهرباء بالمشروع.
+- **المساعد الآلي (Chatbot Widget):** واجهة دردشة تفاعلية ستُربط لاحقاً ببيانات (RAG) لخدمة المهندس.

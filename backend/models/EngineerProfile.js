@@ -15,9 +15,6 @@ const engineerProfileSchema = new mongoose.Schema({
   age: { 
     type: Number 
   },
-  speciality: { 
-    type: String 
-  },
   graduationYear: { 
     type: Number 
   }

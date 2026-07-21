@@ -11,6 +11,7 @@ interface ComplaintFormProps {
 
 const ComplaintForm = ({ onClose, arcgisId, view, onPickingChange }: ComplaintFormProps) => {
   const [type, setType] = useState('internal');
+  const [images, setImages] = useState<string[]>([]);
   const [description, setDescription] = useState('');
   const [coordinates, setCoordinates] = useState<{lat: number, lon: number} | null>(null);
   const [isPickingMap, setIsPickingMap] = useState(false);
@@ -44,6 +45,18 @@ const ComplaintForm = ({ onClose, arcgisId, view, onPickingChange }: ComplaintFo
     };
   }, [isPickingMap, view]);
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      Array.from(e.target.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImages(prev => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -61,6 +74,7 @@ const ComplaintForm = ({ onClose, arcgisId, view, onPickingChange }: ComplaintFo
         title: complaintTitle, // 👈 ضفنا الـ Title هنا
         arcgisId,
         type,
+        images,
         description,
         coordinates
       }, {
@@ -99,10 +113,34 @@ const ComplaintForm = ({ onClose, arcgisId, view, onPickingChange }: ComplaintFo
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <label style={{ color: '#8b949e', fontWeight: 'bold' }}>Complaint Type:</label>
-            <select value={type} onChange={(e) => setType(e.target.value)} style={{ padding: '14px', borderRadius: '8px', backgroundColor: '#161b22', border: '1px solid #30363d', color: '#fff', fontSize: '16px', cursor: 'pointer' }}>
+            <select 
+              value={type} 
+              onChange={(e) => {
+                setType(e.target.value);
+              }} 
+              style={{ padding: '14px', borderRadius: '8px', backgroundColor: '#161b22', border: '1px solid #30363d', color: '#fff', fontSize: '16px', cursor: 'pointer' }}
+            >
               <option value="internal">Internal Maintenance (Inside the unit)</option>
               <option value="external">External Issue (Street / Public Facilities)</option>
             </select>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <label style={{ color: '#8b949e', fontWeight: 'bold' }}>Attach Images (Optional):</label>
+            <input 
+              type="file" 
+              accept="image/*" 
+              multiple 
+              onChange={handleImageUpload} 
+              style={{ padding: '10px', borderRadius: '8px', backgroundColor: '#161b22', border: '1px dashed #30363d', color: '#fff' }}
+            />
+            {images.length > 0 && (
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '10px' }}>
+                {images.map((img, i) => (
+                  <img key={i} src={img} alt={`Preview ${i}`} style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #30363d' }} />
+                ))}
+              </div>
+            )}
           </div>
 
           {type === 'external' && (

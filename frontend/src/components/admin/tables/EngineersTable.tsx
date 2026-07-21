@@ -33,7 +33,7 @@ const EngineersTable = () => {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-        <h4 style={{ margin: 0, color: '#e34c26' }}>Active Engineers</h4>
+        <h4 style={{ margin: 0, color: '#e34c26' }}>Active Engineer</h4>
         <input 
           type="text" 
           placeholder="🔍 Search by Manual Engineer ID..." 
@@ -48,16 +48,15 @@ const EngineersTable = () => {
           <tr style={{ backgroundColor: '#21262d', textAlign: 'left' }}>
             <th style={{ padding: '12px', borderBottom: '1px solid #30363d' }}>Engineer ID</th>
             <th style={{ padding: '12px', borderBottom: '1px solid #30363d' }}>Name & Contact</th>
-            <th style={{ padding: '12px', borderBottom: '1px solid #30363d' }}>Speciality</th>
             <th style={{ padding: '12px', borderBottom: '1px solid #30363d' }}>Grad Year (Age)</th>
             <th style={{ padding: '12px', borderBottom: '1px solid #30363d' }}>Actions</th>
           </tr>
         </thead>
         <tbody>
           {loading ? (
-            <tr><td colSpan={5} style={{ padding: '20px', textAlign: 'center', color: '#8b949e' }}>Loading...</td></tr>
+            <tr><td colSpan={4} style={{ padding: '20px', textAlign: 'center', color: '#8b949e' }}>Loading...</td></tr>
           ) : filteredUsers.length === 0 ? (
-            <tr><td colSpan={5} style={{ padding: '20px', textAlign: 'center', color: '#8b949e' }}>No engineers found.</td></tr>
+            <tr><td colSpan={4} style={{ padding: '20px', textAlign: 'center', color: '#8b949e' }}>No engineer found.</td></tr>
           ) : (
             filteredUsers.map(user => (
               <tr key={user._id} style={{ borderBottom: '1px solid #30363d' }}>
@@ -66,7 +65,6 @@ const EngineersTable = () => {
                   <div style={{ fontWeight: 'bold' }}>{user.name}</div>
                   <div style={{ fontSize: '11px', color: '#8b949e' }}>{user.phone}</div>
                 </td>
-                <td style={{ padding: '12px', color: '#c9d1d9' }}>{user.profile?.speciality || 'N/A'}</td>
                 <td style={{ padding: '12px', color: '#8b949e' }}>
                   {user.profile?.graduationYear || 'N/A'} ({user.profile?.age ? `${user.profile.age} yrs` : 'N/A'})
                 </td>

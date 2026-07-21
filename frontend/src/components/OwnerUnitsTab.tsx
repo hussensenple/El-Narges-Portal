@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import ComplaintForm from './ComplaintForm';
+import ComplaintChatModal from './ComplaintChatModal';
 
 interface Unit {
   _id: string;
@@ -51,6 +52,7 @@ const OwnerUnitsTab = ({ onClose, view }: OwnerUnitsTabProps) => {
   const [showComplaintForm, setShowComplaintForm] = useState<boolean>(false);
   const [selectedArcgisId, setSelectedArcgisId] = useState<string>('');
   const [isPickingLocation, setIsPickingLocation] = useState<boolean>(false);
+  const [activeComplaint, setActiveComplaint] = useState<Complaint | null>(null);
 
   const auth = useContext(AuthContext);
 
@@ -82,6 +84,10 @@ const OwnerUnitsTab = ({ onClose, view }: OwnerUnitsTabProps) => {
         });
 
         setAllComplaints(response.data);
+        if (activeComplaint) {
+          const updated = response.data.find((c: any) => c._id === activeComplaint._id);
+          if (updated) setActiveComplaint(updated);
+        }
       } catch (error) {
         console.error("Error fetching complaints:", error);
       } finally {
@@ -550,6 +556,7 @@ const OwnerUnitsTab = ({ onClose, view }: OwnerUnitsTabProps) => {
                           <th style={{ padding: '16px', color: '#fff' }}>Title</th>
                           <th style={{ padding: '16px', color: '#fff' }}>Unit ID</th>
                           <th style={{ padding: '16px', color: '#fff' }}>Status</th>
+                          <th style={{ padding: '16px', color: '#fff' }}>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -568,12 +575,20 @@ const OwnerUnitsTab = ({ onClose, view }: OwnerUnitsTabProps) => {
                           return (
                             <tr key={complaint._id} style={{ borderBottom: '1px solid #30363d', backgroundColor: index % 2 === 0 ? '#0d1117' : '#161b22' }}>
                               <td style={{ padding: '16px', color: '#8b949e' }}>{date}</td>
-                              <td style={{ padding: '16px', color: '#58a6ff', fontWeight: 'bold' }}>{complaint.title}</td>
+                              <td style={{ padding: '16px', color: '#58a6ff', fontWeight: 'bold' }}>{(complaint as any).problemName || complaint.title}</td>
                               <td style={{ padding: '16px', color: '#c9d1d9', fontFamily: 'monospace' }}>{complaint.arcgisId}</td>
                               <td style={{ padding: '16px' }}>
                                 <span style={{ backgroundColor: statusStyles.bg, color: statusStyles.color, padding: '6px 12px', borderRadius: '16px', fontSize: '13px', fontWeight: 'bold', border: `1px solid ${statusStyles.border}`, whiteSpace: 'nowrap' }}>
                                   {statusStyles.text}
                                 </span>
+                              </td>
+                              <td style={{ padding: '16px' }}>
+                                <button
+                                  onClick={() => setActiveComplaint(complaint)}
+                                  style={{ padding: '6px 12px', backgroundColor: '#1f6feb', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', transition: 'background 0.2s' }}
+                                >
+                                  💬 Chat
+                                </button>
                               </td>
                             </tr>
                           );
@@ -594,6 +609,25 @@ const OwnerUnitsTab = ({ onClose, view }: OwnerUnitsTabProps) => {
           arcgisId={selectedArcgisId}
           view={view}
           onPickingChange={(isPicking) => setIsPickingLocation(isPicking)}
+        />
+      )}
+
+      {activeComplaint && auth?.user && (
+        <ComplaintChatModal
+          complaint={activeComplaint}
+          onClose={() => setActiveComplaint(null)}
+          onRefresh={() => {
+            const fetchMyComplaints = async () => {
+              const token = auth?.token || localStorage.getItem('token');
+              if (!token) return;
+              const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/complaints/my`, { headers: { 'x-auth-token': token } });
+              setAllComplaints(response.data);
+              const updated = response.data.find((c: any) => c._id === activeComplaint._id);
+              if (updated) setActiveComplaint(updated);
+            };
+            fetchMyComplaints();
+          }}
+          currentUser={{ id: auth.user.id, name: auth.user.name, role: auth.user.role }}
         />
       )}
     </>,

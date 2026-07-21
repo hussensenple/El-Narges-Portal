@@ -9,33 +9,36 @@ const RolesWidget = () => {
   const [activeRole, setActiveRole] = useState<'user' | 'owner' | 'broker' | 'engineer' | 'admin'>('user');
 
   return (
-    <div style={{ padding: '20px', height: '100%', overflowY: 'auto' }}>
-      <h3 style={{ borderBottom: '1px solid #30363d', paddingBottom: '10px', marginTop: 0 }}>Roles Management</h3>
+    <div style={{ backgroundColor: '#161b22', padding: '20px', borderRadius: '12px', border: '1px solid #30363d', marginBottom: '20px' }}>
       
-      {/* 5 Role Tabs */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '1px solid #30363d', paddingBottom: '10px' }}>
         {['user', 'owner', 'broker', 'engineer', 'admin'].map(role => (
           <button
             key={role}
             onClick={() => setActiveRole(role as any)}
             style={{
-              padding: '8px 16px',
-              backgroundColor: activeRole === role ? '#1f6feb' : '#21262d',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '6px',
+              padding: '10px 16px',
+              backgroundColor: activeRole === role ? '#21262d' : 'transparent',
+              color: activeRole === role ? '#58a6ff' : '#8b949e',
+              border: activeRole === role ? '1px solid #30363d' : '1px solid transparent',
+              borderRadius: '8px',
               cursor: 'pointer',
               fontWeight: 'bold',
-              textTransform: 'capitalize'
+              textTransform: 'capitalize',
+              transition: 'all 0.2s'
             }}
           >
-            {role}s
+            {role === 'user' ? 'Users' : 
+             role === 'owner' ? 'Owners' : 
+             role === 'broker' ? 'Brokers' : 
+             role === 'engineer' ? 'Engineer' : 'Admins'}
           </button>
         ))}
       </div>
 
-      {/* Content Area */}
-      <div style={{ backgroundColor: '#161b22', padding: '20px', borderRadius: '8px', border: '1px solid #30363d' }}>
+      {/* Render Active Table */}
+      <div style={{ overflowX: 'auto' }}>
         {activeRole === 'user' && <UsersTable />}
         {activeRole === 'owner' && <OwnersTable />}
         {activeRole === 'broker' && <BrokersTable />}

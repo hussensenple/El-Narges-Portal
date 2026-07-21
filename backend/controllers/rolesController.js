@@ -37,7 +37,7 @@ exports.getUsersByRole = async (req, res) => {
 exports.changeUserRole = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { newRole, manualId, age, speciality, graduationYear } = req.body;
+    const { newRole, manualId, age, specialization, graduationYear } = req.body;
 
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ error: 'User not found' });
@@ -67,7 +67,16 @@ exports.changeUserRole = async (req, res) => {
       await BrokerProfile.findOneAndUpdate({ userId }, { manualId }, { upsert: true });
     } else if (newRole === 'engineer') {
       if (!manualId) return res.status(400).json({ error: 'Manual ID required for Engineer' });
-      await EngineerProfile.findOneAndUpdate({ userId }, { manualId, age, speciality, graduationYear }, { upsert: true });
+      
+      // Enforce only one engineer
+      if (oldRole !== 'engineer') {
+        const existingEngineer = await User.findOne({ role: 'engineer' });
+        if (existingEngineer) {
+          return res.status(400).json({ error: 'An engineer already exists. Only one engineer is allowed.' });
+        }
+      }
+      
+      await EngineerProfile.findOneAndUpdate({ userId }, { manualId, age, graduationYear }, { upsert: true });
     } else if (newRole === 'admin') {
       if (!manualId) return res.status(400).json({ error: 'Manual ID required for Admin' });
       await AdminProfile.findOneAndUpdate({ userId }, { manualId, age }, { upsert: true });
@@ -88,7 +97,7 @@ exports.changeUserRole = async (req, res) => {
 exports.editUserInfo = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { name, phone, email, manualId, age, speciality, graduationYear } = req.body;
+    const { name, phone, email, manualId, age, specialization, graduationYear } = req.body;
 
     const user = await User.findByIdAndUpdate(userId, { name, phone, email }, { new: true }).select('-password');
     if (!user) return res.status(404).json({ error: 'User not found' });
@@ -96,7 +105,7 @@ exports.editUserInfo = async (req, res) => {
     if (user.role === 'broker' && manualId) {
       await BrokerProfile.findOneAndUpdate({ userId }, { manualId });
     } else if (user.role === 'engineer' && manualId) {
-      await EngineerProfile.findOneAndUpdate({ userId }, { manualId, age, speciality, graduationYear });
+      await EngineerProfile.findOneAndUpdate({ userId }, { manualId, age, graduationYear });
     } else if (user.role === 'admin' && manualId) {
       await AdminProfile.findOneAndUpdate({ userId }, { manualId, age });
     }

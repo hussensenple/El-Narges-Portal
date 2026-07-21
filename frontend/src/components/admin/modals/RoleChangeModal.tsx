@@ -20,7 +20,6 @@ const RoleChangeModal = ({ userId, userName, currentRole, onClose, onSuccess }: 
   const [targetRole, setTargetRole] = useState(currentRole);
   const [manualId, setManualId] = useState('');
   const [age, setAge] = useState('');
-  const [speciality, setSpeciality] = useState('');
   const [graduationYear, setGraduationYear] = useState('');
   const [loading, setLoading] = useState(false);
   const [showCatalog, setShowCatalog] = useState(false);
@@ -55,7 +54,6 @@ const RoleChangeModal = ({ userId, userName, currentRole, onClose, onSuccess }: 
       }
       if (['engineer', 'admin'].includes(targetRole)) payload.age = Number(age);
       if (targetRole === 'engineer') {
-        payload.speciality = speciality;
         payload.graduationYear = Number(graduationYear);
       }
       await axios.put(`${import.meta.env.VITE_API_URL}/api/roles/change-role/${userId}`, payload);
@@ -118,10 +116,6 @@ const RoleChangeModal = ({ userId, userName, currentRole, onClose, onSuccess }: 
 
           {targetRole === 'engineer' && (
             <>
-              <div>
-                <label style={{ display: 'block', marginBottom: '5px', color: '#c9d1d9' }}>Speciality</label>
-                <input type="text" value={speciality} onChange={(e) => setSpeciality(e.target.value)} style={{ width: '100%', padding: '10px', backgroundColor: '#0d1117', color: '#fff', border: '1px solid #30363d', borderRadius: '5px' }} />
-              </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '5px', color: '#c9d1d9' }}>Graduation Year</label>
                 <input type="number" value={graduationYear} onChange={(e) => setGraduationYear(e.target.value)} style={{ width: '100%', padding: '10px', backgroundColor: '#0d1117', color: '#fff', border: '1px solid #30363d', borderRadius: '5px' }} />

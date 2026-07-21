@@ -4,7 +4,10 @@ import WebScene from '@arcgis/core/WebScene';
 import SceneView from '@arcgis/core/views/SceneView';
 import LayerList from '@arcgis/core/widgets/LayerList';
 import BasemapGallery from '@arcgis/core/widgets/BasemapGallery';
+import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
+import Graphic from '@arcgis/core/Graphic';
 import '@arcgis/core/assets/esri/themes/dark/main.css';
+import AdminUnitSidebar from './AdminUnitSidebar';
 import WeatherWidget from './WeatherWidget';
 import BuildingSidebar from './BuildingSidebar';
 import BrokerMapPopup from './BrokerMapPopup';
@@ -221,14 +224,23 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
               }
             }
 
+            // Always clear old highlights
+            if ((window as any).viewUnitHighlightHandle) {
+              (window as any).viewUnitHighlightHandle.remove();
+              (window as any).viewUnitHighlightHandle = null;
+            }
+
             if (!hitSomething) {
               setSelectedBuildingId(null);
               setSelectedVillaData(null);
-              if ((window as any).viewUnitHighlightHandle) {
-                (window as any).viewUnitHighlightHandle.remove();
-                (window as any).viewUnitHighlightHandle = null;
-              }
             }
+
+            // Always clear the complaint marker when clicking anywhere on the map
+            if (view.map) {
+              const layersToRemove = view.map.layers.filter((l: any) => l.id === "complaint-marker-layer").toArray();
+              layersToRemove.forEach((l: any) => view.map.remove(l));
+            }
+            
           } catch (err) {
             console.error("hitTest or query error", err);
           }
@@ -262,6 +274,9 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
       }
 
       if (viewInstance && viewInstance.map) {
+        const layersToRemove = (viewInstance.map as any).layers.filter((l: any) => l.id === "complaint-marker-layer").toArray();
+        layersToRemove.forEach((l: any) => (viewInstance.map as any).remove(l));
+
         const webMap = viewInstance.map as any;
         if (webMap.initialViewProperties && webMap.initialViewProperties.viewpoint) {
           viewInstance.goTo(webMap.initialViewProperties.viewpoint).catch(() => { });
@@ -278,104 +293,199 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
   useEffect(() => {
     let highlightHandles: any[] = [];
     let layerViewsToClean: any[] = [];
+    let brokerGraphicsLayer: GraphicsLayer | null = null;
 
     if (viewInstance && auth?.user?.role === 'broker') {
       import('axios').then(async (axios) => {
         try {
-          const res = await axios.default.get(`${import.meta.env.VITE_API_URL}/api/users/broker-units`, {
-            headers: { 'x-auth-token': auth.token || localStorage.getItem('token') }
+          brokerGraphicsLayer = new GraphicsLayer({ 
+            title: "Broker_Red_Highlights", 
+            elevationInfo: { mode: "relative-to-scene", offset: 2 } 
           });
-          const units = res.data;
+          viewInstance.map.add(brokerGraphicsLayer);
+
+          const [unitsRes, reqsRes] = await Promise.all([
+            axios.default.get(`${import.meta.env.VITE_API_URL}/api/users/broker-units`, {
+              headers: { 'x-auth-token': auth.token || localStorage.getItem('token') }
+            }),
+            axios.default.get(`${import.meta.env.VITE_API_URL}/api/bookings/broker-pending`, {
+              headers: { Authorization: `Bearer ${auth.token || localStorage.getItem('token')}` }
+            }).catch(() => ({ data: [] }))
+          ]);
+
+          const units = unitsRes.data;
+          const pendingRequests = reqsRes.data || [];
 
           if (!units || units.length === 0) return;
 
           const getLayerIds = (sourceLayer: string) => {
             const filtered = units.filter((u: any) => u.sourceLayer === sourceLayer);
-            const objIds: number[] = [];
-            const guidIds: string[] = [];
+            
+            const redObjIds: number[] = [];
+            const redGuidIds: string[] = [];
+            const blueObjIds: number[] = [];
+            const blueGuidIds: string[] = [];
 
             filtered.forEach((u: any) => {
+              const hasRequest = pendingRequests.some((req: any) => {
+                const reqId = String(req.unitId).replace(/[{}]/g, '').trim().toUpperCase();
+                const uId = String(u.globalId || u.arcgisId).replace(/[{}]/g, '').trim().toUpperCase();
+                return reqId === uId;
+              });
+
               if (u.objectId) {
-                objIds.push(Number(u.objectId));
+                if (hasRequest) redObjIds.push(Number(u.objectId));
+                else blueObjIds.push(Number(u.objectId));
               } else if (u.globalId) {
                 const cleanId = String(u.globalId).replace(/[{}]/g, '').trim();
-                guidIds.push(`'{${cleanId.toUpperCase()}}'`, `'${cleanId.toUpperCase()}'`, `'{${cleanId.toLowerCase()}}'`, `'${cleanId.toLowerCase()}'`, `'{${cleanId}}'`, `'${cleanId}'`);
+                const perms = [`'{${cleanId.toUpperCase()}}'`, `'${cleanId.toUpperCase()}'`, `'{${cleanId.toLowerCase()}}'`, `'${cleanId.toLowerCase()}'`, `'{${cleanId}}'`, `'${cleanId}'`];
+                if (hasRequest) redGuidIds.push(...perms);
+                else blueGuidIds.push(...perms);
               }
             });
-            return { objIds, guidIds };
+            return { redObjIds, redGuidIds, blueObjIds, blueGuidIds };
           };
 
           const villas = getLayerIds('Villas_Global');
           const apartments = getLayerIds('Units');
 
-          // We must resolve Apartment OBJECTIDs into Building GlobalIDs
-          const resolvedBuildingGuids: string[] = [];
-          if (apartments.objIds.length > 0 || apartments.guidIds.length > 0) {
+          // Resolve Apartment OBJECTIDs into Building GlobalIDs
+          const resolvedBuildings = { redObjIds: [] as number[], redGuidIds: [] as string[], blueObjIds: [] as number[], blueGuidIds: [] as string[] };
+          
+          if (apartments.redObjIds.length > 0 || apartments.redGuidIds.length > 0 || apartments.blueObjIds.length > 0 || apartments.blueGuidIds.length > 0) {
             try {
               const UNITS_URL = 'https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WFL1/FeatureServer/37';
-              let whereClause = "1=0";
-              if (apartments.objIds.length > 0) {
-                whereClause = `OBJECTID IN (${apartments.objIds.join(',')})`;
-              }
-              if (apartments.guidIds.length > 0) {
-                whereClause += ` OR GlobalID IN (${apartments.guidIds.join(',')})`;
-              }
+              
+              // Resolve red buildings
+              if (apartments.redObjIds.length > 0 || apartments.redGuidIds.length > 0) {
+                let whereClause = "1=0";
+                if (apartments.redObjIds.length > 0) whereClause = `OBJECTID IN (${apartments.redObjIds.join(',')})`;
+                if (apartments.redGuidIds.length > 0) whereClause += ` OR GlobalID IN (${apartments.redGuidIds.join(',')})`;
 
-              const arcgisRes = await axios.default.get(`${UNITS_URL}/query`, {
-                params: { where: whereClause, outFields: 'BuildingID_FK', returnDistinctValues: true, f: 'json' }
-              });
-
-              if (arcgisRes.data.features) {
-                arcgisRes.data.features.forEach((f: any) => {
-                  if (f.attributes.BuildingID_FK) {
-                    const cleanId = String(f.attributes.BuildingID_FK).replace(/[{}]/g, '').trim();
-                    resolvedBuildingGuids.push(`'{${cleanId.toUpperCase()}}'`, `'${cleanId.toUpperCase()}'`, `'{${cleanId.toLowerCase()}}'`, `'${cleanId.toLowerCase()}'`, `'{${cleanId}}'`, `'${cleanId}'`);
-                  }
+                const arcgisRes = await axios.default.get(`${UNITS_URL}/query`, {
+                  params: { where: whereClause, outFields: 'BuildingID_FK', returnDistinctValues: true, f: 'json' }
                 });
+
+                if (arcgisRes.data.features) {
+                  arcgisRes.data.features.forEach((f: any) => {
+                    if (f.attributes.BuildingID_FK) {
+                      const cleanId = String(f.attributes.BuildingID_FK).replace(/[{}]/g, '').trim();
+                      resolvedBuildings.redGuidIds.push(`'{${cleanId.toUpperCase()}}'`, `'${cleanId.toUpperCase()}'`, `'{${cleanId.toLowerCase()}}'`, `'${cleanId.toLowerCase()}'`, `'{${cleanId}}'`, `'${cleanId}'`);
+                    }
+                  });
+                }
+              }
+
+              // Resolve blue buildings
+              if (apartments.blueObjIds.length > 0 || apartments.blueGuidIds.length > 0) {
+                let whereClause = "1=0";
+                if (apartments.blueObjIds.length > 0) whereClause = `OBJECTID IN (${apartments.blueObjIds.join(',')})`;
+                if (apartments.blueGuidIds.length > 0) whereClause += ` OR GlobalID IN (${apartments.blueGuidIds.join(',')})`;
+
+                const arcgisRes = await axios.default.get(`${UNITS_URL}/query`, {
+                  params: { where: whereClause, outFields: 'BuildingID_FK', returnDistinctValues: true, f: 'json' }
+                });
+
+                if (arcgisRes.data.features) {
+                  arcgisRes.data.features.forEach((f: any) => {
+                    if (f.attributes.BuildingID_FK) {
+                      const cleanId = String(f.attributes.BuildingID_FK).replace(/[{}]/g, '').trim();
+                      // Only add to blue if it's not already in red
+                      if (!resolvedBuildings.redGuidIds.includes(`'{${cleanId.toUpperCase()}}'`)) {
+                         resolvedBuildings.blueGuidIds.push(`'{${cleanId.toUpperCase()}}'`, `'${cleanId.toUpperCase()}'`, `'{${cleanId.toLowerCase()}}'`, `'${cleanId.toLowerCase()}'`, `'{${cleanId}}'`, `'${cleanId}'`);
+                      }
+                    }
+                  });
+                }
               }
             } catch (err) {
               console.error("Error resolving building FKs for apartments", err);
             }
           }
 
-          const resolvedBuildings = { objIds: [], guidIds: resolvedBuildingGuids };
-
-          const applyEffect = async (layerTitle: string, data: { objIds: number[], guidIds: string[] }) => {
-            if (data.objIds.length === 0 && data.guidIds.length === 0) return;
+          const applyEffect = async (layerTitle: string, data: { redObjIds: number[], redGuidIds: string[], blueObjIds: number[], blueGuidIds: string[] }) => {
+            const hasRed = data.redObjIds.length > 0 || data.redGuidIds.length > 0;
+            const hasBlue = data.blueObjIds.length > 0 || data.blueGuidIds.length > 0;
+            if (!hasRed && !hasBlue) return;
 
             const layer = viewInstance.map.layers.find((l: any) => l.title === layerTitle) as any;
             if (layer) {
               const layerView = await viewInstance.whenLayerView(layer) as any;
 
-              const finalObjectIds = [...data.objIds];
-
-              if (data.guidIds.length > 0) {
-                const whereQuery = `GlobalID IN (${data.guidIds.join(',')})`;
-                try {
-                  const query = layer.createQuery();
-                  query.where = whereQuery;
-                  const queriedIds = await layer.queryObjectIds(query);
-                  if (queriedIds && queriedIds.length > 0) {
-                    finalObjectIds.push(...queriedIds);
-                  }
-                } catch (err) {
-                  console.error("Error querying missing objectIds:", err);
+              const getIdsForQuery = async (objIds: number[], guidIds: string[]) => {
+                const finalIds = [...objIds];
+                if (guidIds.length > 0) {
+                  try {
+                    const query = layer.createQuery();
+                    query.where = `GlobalID IN (${guidIds.join(',')})`;
+                    const queriedIds = await layer.queryObjectIds(query);
+                    if (queriedIds && queriedIds.length > 0) {
+                      finalIds.push(...queriedIds);
+                    }
+                  } catch (err) {}
                 }
-              }
+                return finalIds;
+              };
 
-              console.log(`[Broker Effect] Layer: ${layerTitle} | ObjectIds count: ${finalObjectIds.length}`);
+              const finalRedIds = await getIdsForQuery(data.redObjIds, data.redGuidIds);
+              const finalBlueIds = await getIdsForQuery(data.blueObjIds, data.blueGuidIds);
 
-              if (finalObjectIds.length > 0) {
-                const handle = layerView.highlight(finalObjectIds);
-                highlightHandles.push(handle);
-                layerViewsToClean.push(layerView);
+              const allFinalIds = [...finalRedIds, ...finalBlueIds];
+              console.log(`[Broker Effect] Layer: ${layerTitle} | Red: ${finalRedIds.length} | Blue: ${finalBlueIds.length}`);
 
+              if (allFinalIds.length > 0) {
                 layerView.featureEffect = {
-                  filter: {
-                    objectIds: finalObjectIds
-                  },
+                  filter: { objectIds: allFinalIds },
                   excludedEffect: "grayscale(80%) opacity(30%)"
                 };
+                layerViewsToClean.push(layerView);
+
+                // Highlight ALL broker units natively
+                const handle = layerView.highlight(allFinalIds);
+                highlightHandles.push(handle);
+
+                // Add red badge icon for units with requests
+                if (finalRedIds.length > 0 && brokerGraphicsLayer) {
+                  try {
+                    const geomQuery = layer.createQuery();
+                    geomQuery.objectIds = finalRedIds;
+                    geomQuery.returnGeometry = true;
+                    geomQuery.outFields = ["*"];
+                    const result = await layer.queryFeatures(geomQuery);
+                    
+                    result.features.forEach((f: any) => {
+                      let pt: any = null;
+                      if (f.geometry) {
+                        pt = f.geometry.centroid || f.geometry.extent?.center || f.geometry;
+                      }
+
+                      if (pt) {
+                        const g = new Graphic({
+                          geometry: {
+                            type: "point",
+                            x: pt.x,
+                            y: pt.y,
+                            z: (pt.z || 0) + 5, // elevate slightly
+                            spatialReference: f.geometry.spatialReference
+                          },
+                          symbol: {
+                            type: "point-3d",
+                            symbolLayers: [{
+                              type: "icon",
+                              resource: { primitive: "circle" },
+                              material: { color: "#da3633" },
+                              size: "20px",
+                              outline: { color: "#ffffff", size: 2 }
+                            }]
+                          }
+                        });
+                        brokerGraphicsLayer!.add(g);
+                      }
+                    });
+                  } catch (err) {
+                    console.error("Error querying red geometries", err);
+                  }
+                }
               }
             }
           };
@@ -398,6 +508,9 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
       layerViewsToClean.forEach(lv => {
         if (lv) lv.featureEffect = null;
       });
+      if (brokerGraphicsLayer && viewInstance && viewInstance.map) {
+        viewInstance.map.remove(brokerGraphicsLayer);
+      }
     };
   }, [viewInstance, auth]);
 
@@ -481,10 +594,19 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
       )}
 
       {/* Sidebar: Villa mode */}
-      {canSeeSidebar && selectedVillaData && auth?.user?.role !== 'broker' && (
+      {selectedVillaData && canSeeSidebar && auth?.user?.role !== 'broker' && (
         <BuildingSidebar
           villaData={selectedVillaData}
           onClose={() => setSelectedVillaData(null)}
+        />
+      )}
+
+      {/* Engineer Unit Management Sidebar */}
+      {(selectedBuildingId || selectedVillaData) && (auth?.user?.role === 'engineer') && (
+        <AdminUnitSidebar 
+          buildingId={selectedBuildingId}
+          villaData={selectedVillaData}
+          onClose={() => { setSelectedBuildingId(null); setSelectedVillaData(null); }}
         />
       )}
     </div>

@@ -6,14 +6,22 @@ import Graphic from '@arcgis/core/Graphic';
 import Point from '@arcgis/core/geometry/Point';
 import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer'; 
 import { io } from 'socket.io-client'; 
+import { AuthContext } from '../context/AuthContext';
+import { useContext } from 'react';
+import ComplaintChatModal from './ComplaintChatModal'; 
 
 interface Complaint {
   _id: string;
   arcgisId: string;
+  problemName?: string;
+  title?: string;
   type: string;
   description: string;
+  specialization?: string;
+  priority?: string;
   coordinates: { lat: number; lon?: number; lng?: number } | null;
   status: string;
+  images?: string[];
   createdAt?: string;
   ownerId?: { name: string; email: string; phone?: string };
 }
@@ -26,9 +34,25 @@ interface AdminComplaintsTabProps {
 // 🚀 2. استلام الـ Prop جوه الكومبوننت
 const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
   const mapDiv = useRef<HTMLDivElement>(null);
+  const highlightHandleRef = useRef<any>(null);
   const [view, setView] = useState<SceneView | null>(null);
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [activeComplaint, setActiveComplaint] = useState<Complaint | null>(null);
+  const [designImage, setDesignImage] = useState<string | null>(null);
+  const auth = useContext(AuthContext);
+
+  // 🚀 دالة لتفريغ التحديد
+  const clearSelection = () => {
+    if (highlightHandleRef.current) {
+      highlightHandleRef.current.remove();
+      highlightHandleRef.current = null;
+    }
+    if (view) {
+      const oldLayer = view.map?.findLayerById("complaint-marker-layer");
+      if (oldLayer) view.map?.remove(oldLayer);
+    }
+  };
 
   // 🚀 3. تحديث الرقم في הـ Navbar أوتوماتيك كل ما الداتا (complaints) تتغير
   useEffect(() => {
@@ -53,6 +77,14 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
 
       _view.when(() => {
         setView(_view);
+        _view.on('click', () => {
+          if (highlightHandleRef.current) {
+            highlightHandleRef.current.remove();
+            highlightHandleRef.current = null;
+          }
+          const oldLayer = _view.map?.findLayerById("complaint-marker-layer");
+          if (oldLayer) _view.map?.remove(oldLayer);
+        });
       });
 
       return () => {
@@ -101,8 +133,10 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
   }, []);
 
   // 🚀 الطيران لمكان الشكوى
-  const handleZoomToMap = (complaint: Complaint) => {
+  const handleZoomToMap = async (complaint: Complaint) => {
     if (!view) return;
+
+    clearSelection();
 
     if (complaint.type === 'external' && complaint.coordinates) {
       
@@ -132,11 +166,6 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
 
       const pointGraphic = new Graphic({ geometry: point, symbol: markerSymbol as any });
 
-      const oldLayer = view.map?.findLayerById("complaint-marker-layer");
-      if (oldLayer) {
-        view.map?.remove(oldLayer);
-      }
-
       const complaintLayer = new GraphicsLayer({
         id: "complaint-marker-layer",
         elevationInfo: {
@@ -150,11 +179,85 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
 
       view.goTo({ target: pointGraphic, zoom: 19, tilt: 60, heading: 0 }, { duration: 1500 });
     } else if (complaint.type === 'internal') {
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/roles/catalog?mode=all`);
+        const allFeatures = [...(res.data.units || []), ...(res.data.villas || [])];
+        const complaintCleanId = String(complaint.arcgisId).replace(/[{}]/g, '').trim().toLowerCase();
+        
+        const unitData = allFeatures.find(u => {
+          const uObj = String(u.OBJECTID).replace(/[{}]/g, '').trim().toLowerCase();
+          const uGlob = String(u.GlobalID || '').replace(/[{}]/g, '').trim().toLowerCase();
+          const uArc = String(u.arcgisId || '').replace(/[{}]/g, '').trim().toLowerCase();
+          return uObj === complaintCleanId || (u.GlobalID && uGlob === complaintCleanId) || (u.arcgisId && uArc === complaintCleanId);
+        });
+
+        if (unitData) {
+          const source = unitData.sourceLayer || unitData.SourceName;
+          if (source === 'Villas_Global') {
+            const villaLayer = view.map?.layers.find((l: any) => l.title === "Villas_Global" || l.title === "Villas") as any;
+            if (villaLayer) {
+              const query = villaLayer.createQuery();
+              const gID = unitData.GlobalID || unitData.globalid;
+              const oID = unitData.OBJECTID;
+              query.where = `GlobalID = '${gID}' OR OBJECTID = ${oID}`;
+              query.returnGeometry = true;
+              const extentRes = await villaLayer.queryExtent(query);
+              if (extentRes && extentRes.extent) {
+                view.goTo({ target: extentRes.extent, tilt: 45, zoom: 19 }, { animate: true, duration: 2000 });
+                const objectIds = await villaLayer.queryObjectIds(query);
+                if (objectIds && objectIds.length > 0) {
+                  const layerView = await view.whenLayerView(villaLayer) as any;
+                  highlightHandleRef.current = layerView.highlight(objectIds);
+                }
+                return;
+              }
+            }
+          } else if (source === 'Units') {
+            const foreignKey = unitData.BuildingID_FK;
+            if (foreignKey) {
+              const buildingLayer = view.map?.layers.find((l: any) => l.title === "Buildings_Global") as any;
+              if (buildingLayer) {
+                const query = buildingLayer.createQuery();
+                query.where = `GlobalID = '${foreignKey}'`;
+                query.returnGeometry = true;
+                const extentRes = await buildingLayer.queryExtent(query);
+                if (extentRes && extentRes.extent) {
+                  view.goTo({ target: extentRes.extent, tilt: 60, zoom: 20 }, { animate: true, duration: 1500 });
+                  const objectIds = await buildingLayer.queryObjectIds(query);
+                  if (objectIds && objectIds.length > 0) {
+                    const layerView = await view.whenLayerView(buildingLayer) as any;
+                    highlightHandleRef.current = layerView.highlight(objectIds);
+                  }
+                  return;
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Error finding unit location:", e);
+      }
       alert(`🏠 Internal issue for Unit ID: \n${complaint.arcgisId}\n\nSearch for this unit on the main map.`);
     }
   };
 
-  // 🚀 تنفيذ أمر الـ Dismiss والـ Raise للباك إند
+  // 🚀 تحديث الأولوية
+  const handleTogglePriority = async (complaintId: string, currentPriority: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const newPriority = currentPriority === 'High' ? 'Normal' : 'High';
+      await axios.put(`${import.meta.env.VITE_API_URL}/api/complaints/${complaintId}/priority`, 
+        { priority: newPriority }, 
+        { headers: { 'x-auth-token': token } }
+      );
+      setComplaints(prev => prev.map(c => c._id === complaintId ? { ...c, priority: newPriority } : c));
+    } catch (error) {
+      console.error("Error updating priority:", error);
+      alert("Failed to update priority.");
+    }
+  };
+
+  // 🚀 تنفيذ أمر الـ Dismiss للباك إند
   const handleAction = async (complaintId: string, action: 'raise' | 'dismiss') => {
     setComplaints(prev => prev.filter(c => c._id !== complaintId));
     
@@ -198,11 +301,20 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
               <div key={complaint._id} style={{ backgroundColor: '#161b22', border: '1px solid #30363d', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', backgroundColor: complaint.type === 'external' ? '#a371f722' : '#f0883e22', color: complaint.type === 'external' ? '#a371f7' : '#f0883e', border: `1px solid ${complaint.type === 'external' ? '#a371f755' : '#f0883e55'}` }}>
-                    {complaint.type === 'external' ? '🛣️ External' : '🏠 Internal'}
+                    {complaint.specialization || (complaint.type === 'external' ? '🛣️ External' : '🏠 Internal')}
                   </span>
+                  <button 
+                    onClick={() => handleTogglePriority(complaint._id, complaint.priority || 'Normal')}
+                    style={{ backgroundColor: complaint.priority === 'High' ? '#da3633' : '#30363d', color: '#fff', border: 'none', padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s' }}
+                  >
+                    {complaint.priority === 'High' ? '🚨 High Priority' : '⬇️ Normal Priority'}
+                  </button>
                   <span style={{ fontSize: '12px', color: '#8b949e' }}>
                     {complaint.createdAt ? new Date(complaint.createdAt).toLocaleDateString() : ''}
                   </span>
+                </div>
+                <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#fff' }}>
+                  {(complaint as any).problemName || complaint.title} <span style={{color: '#58a6ff', fontSize: '12px', fontWeight: 'normal'}}>({complaint.status})</span>
                 </div>
                 {complaint.ownerId && (
                   <div style={{ fontSize: '13px', color: '#c9d1d9', marginTop: '-4px', marginBottom: '4px' }}>
@@ -211,14 +323,34 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
                   </div>
                 )}
                 <p style={{ margin: 0, color: '#c9d1d9', fontSize: '15px', lineHeight: '1.5' }}>{complaint.description}</p>
-                <button 
-                  onClick={() => handleZoomToMap(complaint)}
-                  style={{ backgroundColor: '#1f6feb', color: '#fff', border: 'none', padding: '10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
-                >
-                  🗺️ Explore on 3D Map
-                </button>
+                
+                {complaint.images && complaint.images.length > 0 && (
+                  <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '5px' }}>
+                    {complaint.images.map((img, i) => (
+                      <img 
+                        key={i} 
+                        src={img} 
+                        alt="Complaint attached" 
+                        onClick={() => setDesignImage(img)}
+                        style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #30363d', cursor: 'pointer' }} 
+                      />
+                    ))}
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
+                  {complaint.type === 'internal' && (
+                    <button onClick={() => setDesignImage('/A.png')} style={{ flex: 1, backgroundColor: '#21262d', color: '#c9d1d9', border: '1px solid #30363d', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>📐 Explore Plan</button>
+                  )}
+                  <button 
+                    onClick={() => handleZoomToMap(complaint)}
+                    style={{ flex: 1, backgroundColor: '#1f6feb', color: '#fff', border: 'none', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                  >
+                    🗺️ Map
+                  </button>
+                </div>
                 <div style={{ display: 'flex', gap: '10px', marginTop: '10px', borderTop: '1px solid #30363d', paddingTop: '16px' }}>
-                  <button onClick={() => handleAction(complaint._id, 'raise')} style={{ flex: 1, backgroundColor: '#2ea043', color: '#fff', border: 'none', padding: '10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>✅ Raise</button>
+                  <button onClick={() => setActiveComplaint(complaint)} style={{ flex: 1, backgroundColor: 'transparent', color: '#58a6ff', border: '1px solid #58a6ff', padding: '10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>💬 Chat</button>
                   <button onClick={() => handleAction(complaint._id, 'dismiss')} style={{ flex: 1, backgroundColor: 'transparent', color: '#da3633', border: '1px solid #da3633', padding: '10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>❌ Dismiss</button>
                 </div>
               </div>
@@ -233,6 +365,29 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
           Click "Explore on 3D Map" to locate the issue 📍
         </div>
       </div>
+
+      {activeComplaint && (
+        <ComplaintChatModal
+          complaint={activeComplaint}
+          onClose={() => setActiveComplaint(null)}
+          onRefresh={fetchComplaints}
+          currentUser={{ 
+            id: auth?.user?.id || 'admin_id', 
+            name: auth?.user?.name || 'Admin', 
+            role: 'admin' 
+          }}
+        />
+      )}
+
+      {designImage && (
+        <div 
+          onClick={() => setDesignImage(null)}
+          style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 9999999, display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+        >
+          <img src={designImage} alt="Enlarged design" style={{ maxWidth: '90%', maxHeight: '90%', borderRadius: '12px', border: '2px solid #58a6ff' }} />
+          <button onClick={() => setDesignImage(null)} style={{ position: 'absolute', top: '20px', right: '30px', background: 'transparent', color: '#ff7b72', border: 'none', fontSize: '30px', cursor: 'pointer' }}>✕</button>
+        </div>
+      )}
     </div>
   );
 };

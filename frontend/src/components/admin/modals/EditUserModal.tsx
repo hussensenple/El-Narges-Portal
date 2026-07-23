@@ -18,11 +18,13 @@ const EditUserModal = ({ user, onClose, onSuccess }: EditUserModalProps) => {
   const [name, setName] = useState(user.name || '');
   const [phone, setPhone] = useState(user.phone || '');
   const [email, setEmail] = useState(user.email || '');
+  const [countryStatus, setCountryStatus] = useState(user.countryStatus || 'Egypt');
+  const [governorate, setGovernorate] = useState(user.countryStatus === 'Outside Egypt' ? user.governorate : (user.governorate || 'Cairo'));
+  const [governoratesList, setGovernoratesList] = useState<string[]>([]);
   
   // Profile states
   const [manualId, setManualId] = useState(user.profile?.manualId || '');
   const [age, setAge] = useState(user.profile?.age || '');
-  const [speciality, setSpeciality] = useState(user.profile?.speciality || '');
   const [graduationYear, setGraduationYear] = useState(user.profile?.graduationYear || '');
 
   const isOwnerOrBroker = user.role === 'owner' || user.role === 'broker';
@@ -46,11 +48,32 @@ const EditUserModal = ({ user, onClose, onSuccess }: EditUserModalProps) => {
     fetchUserUnits();
   }, [user]);
 
+  useEffect(() => {
+    const fetchGovernorates = async () => {
+      try {
+        const url = 'https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Heatmap_WFL1/FeatureServer/0/query';
+        const res = await axios.get(url, { params: { where: '1=1', outFields: '*', returnGeometry: false, f: 'json' } });
+        if (res.data && res.data.features && res.data.features.length > 0) {
+          const fields = Object.keys(res.data.features[0].attributes);
+          const nameField = fields.find(f => f.toLowerCase().includes('name') || f.toLowerCase().includes('gov') || f.toLowerCase().includes('ar')) || fields.find(f => typeof res.data.features[0].attributes[f] === 'string');
+          const govs = [...new Set(res.data.features.map((f: any) => nameField ? f.attributes[nameField] : undefined))].filter(Boolean) as string[];
+          setGovernoratesList(govs);
+        } else {
+          throw new Error('No data');
+        }
+      } catch (err) {
+        const fallbackGovs = ['Cairo', 'Giza', 'Alexandria', 'Dakahlia', 'Red Sea', 'Beheira', 'Fayoum', 'Gharbia', 'Ismailia', 'Menofia', 'Minya', 'Qaliubiya', 'New Valley', 'Suez', 'Aswan', 'Assiut', 'Beni Suef', 'Port Said', 'Damietta', 'Sharkia', 'South Sinai', 'Kafr Al sheikh', 'Matrouh', 'Luxor', 'Qena', 'North Sinai', 'Sohag'];
+        setGovernoratesList(fallbackGovs);
+      }
+    };
+    fetchGovernorates();
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       setLoading(true);
-      const payload: any = { name, phone, email };
+      const payload: any = { name, phone, email, countryStatus, governorate };
       
       if (['broker', 'engineer', 'admin'].includes(user.role)) {
         if (!manualId?.trim()) return alert('Manual ID is required!');
@@ -58,7 +81,6 @@ const EditUserModal = ({ user, onClose, onSuccess }: EditUserModalProps) => {
       }
       if (['engineer', 'admin'].includes(user.role)) payload.age = Number(age);
       if (user.role === 'engineer') {
-        payload.speciality = speciality;
         payload.graduationYear = Number(graduationYear);
       }
 
@@ -128,6 +150,26 @@ const EditUserModal = ({ user, onClose, onSuccess }: EditUserModalProps) => {
             <div><label style={{ display: 'block', marginBottom: '5px', color: '#c9d1d9' }}>Email</label>
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} style={{ width: '100%', padding: '10px', backgroundColor: '#0d1117', color: '#fff', border: '1px solid #30363d', borderRadius: '5px', boxSizing: 'border-box' }} /></div>
 
+            <div style={{ display: 'flex', gap: '15px' }}>
+              <div style={{ flex: 1 }}><label style={{ display: 'block', marginBottom: '5px', color: '#c9d1d9' }}>Region</label>
+              <select value={countryStatus} onChange={(e) => setCountryStatus(e.target.value)} style={{ width: '100%', padding: '10px', backgroundColor: '#0d1117', color: '#fff', border: '1px solid #30363d', borderRadius: '5px', boxSizing: 'border-box', outline: 'none' }}>
+                <option value="Egypt">Inside Egypt</option>
+                <option value="Outside Egypt">Outside Egypt</option>
+              </select></div>
+              <div style={{ flex: 1 }}><label style={{ display: 'block', marginBottom: '5px', color: '#c9d1d9' }}>Governorate/Country</label>
+              {countryStatus === 'Egypt' ? (
+                <select value={governorate} onChange={(e) => setGovernorate(e.target.value)} style={{ width: '100%', padding: '10px', backgroundColor: '#0d1117', color: '#fff', border: '1px solid #30363d', borderRadius: '5px', boxSizing: 'border-box', outline: 'none' }}>
+                  <option value="" disabled>Select Governorate</option>
+                  {governoratesList.map(gov => (
+                    <option key={gov} value={gov}>{gov}</option>
+                  ))}
+                </select>
+              ) : (
+                <input type="text" value={governorate} onChange={(e) => setGovernorate(e.target.value)} style={{ width: '100%', padding: '10px', backgroundColor: '#0d1117', color: '#fff', border: '1px solid #30363d', borderRadius: '5px', boxSizing: 'border-box' }} placeholder="e.g. UAE" />
+              )}
+              </div>
+            </div>
+
             {['broker', 'engineer', 'admin'].includes(user.role) && (
               <div><label style={{ display: 'block', marginBottom: '5px', color: '#c9d1d9' }}>Manual ID (Required)</label>
               <input required type="text" value={manualId} onChange={(e) => setManualId(e.target.value)} style={{ width: '100%', padding: '10px', backgroundColor: '#0d1117', color: '#fff', border: '1px solid #30363d', borderRadius: '5px', boxSizing: 'border-box' }} /></div>
@@ -140,8 +182,6 @@ const EditUserModal = ({ user, onClose, onSuccess }: EditUserModalProps) => {
 
             {user.role === 'engineer' && (
               <>
-                <div><label style={{ display: 'block', marginBottom: '5px', color: '#c9d1d9' }}>Speciality</label>
-                <input type="text" value={speciality} onChange={(e) => setSpeciality(e.target.value)} style={{ width: '100%', padding: '10px', backgroundColor: '#0d1117', color: '#fff', border: '1px solid #30363d', borderRadius: '5px', boxSizing: 'border-box' }} /></div>
                 <div><label style={{ display: 'block', marginBottom: '5px', color: '#c9d1d9' }}>Graduation Year</label>
                 <input type="number" value={graduationYear} onChange={(e) => setGraduationYear(e.target.value)} style={{ width: '100%', padding: '10px', backgroundColor: '#0d1117', color: '#fff', border: '1px solid #30363d', borderRadius: '5px', boxSizing: 'border-box' }} /></div>
               </>

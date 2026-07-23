@@ -37,7 +37,7 @@ exports.getUsersByRole = async (req, res) => {
 exports.changeUserRole = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { newRole, manualId, age, speciality, graduationYear } = req.body;
+    const { newRole, manualId, age, specialization, graduationYear } = req.body;
 
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ error: 'User not found' });
@@ -67,7 +67,16 @@ exports.changeUserRole = async (req, res) => {
       await BrokerProfile.findOneAndUpdate({ userId }, { manualId }, { upsert: true });
     } else if (newRole === 'engineer') {
       if (!manualId) return res.status(400).json({ error: 'Manual ID required for Engineer' });
-      await EngineerProfile.findOneAndUpdate({ userId }, { manualId, age, speciality, graduationYear }, { upsert: true });
+      
+      // Enforce only one engineer
+      if (oldRole !== 'engineer') {
+        const existingEngineer = await User.findOne({ role: 'engineer' });
+        if (existingEngineer) {
+          return res.status(400).json({ error: 'An engineer already exists. Only one engineer is allowed.' });
+        }
+      }
+      
+      await EngineerProfile.findOneAndUpdate({ userId }, { manualId, age, graduationYear }, { upsert: true });
     } else if (newRole === 'admin') {
       if (!manualId) return res.status(400).json({ error: 'Manual ID required for Admin' });
       await AdminProfile.findOneAndUpdate({ userId }, { manualId, age }, { upsert: true });
@@ -88,15 +97,15 @@ exports.changeUserRole = async (req, res) => {
 exports.editUserInfo = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { name, phone, email, manualId, age, speciality, graduationYear } = req.body;
+    const { name, phone, email, manualId, age, specialization, graduationYear, countryStatus, governorate } = req.body;
 
-    const user = await User.findByIdAndUpdate(userId, { name, phone, email }, { new: true }).select('-password');
+    const user = await User.findByIdAndUpdate(userId, { name, phone, email, countryStatus, governorate }, { new: true }).select('-password');
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     if (user.role === 'broker' && manualId) {
       await BrokerProfile.findOneAndUpdate({ userId }, { manualId });
     } else if (user.role === 'engineer' && manualId) {
-      await EngineerProfile.findOneAndUpdate({ userId }, { manualId, age, speciality, graduationYear });
+      await EngineerProfile.findOneAndUpdate({ userId }, { manualId, age, graduationYear });
     } else if (user.role === 'admin' && manualId) {
       await AdminProfile.findOneAndUpdate({ userId }, { manualId, age });
     }
@@ -114,10 +123,11 @@ exports.assignProperty = async (req, res) => {
     const { userId, unitId, arcgisObjectId, sourceLayer, targetRole } = req.body;
 
     if (targetRole === 'owner') {
+      const owner = await User.findById(userId);
       // 1. Save to MongoDB — also store sourceLayer and OBJECTID (display ID matching property catalog)
       const updatedUnit = await Unit.findOneAndUpdate(
         { arcgisId: unitId },
-        { ownerId: userId, status: '4', sourceLayer: sourceLayer, objectId: arcgisObjectId },
+        { ownerId: userId, status: '4', sourceLayer: sourceLayer, objectId: arcgisObjectId, ownerEmail: owner?.email, ownerName: owner?.name, ownerPhone: owner?.phone },
         { upsert: true, new: true }
       );
       // 2. Add to user's ownedUnits array (MUST be ObjectId)
@@ -125,7 +135,6 @@ exports.assignProperty = async (req, res) => {
       // 3. Ensure user role is 'owner'
       await User.findByIdAndUpdate(userId, { role: 'owner' });
       // 4. ✅ Sync ArcGIS: mark property as Sold (status 4)
-      const owner = await User.findById(userId);
       if (arcgisObjectId && sourceLayer) {
         await updateArcGISStatus(
           arcgisObjectId,
@@ -392,7 +401,7 @@ exports.getBrokerPerformance = async (req, res) => {
       });
     }
 
-    const revenueMEGP = Math.floor(totalRevenue / 1000000);
+    const revenueMEGP = parseFloat((totalRevenue / 1000000).toFixed(2));
 
     res.status(200).json({
       indicators: {

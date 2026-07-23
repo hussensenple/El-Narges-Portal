@@ -103,7 +103,7 @@ exports.getDashboardStats = async (req, res) => {
     const totalSoldUnits = aptSold + villaSold;
     const totalAvailableUnits = aptAvailable + villaAvailable;
     const totalReservedUnits = aptReserved + villaReserved;
-    const revenueMEGP = Math.round(totalRevenueRaw / 1000000);
+    const revenueMEGP = parseFloat((totalRevenueRaw / 1000000).toFixed(2));
 
     const barChartData = [
       { name: 'Villa', Available: villaAvailable, Sold: villaSold, Reserved: villaReserved },
@@ -148,8 +148,19 @@ exports.getDashboardStats = async (req, res) => {
 
     // 3. Broker Performance Leaderboard
     const brokers = await User.find({ role: 'broker' }).select('name');
-    const allUnits = await Unit.find({ brokerId: { $ne: null } }).select('brokerId arcgisId globalId');
+    const allUnits = await Unit.find({ brokerId: { $ne: null } }).select('brokerId arcgisId globalId status');
     const allRequests = await BookingRequest.find({}).select('unitId status');
+
+    const [allApts, allVillas] = await Promise.all([
+      axios.get(`${UNITS_URL}/query`, { params: { where: '1=1', outFields: 'OBJECTID,GlobalID,totalPrice', returnGeometry: false, f: 'json' } }),
+      axios.get(`${VILLAS_URL}/query`, { params: { where: '1=1', outFields: 'OBJECTID,GlobalID,totalPrice', returnGeometry: false, f: 'json' } })
+    ]);
+    const agolPriceMap = {};
+    [...(allApts.data.features || []), ...(allVillas.data.features || [])].forEach(f => {
+      const attrs = f.attributes;
+      if (attrs.OBJECTID) agolPriceMap[attrs.OBJECTID.toString()] = attrs.totalPrice || 0;
+      if (attrs.GlobalID) agolPriceMap[attrs.GlobalID] = attrs.totalPrice || 0;
+    });
 
     const topBrokers = brokers.map(broker => {
       const brokerUnits = allUnits.filter(u => u.brokerId && u.brokerId.toString() === broker._id.toString());
@@ -158,19 +169,38 @@ exports.getDashboardStats = async (req, res) => {
       const brokerRequests = allRequests.filter(req => brokerUnitIds.includes(req.unitId));
 
       let totalRequests = brokerRequests.length;
-      let sold = brokerRequests.filter(r => r.status === 'Approved').length;
-      let declined = brokerRequests.filter(r => r.status === 'Declined').length;
-      let raisedToAdmin = brokerRequests.filter(r => r.status === 'Reserved' || r.status === 'Approved' || r.status === 'Rejected').length;
+      let sold = 0;
+      let brokerRevenueRaw = 0;
+      let declined = 0;
+      let raisedToAdmin = 0;
+
+      brokerUnits.forEach(u => {
+        if (u.status === '4') {
+          sold++;
+          const price = (u.arcgisId && agolPriceMap[u.arcgisId.toString()]) || (u.globalId && agolPriceMap[u.globalId]) || 0;
+          brokerRevenueRaw += price;
+        }
+      });
+
+      brokerRequests.forEach(r => {
+        if (r.status === 'Declined') {
+          declined++;
+        }
+        if (r.status === 'Reserved' || r.status === 'Approved' || r.status === 'Rejected') {
+          raisedToAdmin++;
+        }
+      });
 
       return {
         _id: broker._id,
         name: broker.name,
+        revenue: parseFloat((brokerRevenueRaw / 1000000).toFixed(2)),
         totalRequests,
         sold,
         declined,
         raisedToAdmin
       };
-    }).sort((a, b) => b.sold - a.sold || b.raisedToAdmin - a.raisedToAdmin || b.totalRequests - a.totalRequests);
+    }).sort((a, b) => b.revenue - a.revenue || b.sold - a.sold);
 
     res.status(200).json({
       indicators: {

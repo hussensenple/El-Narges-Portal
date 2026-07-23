@@ -306,17 +306,17 @@ const AdminPortal = () => {
         </div>
 
         {/* التابة الثالثة: إدارة الأدوار */}
-        <div style={{ display: activeTab === 'roles' ? 'block' : 'none', height: '100%' }}>
+        <div style={{ display: activeTab === 'roles' ? 'block' : 'none', height: '100%', overflowY: 'auto' }}>
           <RolesWidget />
         </div>
 
         {/* التابة الرابعة: إدارة العقارات */}
-        <div style={{ display: activeTab === 'properties' ? 'block' : 'none', height: '100%' }}>
+        <div style={{ display: activeTab === 'properties' ? 'block' : 'none', height: '100%', overflowY: 'auto' }}>
           <PropertyManagementTab />
         </div>
 
         {/* التابة الخامسة: تحليل الرفضات */}
-        <div style={{ display: activeTab === 'rejections' ? 'flex' : 'none', height: '100%', flexDirection: 'column' }}>
+        <div style={{ display: activeTab === 'rejections' ? 'flex' : 'none', height: '100%', flexDirection: 'column', overflowY: 'auto' }}>
           <RejectionAnalysisTab />
         </div>
 

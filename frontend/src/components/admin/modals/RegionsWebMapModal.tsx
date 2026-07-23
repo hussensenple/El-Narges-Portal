@@ -15,13 +15,13 @@ esriConfig.apiKey = 'AAPTaDbfhBZWiLu4_n_GjVYQ4HQ..-oEYWQVVvlTpQ_TFGjK-E8Zrlsazlp
 
 
 const getColorForCount = (count: number, maxCount: number): [number, number, number, number] => {
-  if (maxCount === 0 || count === 0) return [80, 150, 240, 0.2]; // Base color for 0
+  if (maxCount === 0 || count === 0) return [48, 54, 61, 0.4]; // Base dark gray for 0
   const ratio = count / maxCount;
   
-  if (ratio <= 0.25) return [50, 130, 240, 0.4];
-  if (ratio <= 0.50) return [30, 90, 250, 0.6];
-  if (ratio <= 0.75) return [15, 60, 255, 0.8];
-  return [5, 30, 220, 0.95]; // Top 25%
+  if (ratio <= 0.25) return [144, 238, 144, 0.8]; // Light Green
+  if (ratio <= 0.50) return [255, 255, 51, 0.8];  // Yellow
+  if (ratio <= 0.75) return [255, 153, 51, 0.9];  // Orange
+  return [255, 51, 51, 1]; // Red (MAX)
 };
 
 const GOV_ALIASES: Record<string, string[]> = {
@@ -181,11 +181,11 @@ const RegionsWebMapModal: React.FC<RegionsWebMapModalProps> = ({ regionsStats, o
                   <div style={{ fontSize: '11px', color: '#8b949e', marginBottom: '6px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Color Legend</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px' }}>
                     {[
-                      { label: '0 Clients', color: 'rgba(80, 150, 240, 0.2)' },
-                      { label: '1 - 25%', color: 'rgba(50, 130, 240, 0.4)' },
-                      { label: '26 - 50%', color: 'rgba(30, 90, 250, 0.6)' },
-                      { label: '51 - 75%', color: 'rgba(15, 60, 255, 0.8)' },
-                      { label: '76 - 100%', color: 'rgba(5, 30, 220, 0.95)' }
+                      { label: '0 Clients', color: 'rgba(48, 54, 61, 0.4)' },
+                      { label: '1 - 25%', color: 'rgba(144, 238, 144, 0.8)' },
+                      { label: '26 - 50%', color: 'rgba(255, 255, 51, 0.8)' },
+                      { label: '51 - 75%', color: 'rgba(255, 153, 51, 0.9)' },
+                      { label: '76 - 100%', color: 'rgba(255, 51, 51, 1)' }
                     ].map((bucket, i) => (
                       <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <div style={{ width: '16px', height: '16px', backgroundColor: bucket.color, borderRadius: '4px', border: '1px solid #30363d' }} />
@@ -195,7 +195,7 @@ const RegionsWebMapModal: React.FC<RegionsWebMapModalProps> = ({ regionsStats, o
                   </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 }}>
-                  {chartData.map((r, idx) => (
+                  {chartData.map((r) => (
                     <div key={r.governorate} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#161b22', padding: '5px 10px', borderRadius: '6px', border: '1px solid #30363d' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <div style={{ width: '10px', height: '10px', borderRadius: '2px', backgroundColor: colorStr(r.count, maxCount), flexShrink: 0 }} />

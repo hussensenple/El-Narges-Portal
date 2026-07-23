@@ -88,9 +88,9 @@ The `User` model (MongoDB) has a `role` field. Valid roles: `'user'`, `'owner'`,
 - `User`: `{ name, phone, email, password, role, governorate, countryStatus, ownedUnits: [ObjectId ref Unit] }`
 - `Unit`: `{ globalId, arcgisId, unitName, status, ownerName, ownerEmail, ownerPhone, ownerId, brokerId }` + `strict: false`
 - `BookingRequest`: `{ userId, unitId, objectId, sourceLayer, buildingFK, customerName, customerPhone, customerGmail, status }`
-- `Complaint`: `{ title, arcgisId, type (internal/external), description, coordinates: {lat, lon}, status, ownerId }`
+- `Complaint`: `{ title, arcgisId, type (internal/external), images: [String], description, coordinates: {lat, lon}, status, ownerId }`
 - `BrokerProfile`: `{ userId, manualId }`
-- `EngineerProfile`: `{ userId, manualId, age, speciality, graduationYear }`
+- `EngineerProfile`: `{ userId, manualId, age, graduationYear }` (Only ONE engineer allowed in the system)
 - `AdminProfile`: `{ userId, manualId, age }`
 - `KnowledgeBase`: Used by the AI Advisor for property/compound knowledge
 
@@ -123,7 +123,8 @@ Located under `frontend/src/components/admin/` and `frontend/src/pages/AdminRequ
 - `RolesWidget.tsx` — Quick role switcher widget
 - `RejectionAnalysisTab.tsx` — Two-panel view for analyzing rejection reasons (filterable list + live recharts bar chart)
 - **Tables:** `OwnersTable.tsx`, `BrokersTable.tsx`, `EngineersTable.tsx`, `AdminsTable.tsx`, `UsersTable.tsx`
-- **Modals:** `PropertyAssignCatalog.tsx`, `EditUserModal.tsx`, `RoleChangeModal.tsx`, `BrokerPerformanceModal.tsx`, `OwnerPropertiesModal.tsx` (displays properties owned by selected user in top owners list, with map location sync matching owner dashboard design), `TopOwnersChartModal.tsx` (displays recharts bar chart of top 25 owners by paid amount), `RegionClientsModal.tsx` (lists clients inside a region), `RegionsWebMapModal.tsx` (displays ArcGIS Web Map choropleth shaded by client distribution).
+- **Modals:** `PropertyAssignCatalog.tsx`, `EditUserModal.tsx`, `RoleChangeModal.tsx`, `BrokerPerformanceModal.tsx`, `OwnerPropertiesModal.tsx` (displays properties owned by selected user in top owners list, with map location sync matching owner dashboard design), `TopOwnersChartModal.tsx` (displays recharts bar chart of top 25 owners by paid amount)
+- **Map Tools:** `AdminUnitSidebar.tsx` — Allows Admins and Engineers to click any building/unit on the 3D map to open a right-side panel containing unit ID, occupancy status, owner details, unit plan exploration, and internal/external complaints management for that specific unit.
 
 ---
 
@@ -236,6 +237,7 @@ Located under `frontend/src/components/admin/` and `frontend/src/pages/AdminRequ
 | `/api/roles` | `rolesRoutes.js` | Role management, property assignment, catalog |
 | `/api/admin` | `adminRoutes.js` | Admin-specific actions |
 | `/api/complaints` | `complaintRoutes.js` | Complaint CRUD |
+| `/api/technicians` | `technicianRoutes.js` | Technician CRUD for Engineers |
 | `/api/ai` | `aiRoutes.js` | AI Advisor (Gemini) |
 | `/api/weather` | `weatherRoutes.js` | Weather proxy (OpenWeatherMap) |
 

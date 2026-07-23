@@ -89,7 +89,8 @@ exports.approveRequest = async (req, res) => {
         ownerEmail: request.customerGmail,
         ownerPhone: request.customerPhone,
         sourceLayer: request.sourceLayer,
-        objectId: request.objectId
+        objectId: request.objectId,
+        buildingIdFk: request.buildingFK || null
       });
       await updatedUnit.save();
     } else {
@@ -100,8 +101,17 @@ exports.approveRequest = async (req, res) => {
       updatedUnit.ownerPhone = request.customerPhone;
       updatedUnit.sourceLayer = request.sourceLayer;
       updatedUnit.objectId = request.objectId;
+      if (request.buildingFK) {
+        updatedUnit.buildingIdFk = request.buildingFK;
+      }
       await updatedUnit.save();
     }
+
+    // Add unit to user's ownedUnits and upgrade role to owner
+    await User.findByIdAndUpdate(request.userId, { 
+      $addToSet: { ownedUnits: updatedUnit._id },
+      $set: { role: 'owner' } 
+    });
     console.log("✅ Unit data updated in MongoDB!");
 
     // 2. 🚀 تحديث الخريطة (ArcGIS) - ده اللي كان متعطل وشغلناه!

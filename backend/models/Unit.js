@@ -9,6 +9,8 @@ const unitSchema = new mongoose.Schema({
   ownerName: { type: String },  
   ownerEmail: { type: String }, 
   ownerPhone: { type: String }, 
+  buildingIdFk: { type: String },
+  floorNumber: { type: Number },
   
   // 2. ودي الحقول القديمة بتاعتك زي ما هي
   ownerId: { 

@@ -10,6 +10,18 @@ const { getDashboardStats, getRegionsStats } = require('../controllers/adminCont
 router.get('/dashboard-stats', getDashboardStats);
 router.get('/regions-stats', getRegionsStats);
 
+// 0.5 Fetch all MongoDB units for Admin/Engineer Sidebar
+router.get('/all-units', async (req, res) => {
+  try {
+    const Unit = require('../models/Unit');
+    // populate ownerId so we can get name, email, phone on the frontend
+    const units = await Unit.find().populate('ownerId', 'name email phone');
+    res.json(units);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch units' });
+  }
+});
+
 // 1. جلب الطلبات المعلقة للوحة الأدمن
 router.get('/pending', async (req, res) => {
   try {

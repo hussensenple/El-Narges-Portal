@@ -88,11 +88,8 @@ const BrokerUnitRequestsModal = ({ unit, requests, onClose, onRefresh }: BrokerU
         <div style={{ padding: '20px', borderBottom: '1px solid #30363d', backgroundColor: '#0d1117', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <h3 style={{ margin: 0, color: '#58a6ff' }}>
-              Requests for {unit.unitName?.includes('شقة') ? 'Apartment' : unit.unitName?.includes('فيلا') ? 'Villa' : unit.unitName || 'Unit'} #{unit.objectId || unit.OBJECTID}
+              Requests for {unit.unitName?.includes('شقة') ? 'Apartment' : unit.unitName?.includes('فيلا') ? 'Villa' : unit.unitName || 'Unit'} #{unit.objectId || unit.OBJECTID || unit.arcgisId}
             </h3>
-            <p style={{ margin: '4px 0 0', color: '#8b949e', fontSize: '13px' }}>
-              Handle incoming interests. FIFO (Oldest first) priority is recommended.
-            </p>
           </div>
           <button onClick={onClose} style={{ background: 'transparent', border: '1px solid #30363d', color: '#8b949e', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>✖</button>
         </div>

@@ -321,8 +321,8 @@ const AdminDashboardTab = () => {
               <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#da3633' }}>{stats.indicators.totalSoldUnits}</div>
             </div>
             <div style={{ flex: 1, backgroundColor: '#21262d', padding: '10px 15px', borderRadius: '16px', border: '1px solid #30363d', textAlign: 'center' }}>
-              <h4 style={{ margin: '0 0 5px 0', color: '#8b949e', fontSize: '12px' }}>Total Revenue</h4>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffc658' }}>{Number(stats.indicators.totalRevenue).toFixed(2)} M EGY</div>
+              <h4 style={{ margin: '0 0 5px 0', color: '#8b949e', fontSize: '12px' }}>Total Revenue <span style={{ fontSize: '10px', fontWeight: 'normal', textTransform: 'none' }}>(M EGY)</span></h4>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffc658' }}>{Number(stats.indicators.totalRevenue).toFixed(2)}</div>
             </div>
           </div>
 

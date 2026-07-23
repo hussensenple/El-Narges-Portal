@@ -55,8 +55,8 @@ const BrokerPerformanceModal: React.FC<BrokerPerformanceModalProps> = ({ broker,
                 <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#da3633' }}>{data.indicators.soldUnits}</div>
               </div>
               <div style={{ flex: 1, minWidth: 0, backgroundColor: '#21262d', padding: '15px', borderRadius: '8px', border: '1px solid #30363d', textAlign: 'center' }}>
-                <h4 style={{ margin: '0 0 10px 0', color: '#8b949e' }}>Total Revenue (M EGP)</h4>
-                <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#ffc658' }}>EGP {data.indicators.revenueMEGP}</div>
+                <h4 style={{ margin: '0 0 10px 0', color: '#8b949e' }}>Total Revenue <span style={{ fontSize: '10px', fontWeight: 'normal', textTransform: 'none' }}>(M EGY)</span></h4>
+                <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#ffc658' }}>{data.indicators.revenueMEGP.toFixed(2)}</div>
               </div>
               {/* Commission Card — 1.5% of total revenue */}
               <div style={{
@@ -75,12 +75,13 @@ const BrokerPerformanceModal: React.FC<BrokerPerformanceModalProps> = ({ broker,
                   height: '3px',
                   background: 'linear-gradient(90deg, #2ea043, #56d364)'
                 }} />
-                <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#56d364', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '6px' }}>Commission</div>
+                <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#56d364', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '8px' }}>
+                  Commission <span style={{ fontSize: '10px', fontWeight: 'normal', textTransform: 'none' }}>(M EGY)</span>
+                </div>
                 <h4 style={{ margin: '0 0 10px 0', color: '#8b949e' }}>1.5% of Revenue</h4>
                 <div style={{ fontSize: '26px', fontWeight: 'bold', color: '#56d364' }}>
-                  💰 {(data.indicators.revenueMEGP * 15).toLocaleString(undefined, { maximumFractionDigits: 1 })}
+                  💰 {(data.indicators.revenueMEGP * 0.015).toFixed(2)}
                 </div>
-                <div style={{ fontSize: '11px', color: '#8b949e', marginTop: '4px' }}>Thousand EGP</div>
               </div>
             </div>
 
@@ -90,7 +91,7 @@ const BrokerPerformanceModal: React.FC<BrokerPerformanceModalProps> = ({ broker,
               {/* Pie Chart */}
               <div style={{ flex: 1, backgroundColor: '#21262d', padding: '20px', borderRadius: '8px', border: '1px solid #30363d' }}>
                 <h4 style={{ marginTop: 0, marginBottom: '20px', color: '#fff', textAlign: 'center' }}>Requests Conversion</h4>
-                <div style={{ height: '420px' }}>
+                <div style={{ height: '280px' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -116,7 +117,7 @@ const BrokerPerformanceModal: React.FC<BrokerPerformanceModalProps> = ({ broker,
               {/* Bar Chart */}
               <div style={{ flex: 1, backgroundColor: '#21262d', padding: '20px', borderRadius: '8px', border: '1px solid #30363d' }}>
                 <h4 style={{ marginTop: 0, marginBottom: '20px', color: '#fff', textAlign: 'center' }}>Client Requests by Property Type</h4>
-                <div style={{ height: '420px' }}>
+                <div style={{ height: '280px' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                       data={data.barChartData}

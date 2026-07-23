@@ -62,7 +62,7 @@ const BrokerCatalog = ({ view, onClose }: BrokerCatalogProps) => {
     if (!view) return;
     try {
       if (unit.sourceLayer === 'Units' || unit.unitName !== 'فيلا') {
-        let bldgFK = unit.buildingFK || unit.BuildingID_FK;
+        let bldgFK = unit.buildingIdFk || unit.buildingFK || unit.BuildingID_FK;
         if (!bldgFK) {
           const UNITS_URL = 'https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WFL1/FeatureServer/37';
           const res = await axios.get(`${UNITS_URL}/query`, {

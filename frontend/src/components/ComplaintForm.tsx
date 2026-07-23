@@ -11,6 +11,7 @@ interface ComplaintFormProps {
 
 const ComplaintForm = ({ onClose, arcgisId, view, onPickingChange }: ComplaintFormProps) => {
   const [type, setType] = useState('internal');
+  const [images, setImages] = useState<string[]>([]);
   const [description, setDescription] = useState('');
   const [coordinates, setCoordinates] = useState<{lat: number, lon: number} | null>(null);
   const [isPickingMap, setIsPickingMap] = useState(false);
@@ -44,6 +45,18 @@ const ComplaintForm = ({ onClose, arcgisId, view, onPickingChange }: ComplaintFo
     };
   }, [isPickingMap, view]);
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      Array.from(e.target.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImages(prev => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -61,6 +74,7 @@ const ComplaintForm = ({ onClose, arcgisId, view, onPickingChange }: ComplaintFo
         title: complaintTitle, // 👈 ضفنا الـ Title هنا
         arcgisId,
         type,
+        images,
         description,
         coordinates
       }, {
@@ -90,19 +104,43 @@ const ComplaintForm = ({ onClose, arcgisId, view, onPickingChange }: ComplaintFo
 
   return createPortal(
     <div onClick={onClose} style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 99999999, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: '#0d1117', padding: '30px', borderRadius: '16px', width: '550px', maxWidth: '90vw', border: '1px solid #30363d', color: '#fff', boxShadow: '0 20px 50px rgba(0,0,0,0.8)' }}>
-        <h2 style={{ marginTop: 0, borderBottom: '1px solid #30363d', paddingBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: '#0d1117', padding: '20px', borderRadius: '16px', width: '550px', maxWidth: '90vw', maxHeight: '85vh', overflowY: 'auto', border: '1px solid #30363d', color: '#fff', boxShadow: '0 20px 50px rgba(0,0,0,0.8)' }}>
+        <h2 style={{ marginTop: 0, borderBottom: '1px solid #30363d', paddingBottom: '10px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '20px' }}>
           🛠️ Submit Maintenance / Complaint Request
         </h2>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '20px' }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '15px' }}>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <label style={{ color: '#8b949e', fontWeight: 'bold' }}>Complaint Type:</label>
-            <select value={type} onChange={(e) => setType(e.target.value)} style={{ padding: '14px', borderRadius: '8px', backgroundColor: '#161b22', border: '1px solid #30363d', color: '#fff', fontSize: '16px', cursor: 'pointer' }}>
+            <select 
+              value={type} 
+              onChange={(e) => {
+                setType(e.target.value);
+              }} 
+              style={{ padding: '10px', borderRadius: '8px', backgroundColor: '#161b22', border: '1px solid #30363d', color: '#fff', fontSize: '15px', cursor: 'pointer' }}
+            >
               <option value="internal">Internal Maintenance (Inside the unit)</option>
               <option value="external">External Issue (Street / Public Facilities)</option>
             </select>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <label style={{ color: '#8b949e', fontWeight: 'bold' }}>Attach Images (Optional):</label>
+            <input 
+              type="file" 
+              accept="image/*" 
+              multiple 
+              onChange={handleImageUpload} 
+              style={{ padding: '10px', borderRadius: '8px', backgroundColor: '#161b22', border: '1px dashed #30363d', color: '#fff' }}
+            />
+            {images.length > 0 && (
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '10px' }}>
+                {images.map((img, i) => (
+                  <img key={i} src={img} alt={`Preview ${i}`} style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #30363d' }} />
+                ))}
+              </div>
+            )}
           </div>
 
           {type === 'external' && (
@@ -128,13 +166,13 @@ const ComplaintForm = ({ onClose, arcgisId, view, onPickingChange }: ComplaintFo
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Please describe the issue in detail here..."
-              style={{ padding: '14px', borderRadius: '8px', backgroundColor: '#161b22', border: '1px solid #30363d', color: '#fff', fontSize: '16px', minHeight: '120px', resize: 'vertical' }}
+              style={{ padding: '10px', borderRadius: '8px', backgroundColor: '#161b22', border: '1px solid #30363d', color: '#fff', fontSize: '15px', minHeight: '80px', resize: 'vertical' }}
             />
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '10px' }}>
-            <button type="button" onClick={onClose} style={{ padding: '14px 24px', backgroundColor: 'transparent', color: '#8b949e', border: '1px solid #30363d', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px' }}>Cancel</button>
-            <button type="submit" disabled={isSubmitting || (type === 'external' && !coordinates)} style={{ padding: '14px 24px', backgroundColor: (isSubmitting || (type === 'external' && !coordinates)) ? '#b6232455' : '#2ea043', color: '#fff', border: 'none', borderRadius: '8px', cursor: (isSubmitting || (type === 'external' && !coordinates)) ? 'not-allowed' : 'pointer', fontWeight: 'bold', fontSize: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '5px' }}>
+            <button type="button" onClick={onClose} style={{ padding: '10px 20px', backgroundColor: 'transparent', color: '#8b949e', border: '1px solid #30363d', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px' }}>Cancel</button>
+            <button type="submit" disabled={isSubmitting || (type === 'external' && !coordinates)} style={{ padding: '10px 20px', backgroundColor: (isSubmitting || (type === 'external' && !coordinates)) ? '#b6232455' : '#2ea043', color: '#fff', border: 'none', borderRadius: '8px', cursor: (isSubmitting || (type === 'external' && !coordinates)) ? 'not-allowed' : 'pointer', fontWeight: 'bold', fontSize: '15px' }}>
               {isSubmitting ? 'Submitting...' : 'Submit Complaint 🚀'}
             </button>
           </div>

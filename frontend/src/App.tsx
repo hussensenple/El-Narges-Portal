@@ -1,8 +1,9 @@
-import { useState, useContext, useCallback } from 'react';
+import { useState, useEffect, useContext, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import SceneView from '@arcgis/core/views/SceneView';
 import MapViewer from './components/MapViewer';
 import MapViewer2D from './components/MapViewer2D';
+import WalkthroughTour from './components/WalkthroughTour';
 import OwnerUnitsTab from './components/OwnerUnitsTab'; 
 import UnitCatalog from './components/UnitCatalog';
 import AIAdvisor from './components/AIAdvisor';
@@ -66,6 +67,29 @@ const CustomerInterface = () => {
 
   const auth = useContext(AuthContext); 
   const isAuthenticated = !!auth?.user;
+
+  // Walkthrough Tour State & Trigger Logic
+  const [activeTourRole, setActiveTourRole] = useState<'visitor' | 'user' | 'owner' | null>(null);
+
+  useEffect(() => {
+    // Small delay to ensure ESRI Map features & DOM are rendered
+    const timer = setTimeout(() => {
+      if (!isAuthenticated) {
+        const seenVisitor = localStorage.getItem('tour_seen_visitor');
+        if (!seenVisitor) setActiveTourRole('visitor');
+      } else {
+        const role = auth?.user?.role;
+        if (role === 'user') {
+          const seenUser = localStorage.getItem('tour_seen_user');
+          if (!seenUser) setActiveTourRole('user');
+        } else if (role === 'owner') {
+          const seenOwner = localStorage.getItem('tour_seen_owner');
+          if (!seenOwner) setActiveTourRole('owner');
+        }
+      }
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [isAuthenticated, auth?.user?.role]);
 
   const handleSwitchTo3D = useCallback(() => setMapMode('3D'), []);
   const handleViewReady = useCallback((view: SceneView) => setMapView(view), []);
@@ -155,9 +179,25 @@ const CustomerInterface = () => {
 
       <div style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 1000, display: 'flex', flexDirection: 'row', gap: '10px', alignItems: 'center' }}>
         
+        {/* Manual Tour Restart / Guidance Help Button (Top Right next to other actions) */}
+        {mapMode === '3D' && auth?.user?.role !== 'broker' && auth?.user?.role !== 'engineer' && (
+          <button
+            onClick={() => {
+              if (!isAuthenticated) setActiveTourRole('visitor');
+              else if (auth?.user?.role === 'user') setActiveTourRole('user');
+              else if (auth?.user?.role === 'owner') setActiveTourRole('owner');
+            }}
+            className="map-icon-btn inactive"
+            title="Show Guide"
+          >
+            📖
+          </button>
+        )}
+
         {/* My Units Button */}
         {auth?.user?.role === 'owner' && (
           <button 
+            id="tour-owner-units-btn"
             title="My Units" 
             onClick={() => setIsOwnerUnitsOpen(!isOwnerUnitsOpen)} 
             className={`map-icon-btn ${isOwnerUnitsOpen ? 'active' : 'inactive'}`}
@@ -169,6 +209,7 @@ const CustomerInterface = () => {
         {/* My Requests Button for Users */}
         {auth?.user?.role === 'user' && (
           <button 
+            id="tour-requests-btn"
             title="My Requests" 
             onClick={() => setIsUserRequestsOpen(!isUserRequestsOpen)} 
             className={`map-icon-btn ${isUserRequestsOpen ? 'active' : 'inactive'}`}
@@ -200,7 +241,7 @@ const CustomerInterface = () => {
 
         {/* Customer / Owner Tools (Weather, Layers, Basemap) */}
         {isAuthenticated && auth?.user?.role !== 'broker' && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div id="tour-customer-tools" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             {mapMode === '3D' && (
               <button title="Weather" onClick={() => { setIsWeatherOpen(!isWeatherOpen); setIsLayersOpen(false); setIsBasemapOpen(false); }} className={`map-icon-btn ${isWeatherOpen ? 'active' : 'inactive'}`}>
                 <Icons.Weather />
@@ -219,7 +260,7 @@ const CustomerInterface = () => {
         {auth?.user ? (
           <div style={{ display: 'flex', gap: '10px' }}>
             {(auth.user.role === 'user' || auth.user.role === 'owner') && (
-              <button title="Account Settings" onClick={() => setIsSettingsOpen(true)} className={`map-icon-btn ${isSettingsOpen ? 'active' : 'inactive'}`}>
+              <button id="tour-settings-btn" title="Account Settings" onClick={() => setIsSettingsOpen(true)} className={`map-icon-btn ${isSettingsOpen ? 'active' : 'inactive'}`}>
                 <Icons.Settings />
               </button>
             )}
@@ -228,7 +269,7 @@ const CustomerInterface = () => {
             </button>
           </div>
         ) : (
-          <button title="Login" onClick={() => setShowLoginModal(true)} className={`map-icon-btn ${showLoginModal ? 'active' : 'inactive'}`}>
+          <button id="tour-login-btn" title="Login" onClick={() => setShowLoginModal(true)} className={`map-icon-btn ${showLoginModal ? 'active' : 'inactive'}`}>
             <Icons.Login />
           </button>
         )}
@@ -236,7 +277,7 @@ const CustomerInterface = () => {
 
       <div style={{ position: 'absolute', top: '20px', left: '70px', zIndex: 1000, display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
         
-        <button title={mapMode === '3D' ? "Switch to 2D Map" : "Switch to 3D Map"} onClick={() => setMapMode(mapMode === '3D' ? '2D' : '3D')} className="map-icon-btn inactive">
+        <button id="tour-map-toggle" title={mapMode === '3D' ? "Switch to 2D Map" : "Switch to 3D Map"} onClick={() => setMapMode(mapMode === '3D' ? '2D' : '3D')} className="map-icon-btn inactive">
           {mapMode === '3D' ? <Icons.Map2D /> : <Icons.Map3D />}
         </button>
 
@@ -253,7 +294,7 @@ const CustomerInterface = () => {
         )}
 
         {mapMode === '3D' && isAuthenticated && auth?.user?.role !== 'broker' && auth?.user?.role !== 'engineer' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start' }}>
+          <div id="tour-gis-tools" style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start' }}>
             <button title="GIS Tools" onClick={() => setIsToolsMenuOpen(!isToolsMenuOpen)} className={`map-icon-btn ${isToolsMenuOpen ? 'active' : 'inactive'}`}>
               <Icons.GisTools />
             </button>
@@ -289,6 +330,7 @@ const CustomerInterface = () => {
 
       {mapMode === '3D' && isAuthenticated && auth?.user?.role !== 'engineer' && (
         <button 
+          id="tour-catalog-btn"
           title="Property Catalog"
           onClick={() => {
             if (auth?.user?.role === 'broker') {
@@ -370,7 +412,9 @@ const CustomerInterface = () => {
         />
       </div>
 
-      {mapMode === '3D' && isAuthenticated && auth?.user?.role !== 'broker' && auth?.user?.role !== 'engineer' && <AIAdvisor view={mapView} />}
+      {mapMode === '3D' && isAuthenticated && auth?.user?.role !== 'broker' && auth?.user?.role !== 'engineer' && (
+        <AIAdvisor view={mapView} />
+      )}
       {/* Customer Support Chatbot UI */}
       {auth?.user?.role === 'engineer' && <ChatbotWidget />}
 
@@ -417,6 +461,12 @@ const CustomerInterface = () => {
           <ShowAllIssuesButton view={mapView} />
         )}
       </div>
+
+      {/* Walkthrough Guide Overlay */}
+      {activeTourRole && (
+        <WalkthroughTour role={activeTourRole} userName={auth?.user?.name} onClose={() => setActiveTourRole(null)} />
+      )}
+
 
     </div>
   );

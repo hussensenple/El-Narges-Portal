@@ -20,6 +20,7 @@ Act as an Expert System Architect, Full-Stack MERN Developer, and Web GIS Engine
 - **2D/3D Map Toggle** (switch between SceneView and MapView)
 - **Account Settings** (users/owners can update personal info and secondary contact)
 - **Email Notifications** (booking approved/rejected/declined emails sent automatically)
+- **Onboarding Walkthrough Tour** (role-based interactive guided tour using a dark CSS spotlight mask backdrop for Visitors, Users, and Owners, trackable via `localStorage`, with a manual restart button `📖` in the top right)
 
 The complete 4-step booking workflow is fully implemented:
 `User submits Interest (Pending) → Broker reviews → raises to Admin (Reserved) or Declines → Admin Approves (Sold/Owner promoted) or Rejects`
@@ -217,13 +218,22 @@ Located under `frontend/src/components/admin/` and `frontend/src/pages/AdminRequ
 
 ---
 
-## J. AI Advisor (Fully Implemented)
+## J. AI Advisor & Engineer Chatbot (Fully Implemented)
 
-`AIAdvisor.tsx`:
-- Uses Google Gemini 2.5 Flash via the backend (`/api/ai/`)
-- Powered by a `KnowledgeBase` MongoDB collection seeded with compound/property information
+`AIAdvisor.tsx` (Customer Facing):
+- Uses Google Gemini 3.5 Flash via the backend (`/api/ai/ask`)
+- Powered by a `KnowledgeBase` MongoDB collection seeded with compound/property information (filters out Engineering category)
 - Answers questions about available units, prices, location, and compound amenities
-- Visible only to authenticated non-broker users on the 3D map view
+- Visible only to authenticated non-broker/non-engineer users on the 3D map view
+- **Integrated Proximity Analysis:** Supports queries like *"apartments near gym within 5 mins"*. Calculates Haversine distance from services centroids (School, Hospital, Gym, Commercial) to filter map units.
+- **Integrated Closest Facility Road Routing:** Supports queries like *"closest services to unit 99"*. Triggers actual ArcGIS Network Analysis road routing (`closestFacility.solve`) to solve routes, draws colored 3D path lines on the map (School is Green, Hospital is Yellow, Gym is Red, Commercial is Blue), and prints exact routing distances and walking times in the chat.
+
+`ChatbotWidget.tsx` (Engineer Facing):
+- Uses Google Gemini 2.5 Flash via the backend (`/api/ai/engineer-ask`)
+- Powered exclusively by the `Engineering` category chunks in the `KnowledgeBase`
+- Answers deep technical queries based strictly on the Master Engineering Manual (e.g. pressure parameters, testing intervals, electrical configs)
+- Visible only to the Engineer role
+- Includes quick-access "Suggested Questions" chips for instant querying without typing
 
 ---
 

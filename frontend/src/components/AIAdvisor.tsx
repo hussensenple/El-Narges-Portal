@@ -1,6 +1,14 @@
 import { useState, useRef } from 'react';
 import SceneView from '@arcgis/core/views/SceneView';
 import FeatureLayer from '@arcgis/core/layers/FeatureLayer';
+import Graphic from '@arcgis/core/Graphic';
+import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
+import Point from '@arcgis/core/geometry/Point';
+import * as closestFacility from '@arcgis/core/rest/closestFacility';
+import ClosestFacilityParameters from '@arcgis/core/rest/support/ClosestFacilityParameters';
+import FeatureSet from '@arcgis/core/rest/support/FeatureSet';
+import esriId from "@arcgis/core/identity/IdentityManager";
+import esriConfig from "@arcgis/core/config";
 import axios from 'axios';
 import AuthModal from './AuthModal'; 
 
@@ -26,14 +34,20 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
   const isUserLoggedIn = !!userToken;
 
   const TARGET_LAYERS = ["Villas_Global", "Units"];
-  const VISUAL_LAYERS = ["Villas_Global", "Buildings_Global"];
 
   const handleResetFilter = () => {
     if (view && view.map) {
-      VISUAL_LAYERS.forEach(title => {
-        const layer = view.map?.layers.find(l => l.title === title) as any;
-        if (layer) layer.definitionExpression = "1=1"; 
+      const SAFE_LAYERS = ["Villas_Global", "roads_Global", "Trees", "Trees_Global", "Landscape_Global", "Landscape"];
+      const allVisualLayers = view.map.allLayers.filter((l:any) => 
+        l.title === "Villas_Global" || (!SAFE_LAYERS.includes(l.title) && (l.type === "feature" || l.type === "scene" || l.type === "building-scene" || l.type === "integrated-mesh"))
+      ).toArray();
+      
+      allVisualLayers.forEach(async layer => {
+        (layer as any).definitionExpression = "1=1"; 
+        (layer as any).visible = true;
       });
+      const hl = view.map.layers.find((l:any) => l.title === "AIHighlightsLayer") as GraphicsLayer;
+      if (hl) hl.removeAll();
       setIsFilterActive(false);
       if (highlightHandleRef.current) {
         highlightHandleRef.current.remove();
@@ -49,7 +63,7 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
 
       if (view && view.map) {
         for (const title of TARGET_LAYERS) {
-          const layer = view.map.layers.find(l => l.title === title) as FeatureLayer;
+          const layer = view.map.allLayers.find(l => l.title === title) as FeatureLayer;
           if (layer) {
             const query = layer.createQuery();
             query.where = `OBJECTID = ${objectId}`;
@@ -117,27 +131,33 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
       let contextData: any[] = [];
       
       if (view && view.map) {
-        const villasLayer = view.map.layers.find((l:any) => l.title === "Villas_Global") as FeatureLayer;
+        const villasLayer = view.map.allLayers.find((l:any) => l.title === "Villas_Global") as FeatureLayer;
         if (villasLayer) {
           const q = villasLayer.createQuery(); q.where = "1=1"; q.outFields = ["*"];
           const res = await villasLayer.queryFeatures(q);
+          const uniqueTypes = [...new Set(res.features.map(f => f.attributes.BuildingType))];
+          console.log("VILLAS_GLOBAL UNIQUE BUILDING TYPES:", uniqueTypes);
+          
           contextData.push(...res.features.map(f => ({
-            id: f.attributes.OBJECTID,
+            id: `Villas_Global-${f.attributes.OBJECTID}`,
+            originalId: f.attributes.OBJECTID,
             layer: "Villas_Global",
-            type: f.attributes.BuildingType === 2 ? "TwinHouse" : "Villa",
+            type: Number(f.attributes.BuildingType) === 1 ? "Villa" :
+                  Number(f.attributes.BuildingType) === 2 ? "TwinHouse" :
+                  "Apartment",
             price: f.attributes.Total_Price || f.attributes.Price,
             status: String(f.attributes.Status).toLowerCase()
           })));
         }
 
-        const unitsTable = view.map.tables?.find((t:any) => t.title === "Units") as FeatureLayer || view.map.layers.find((l:any) => l.title === "Units") as FeatureLayer;
+        const unitsTable = view.map.tables?.find((t:any) => t.title === "Units") as FeatureLayer || view.map.allLayers.find((l:any) => l.title === "Units") as FeatureLayer;
         if (unitsTable) {
           const q = unitsTable.createQuery(); q.where = "1=1"; q.outFields = ["*"];
           const res = await unitsTable.queryFeatures(q);
           contextData.push(...res.features.map(f => ({
-            id: f.attributes.OBJECTID,
+            id: `Units-${f.attributes.OBJECTID}`,
+            originalId: f.attributes.OBJECTID,
             layer: "Units",
-            // 🚀 استخراج آمن للـ FK مهما كان اسمه في الـ Database
             buildingFK: f.attributes.BuildingID_FK || f.attributes.BuildingID_FK || f.attributes.GlobalID_FK, 
             type: "Apartment",
             price: f.attributes.Price,
@@ -153,79 +173,461 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
         contextData: availableOnly 
       });
       
-      const { reply, isFilterQuery, filteredIds, action, actionUnitId } = res.data; 
+      const { reply, isFilterQuery, filteredIds, nearTo, maxWalkingMinutes, action, actionUnitId } = res.data; 
 
-      setMessages(prev => [...prev, { sender: 'ai', text: reply, action: action, actionUnitId: actionUnitId }]); 
+      let finalReplyText = reply;
 
       if (view && view.map) {
         if (isFilterQuery && filteredIds && filteredIds.length > 0) {
           
-          const filteredItems = availableOnly.filter(u => filteredIds.includes(u.id));
+          let filteredItems = availableOnly.filter(u => filteredIds.includes(u.id));
           
-          const villaIds = filteredItems.filter(u => u.layer === "Villas_Global").map(u => u.id);
-          // 🚀 تصفية الـ FKs المكررة والتأكد إنها مش Undefined
-          const rawBuildingFKs = filteredItems.filter(u => u.layer === "Units" && u.buildingFK).map(u => `'${u.buildingFK}'`);
+          // 🚀 Proximity filtering: if nearTo is specified, filter by walking distance
+          if (nearTo && maxWalkingMinutes) {
+            const AMENITY_TYPE_MAP: Record<string, number> = { 'School': 1, 'Hospital': 2, 'GYM': 3, 'Commercial': 4 };
+            const amenityTypeId = AMENITY_TYPE_MAP[nearTo];
+            if (amenityTypeId) {
+              const servicesLayer = view.map.allLayers.find((l:any) => l.title === 'Services_Global') as FeatureLayer;
+              if (servicesLayer) {
+                const sq = servicesLayer.createQuery();
+                sq.where = `Type = ${amenityTypeId}`;
+                sq.returnGeometry = true;
+                sq.outFields = ['OBJECTID', 'Type'];
+                const sRes = await servicesLayer.queryFeatures(sq);
+                
+                if (sRes.features.length > 0) {
+                  // Get centroids of all matching amenities
+                  const amenityCentroids = sRes.features.map((f: any) => {
+                    const center = f.geometry.centroid || f.geometry.extent?.center;
+                    return center ? { lon: center.longitude, lat: center.latitude } : null;
+                  }).filter(Boolean);
+                  
+                  // Walking speed ~80m/min, so maxDistance = maxWalkingMinutes * 80
+                  const maxDistMeters = maxWalkingMinutes * 80;
+                  
+                  // Haversine distance function
+                  const haversine = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+                    const R = 6371000; // Earth radius in meters
+                    const dLat = (lat2 - lat1) * Math.PI / 180;
+                    const dLon = (lon2 - lon1) * Math.PI / 180;
+                    const a = Math.sin(dLat/2) * Math.sin(dLat/2) + 
+                              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                              Math.sin(dLon/2) * Math.sin(dLon/2);
+                    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                  };
+                  
+                  // We need geometry for each filtered item to calculate distance
+                  // For Villas_Global items, query their geometry
+                  const villasInFilter = filteredItems.filter(u => u.layer === 'Villas_Global');
+                  const unitsInFilter = filteredItems.filter(u => u.layer === 'Units');
+                  
+                  const nearbyIds: string[] = [];
+                  
+                  // Check villas proximity
+                  if (villasInFilter.length > 0) {
+                    const vLayer = view.map.allLayers.find((l:any) => l.title === 'Villas_Global') as FeatureLayer;
+                    if (vLayer) {
+                      const vq = vLayer.createQuery();
+                      vq.where = `OBJECTID IN (${villasInFilter.map(u => u.originalId).join(',')})`;
+                      vq.returnGeometry = true;
+                      const vRes = await vLayer.queryFeatures(vq);
+                      vRes.features.forEach((f: any) => {
+                        const center = f.geometry.centroid || f.geometry.extent?.center;
+                        if (center) {
+                          const minDist = Math.min(...amenityCentroids.map((ac: any) => 
+                            haversine(center.latitude, center.longitude, ac.lat, ac.lon)
+                          ));
+                          if (minDist <= maxDistMeters) {
+                            nearbyIds.push(`Villas_Global-${f.attributes.OBJECTID}`);
+                          }
+                        }
+                      });
+                    }
+                  }
+                  
+                  // Check apartments proximity (use building geometry)
+                  if (unitsInFilter.length > 0) {
+                    const rawFKs: string[] = [];
+                    unitsInFilter.filter(u => u.buildingFK).forEach(u => {
+                      const cleanId = String(u.buildingFK).replace(/[{}]/g, '').trim();
+                      rawFKs.push(
+                        `'{${cleanId.toUpperCase()}}'`, `'${cleanId.toUpperCase()}'`,
+                        `'{${cleanId.toLowerCase()}}'`, `'${cleanId.toLowerCase()}'`,
+                        `'{${cleanId}}'`, `'${cleanId}'`
+                      );
+                    });
+                    const buildingFKs = [...new Set(rawFKs)];
+                    if (buildingFKs.length > 0) {
+                      const SAFE_LAYERS = ['Villas_Global', 'roads_Global', 'Trees', 'Trees_Global', 'Landscape_Global', 'Landscape', 'Services_Global', 'Service_Territory_Global', 'LandUse_Global'];
+                      const bLayers = view.map.allLayers.filter((l:any) => {
+                        if (!l.title) return false;
+                        return !SAFE_LAYERS.includes(l.title) && (l.type === 'scene' || l.type === 'feature');
+                      }).toArray();
+                      
+                      for (const bLayer of bLayers) {
+                        try {
+                          const bq = (bLayer as any).createQuery();
+                          bq.where = `GlobalID IN (${buildingFKs.join(',')})`;
+                          bq.returnGeometry = true;
+                          const bRes = await (bLayer as any).queryFeatures(bq);
+                          bRes.features.forEach((bf: any) => {
+                            const center = bf.geometry.centroid || bf.geometry.extent?.center;
+                            if (center) {
+                              const minDist = Math.min(...amenityCentroids.map((ac: any) => 
+                                haversine(center.latitude, center.longitude, ac.lat, ac.lon)
+                              ));
+                              if (minDist <= maxDistMeters) {
+                                // Find all units that belong to this building
+                                const bGlobalId = String(bf.attributes.GlobalID || bf.attributes.globalid).replace(/[{}]/g, '').trim().toLowerCase();
+                                unitsInFilter.forEach(u => {
+                                  const uFK = String(u.buildingFK).replace(/[{}]/g, '').trim().toLowerCase();
+                                  if (uFK === bGlobalId) nearbyIds.push(u.id);
+                                });
+                              }
+                            }
+                          });
+                        } catch (err) {
+                          console.error('Proximity query error:', err);
+                        }
+                      }
+                    }
+                  }
+                  
+                  // Filter down to only nearby items
+                  filteredItems = filteredItems.filter(u => nearbyIds.includes(u.id));
+                  // Update reply with the real proximity-filtered count
+                  finalReplyText = `We found ${filteredItems.length} matching units within ${maxWalkingMinutes}-minute walking distance of the ${nearTo}. They have been highlighted on the map!`;
+                  console.log(`Proximity filter: ${nearbyIds.length} units within ${maxWalkingMinutes} min walk of ${nearTo}`);
+                }
+              }
+            }
+          }
+          
+          setMessages(prev => [...prev, { sender: 'ai', text: finalReplyText, action: action, actionUnitId: actionUnitId }]); 
+          
+          const villaIds = filteredItems.filter(u => u.layer === 'Villas_Global').map(u => u.originalId);
+          
+          const rawBuildingFKs: string[] = [];
+          filteredItems.filter(u => u.layer === "Units" && u.buildingFK).forEach(u => {
+              const cleanId = String(u.buildingFK).replace(/[{}]/g, '').trim();
+              rawBuildingFKs.push(
+                  `'{${cleanId.toUpperCase()}}'`, `'${cleanId.toUpperCase()}'`, 
+                  `'{${cleanId.toLowerCase()}}'`, `'${cleanId.toLowerCase()}'`, 
+                  `'{${cleanId}}'`, `'${cleanId}'`
+              );
+          });
           const apartmentBuildingFKs = [...new Set(rawBuildingFKs)]; 
 
           let allVisualFeatures: any[] = [];
 
-          // 1. فلترة الفيلات
-          const villasLayer = view.map.layers.find((l:any) => l.title === "Villas_Global") as FeatureLayer;
+          // 1. Filter Villas
+          const villasLayer = view.map.allLayers.find((l:any) => l.title === "Villas_Global") as FeatureLayer;
           if (villasLayer) {
+            villasLayer.visible = true;
             if (villaIds.length > 0) {
               const expr = `OBJECTID IN (${villaIds.join(',')})`;
-              villasLayer.definitionExpression = expr;
               const q = villasLayer.createQuery(); q.where = expr; q.returnGeometry = true;
               const vRes = await villasLayer.queryFeatures(q);
               allVisualFeatures.push(...vRes.features);
-            } else {
-              villasLayer.definitionExpression = "1=0"; 
             }
           }
 
-          // 2. فلترة العمارات باحترافية (Reverse Querying)
-          const buildingsLayer = view.map.layers.find((l:any) => l.title === "Buildings_Global") as any;
-          if (buildingsLayer) {
+          // 2. فلترة العمارات باحترافية
+          const SAFE_LAYERS = ["Villas_Global", "roads_Global", "Trees", "Trees_Global", "Landscape_Global", "Landscape"];
+          const buildingLayers = view.map.allLayers.filter((l:any) => {
+            if (!l.title) return false;
+            // If it is NOT a safe layer, and it is a 3D/Feature layer, we treat it as a building layer to hide
+            return !SAFE_LAYERS.includes(l.title) && (l.type === "feature" || l.type === "scene" || l.type === "building-scene" || l.type === "integrated-mesh");
+          }).toArray();
+          
+          if (buildingLayers.length > 0) {
+            buildingLayers.forEach((l:any) => l.visible = true);
             if (apartmentBuildingFKs.length > 0) {
-              try {
-                // هنسأل طبقة العمارات الأول: مين الـ OBJECTID بتاع الـ GlobalIDs دي؟
-                const bQuery = buildingsLayer.createQuery();
-                bQuery.where = `GlobalID IN (${apartmentBuildingFKs.join(',')})`;
-                bQuery.outFields = ["OBJECTID"];
-                bQuery.returnGeometry = true;
+              for (const targetLayerToQuery of buildingLayers) {
+                  try {
+                    const bQuery = (targetLayerToQuery as any).createQuery();
+                    bQuery.where = `GlobalID IN (${apartmentBuildingFKs.join(',')})`;
+                    bQuery.outFields = ["OBJECTID"];
+                    bQuery.returnGeometry = true;
 
-                const bRes = await buildingsLayer.queryFeatures(bQuery);
-                const bObjectIds = bRes.features.map((f:any) => f.attributes.OBJECTID);
-
-                // هنفلتر العمارات بناءً على الـ OBJECTID لأنه مضمون 100% مع الـ SceneLayers
-                if (bObjectIds.length > 0) {
-                  buildingsLayer.definitionExpression = `OBJECTID IN (${bObjectIds.join(',')})`;
-                  allVisualFeatures.push(...bRes.features);
-                } else {
-                  buildingsLayer.definitionExpression = "1=0";
-                }
-              } catch (err) {
-                console.error("Error applying filter to Buildings:", err);
-                // Fallback لو الكويري فشل
-                buildingsLayer.definitionExpression = `GlobalID IN (${apartmentBuildingFKs.join(',')})`;
+                    const bRes = await (targetLayerToQuery as any).queryFeatures(bQuery);
+                    const bObjectIds = bRes.features.map((f:any) => f.attributes.OBJECTID);
+                    if (bObjectIds.length > 0) allVisualFeatures.push(...bRes.features);
+                  } catch (err) {
+                    console.error("Error applying filter to layer:", (targetLayerToQuery as any).title, err);
+                  }
               }
-            } else {
-              buildingsLayer.definitionExpression = "1=0"; 
             }
           }
 
           setIsFilterActive(true); 
           if (allVisualFeatures.length > 0) {
             view.goTo(allVisualFeatures, { animate: true, duration: 2000 });
+            
+            // Add cyan pins!
+            let hl = view.map.layers.find((l:any) => l.title === "AIHighlightsLayer") as GraphicsLayer;
+            if (!hl) {
+                hl = new GraphicsLayer({ title: "AIHighlightsLayer", elevationInfo: { mode: "relative-to-scene" } });
+                view.map.add(hl);
+            }
+            if (hl) {
+                hl.removeAll();
+                allVisualFeatures.forEach(feature => {
+                    if (feature.geometry) {
+                        let targetGeom = feature.geometry;
+                        if (feature.geometry.type === "polygon" || feature.geometry.type === "multipatch") {
+                            targetGeom = feature.geometry.centroid || feature.geometry.extent?.center;
+                        }
+                        if (targetGeom) {
+                            hl.add(new Graphic({
+                                geometry: targetGeom,
+                                symbol: {
+                                    type: "point-3d",
+                                    symbolLayers: [{
+                                        type: "icon",
+                                        resource: { primitive: "circle" },
+                                        material: { color: [0, 255, 255, 0.9] },
+                                        size: 25,
+                                        outline: { color: "white", size: 2 }
+                                    }],
+                                    verticalOffset: { screenLength: 50, maxWorldLength: 100, minWorldLength: 20 },
+                                    callout: { type: "line", size: 2, color: [255, 255, 255, 0.8], border: { color: [0, 255, 255, 0.8] } }
+                                }
+                            }));
+                        }
+                    }
+                });
+            }
+          }
+
+        } else if (action === 'CLOSEST_SERVICE') {
+          // 📍 Closest Service Analysis from chatbot (Using actual road network routing!)
+          const targetUnitId = actionUnitId;
+          let unitPoint: any = null;
+          
+          if (targetUnitId) {
+            // Try finding in Villas_Global first
+            const villasLayer = view.map.allLayers.find((l:any) => l.title === 'Villas_Global') as FeatureLayer;
+            if (villasLayer) {
+              const vq = villasLayer.createQuery();
+              vq.where = `OBJECTID = ${targetUnitId}`;
+              vq.returnGeometry = true;
+              const vRes = await villasLayer.queryFeatures(vq);
+              if (vRes.features.length > 0) {
+                const geom = vRes.features[0].geometry as any;
+                unitPoint = geom.centroid || geom.extent?.center;
+              }
+            }
+            
+            // If not found in villas, try buildings via Units table
+            if (!unitPoint) {
+              const unitsTable = view.map.tables?.find((t:any) => t.title === 'Units') as FeatureLayer || view.map.allLayers.find((l:any) => l.title === 'Units') as FeatureLayer;
+              if (unitsTable) {
+                const uq = unitsTable.createQuery();
+                uq.where = `OBJECTID = ${targetUnitId}`;
+                uq.outFields = ['*'];
+                const uRes = await unitsTable.queryFeatures(uq);
+                if (uRes.features.length > 0) {
+                  const buildingFK = uRes.features[0].attributes.BuildingID_FK;
+                  if (buildingFK) {
+                    const cleanFK = String(buildingFK).replace(/[{}]/g, '').trim();
+                    const bLayers = view.map.allLayers.filter((l:any) => l.title && (l.title.includes('Buildings') || l.title.includes('WSL'))).toArray();
+                    for (const bl of bLayers) {
+                      const bq = (bl as any).createQuery();
+                      bq.where = `GlobalID IN ('{${cleanFK}}', '${cleanFK}', '{${cleanFK.toUpperCase()}}', '${cleanFK.toUpperCase()}')`;
+                      bq.returnGeometry = true;
+                      try {
+                        const bRes = await (bl as any).queryFeatures(bq);
+                        if (bRes.features.length > 0) {
+                          const geom = bRes.features[0].geometry as any;
+                          unitPoint = geom.centroid || geom.extent?.center;
+                          break;
+                        }
+                      } catch (e) { /* skip */ }
+                    }
+                  }
+                }
+              }
+            }
+          }
+          
+          if (unitPoint) {
+            // Find or create Routes / Highlights layer
+            let routeLayer = view.map.layers.find((l:any) => l.title === "Closest Facilities Routes") as GraphicsLayer;
+            if (!routeLayer) {
+              routeLayer = new GraphicsLayer({
+                title: "Closest Facilities Routes",
+                elevationInfo: { mode: "relative-to-ground", offset: 6 }
+              });
+              view.map.add(routeLayer);
+            }
+            routeLayer.removeAll();
+
+            const serviceGroups: { [key: string]: { color: number[], solidColor: number[], features: Graphic[] } } = {
+              "school": { color: [134, 214, 100, 1], solidColor: [134, 214, 100], features: [] },
+              "gym": { color: [248, 113, 113, 1], solidColor: [248, 113, 113], features: [] },
+              "commercial": { color: [96, 165, 250, 1], solidColor: [96, 165, 250], features: [] },
+              "hospital": { color: [250, 204, 21, 1], solidColor: [250, 204, 21], features: [] }
+            };
+
+            const servicesLayer = view.map.allLayers.find((l:any) => l.title === "Services_Global") as FeatureLayer;
+            if (servicesLayer) {
+              const query = servicesLayer.createQuery();
+              query.where = "1=1";
+              query.returnGeometry = true;
+              query.outFields = ["*"];
+              
+              try {
+                const featureSet = await servicesLayer.queryFeatures(query);
+                featureSet.features.forEach((feature: any) => {
+                  let matchedType: string | null = null;
+                  const typeCode = feature.attributes.Type;
+
+                  if (typeCode === 1) matchedType = "school";
+                  else if (typeCode === 2) matchedType = "hospital";
+                  else if (typeCode === 3) matchedType = "gym";
+                  else if (typeCode === 4) matchedType = "commercial";
+
+                  if (matchedType && serviceGroups[matchedType]) {
+                    const geom = feature.geometry as any;
+                    const centerPt = geom.extent ? geom.extent.center : geom;
+                    serviceGroups[matchedType].features.push(new Graphic({ geometry: centerPt }));
+                  }
+                });
+              } catch (error) {
+                console.error("Failed to query services geometry:", error);
+              }
+            }
+
+            const routingServiceUrl = "https://route.arcgis.com/arcgis/rest/services/World/ClosestFacility/NAServer/ClosestFacility_World";
+            const incidents = new FeatureSet({ features: [new Graphic({ geometry: new Point({ longitude: unitPoint.longitude, latitude: unitPoint.latitude }) })] });
+            
+            const currentGlobalKey = esriConfig.apiKey;
+            esriConfig.apiKey = "";
+
+            try {
+              await esriId.getCredential(routingServiceUrl);
+
+              const routePromises = Object.keys(serviceGroups).map(async (typeKey) => {
+                const typeData = serviceGroups[typeKey];
+                if (typeData.features.length === 0) return null;
+
+                const facilities = new FeatureSet({ features: typeData.features });
+                const params = new ClosestFacilityParameters({
+                  incidents: incidents,
+                  facilities: facilities,
+                  returnRoutes: true,
+                  defaultTargetFacilityCount: 1
+                });
+
+                try {
+                  const results = await closestFacility.solve(routingServiceUrl, params, {} as any);
+                  const features = results?.routes?.features;
+
+                  if (features && features.length > 0) {
+                    const routeGraphic = features[0];
+                    const totalKm = routeGraphic.attributes.Total_Kilometers || 0;
+                    const totalMinsFloat = routeGraphic.attributes.Total_Minutes || routeGraphic.attributes.Total_TravelTime || 0;
+                    const meters = Math.round(totalKm * 1000);
+                    let minutes = Math.floor(totalMinsFloat);
+                    let seconds = Math.round((totalMinsFloat - minutes) * 60);
+
+                    if (seconds === 60) { minutes += 1; seconds = 0; }
+                    let timeString = `${minutes} min`;
+                    if (seconds > 0) timeString += ` ${seconds} sec`;
+                    const formattedInfo = `${meters} m | ${timeString}`;
+
+                    routeGraphic.symbol = {
+                      type: "line-3d",
+                      symbolLayers: [{
+                        type: "path", profile: "circle", width: 4, material: { color: typeData.color }
+                      }]
+                    } as any;
+
+                    const routeGeom = routeGraphic.geometry as any;
+                    const lastPath = routeGeom.paths[routeGeom.paths.length - 1];
+                    const endPointCoords = lastPath[lastPath.length - 1];
+
+                    const targetFacilityPoint = new Point({
+                      x: endPointCoords[0], y: endPointCoords[1], z: endPointCoords.length > 2 ? endPointCoords[2] : 0,
+                      spatialReference: routeGeom.spatialReference
+                    });
+
+                    const facilityPin = new Graphic({
+                      geometry: targetFacilityPoint,
+                      symbol: {
+                        type: "point-3d",
+                        symbolLayers: [{
+                          type: "object", resource: { primitive: "inverted-cone" }, height: 40, width: 15, material: { color: typeData.solidColor }
+                        }]
+                      } as any
+                    });
+
+                    return { routeGraphic, facilityPin, typeKey, infoText: formattedInfo };
+                  }
+                } catch (error) {
+                  console.error(`Route failed for ${typeKey}:`, error);
+                }
+                return null;
+              });
+
+              const routeResults = await Promise.all(routePromises);
+              const validResults = routeResults.filter(r => r !== null);
+
+              if (validResults.length > 0) {
+                const graphicsToAdd: any[] = [];
+                const lines: string[] = [`📍 Closest Services to Unit #${targetUnitId} (via Road Network):\n`];
+
+                validResults.forEach(res => {
+                  if (res) {
+                    graphicsToAdd.push(res.routeGraphic);
+                    graphicsToAdd.push(res.facilityPin);
+                    
+                    const emoji = res.typeKey === 'school' ? '🏫' : res.typeKey === 'hospital' ? '🏥' : res.typeKey === 'gym' ? '💪' : '🏪';
+                    lines.push(`${emoji} ${res.typeKey.toUpperCase()}: ${res.infoText}`);
+                  }
+                });
+
+                routeLayer.addMany(graphicsToAdd);
+                routeLayer.listMode = "show";
+                
+                // Zoom map to show all route lines
+                view.goTo(graphicsToAdd, { animate: true, duration: 2000 });
+
+                finalReplyText = lines.join('\n');
+                setMessages(prev => [...prev, { sender: 'ai', text: finalReplyText, action: action, actionUnitId: actionUnitId }]);
+              }
+            } catch (err) {
+              console.warn("Sign-in cancelled or failed:", err);
+              finalReplyText = "ArcGIS Login is required to calculate the real road routes. Please log in when prompted.";
+              setMessages(prev => [...prev, { sender: 'ai', text: finalReplyText, action: action, actionUnitId: actionUnitId }]);
+            } finally {
+              esriConfig.apiKey = currentGlobalKey;
+            }
+          } else {
+            finalReplyText = `Could not find unit #${targetUnitId} on the map. Please check the ID and try again.`;
+            setMessages(prev => [...prev, { sender: 'ai', text: finalReplyText, action: action, actionUnitId: actionUnitId }]);
           }
 
         } else if (!isFilterQuery) {
-          const villasLayer = view.map.layers.find((l:any) => l.title === "Villas_Global") as any;
-          const buildingsLayer = view.map.layers.find((l:any) => l.title === "Buildings_Global") as any;
-          if (villasLayer) villasLayer.definitionExpression = "1=1";
-          if (buildingsLayer) buildingsLayer.definitionExpression = "1=1";
+          setMessages(prev => [...prev, { sender: 'ai', text: finalReplyText, action: action, actionUnitId: actionUnitId }]);
+          const SAFE_LAYERS = ["Villas_Global", "roads_Global", "Trees", "Trees_Global", "Landscape_Global", "Landscape"];
+          const allVisualLayers = view.map.allLayers.filter((l:any) => 
+            l.title === "Villas_Global" || (!SAFE_LAYERS.includes(l.title) && (l.type === "feature" || l.type === "scene" || l.type === "building-scene" || l.type === "integrated-mesh"))
+          ).toArray();
+          
+          allVisualLayers.forEach(async layer => {
+            (layer as any).definitionExpression = "1=1"; 
+            (layer as any).visible = true;
+          });
+          const hl = view.map.layers.find((l:any) => l.title === "AIHighlightsLayer") as GraphicsLayer;
+          if (hl) hl.removeAll();
           setIsFilterActive(false);
+        } else {
+          setMessages(prev => [...prev, { sender: 'ai', text: finalReplyText, action: action, actionUnitId: actionUnitId }]);
         }
+      } else {
+        setMessages(prev => [...prev, { sender: 'ai', text: finalReplyText, action: action, actionUnitId: actionUnitId }]);
       }
     } catch (error) {
       setMessages(prev => [...prev, { sender: 'ai', text: 'Sorry, an error occurred while connecting to the servers.' }]); 
@@ -244,7 +646,7 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
         />
       )}
 
-      <div style={{ position: 'absolute', bottom: '30px', right: '30px', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+      <div id="tour-ai-advisor" style={{ position: 'absolute', bottom: '30px', right: '30px', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
         
         {isOpen && (
           <div style={{ width: '350px', height: '450px', backgroundColor: '#161b22', border: '1px solid #30363d', borderRadius: '12px', display: 'flex', flexDirection: 'column', color: '#c9d1d9', overflow: 'hidden', marginBottom: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>

@@ -11,13 +11,19 @@ const knowledgeChunks = [
     "title": "El Narges Master Plan & Land Allocation",
     "category": "Project",
     "subcategory": "Master plans",
-    "content": "The El Narges Compound spans 45 acres in the prestigious New Narges district of New Cairo, situated strategically near South 90th Street and the German University in Cairo (GUC). The development strictly adheres to an 18% low-density footprint, dedicating 82% of the total area to landscaped green parks, crystal water features, and pedestrian greenways. The residential zoning is divided into two distinct neighborhoods: The Villa Cluster (standalone villas and twin houses) and The Residences (G+3 luxury apartment buildings)."
+    "content": "The El Narges Compound spans 45 acres in Al Rehab City, New Cairo. The development strictly adheres to an 18% low-density footprint, dedicating 82% of the total area to landscaped green parks, crystal water features, and pedestrian greenways. The residential zoning is divided into two distinct neighborhoods: The Villa Cluster (standalone villas and twin houses) and The Residences (G+3 luxury apartment buildings)."
   },
   {
     "title": "El Narges Geographic Boundaries & Coordinates",
     "category": "Project",
     "subcategory": "Master plans",
-    "content": "El Narges is located in the Fifth Settlement, New Cairo. The compound is geographically bounded by South 90th Street to the north, Mohammed Nagib Axis to the east, and the German University in Cairo (GUC) to the south. The true geographic center of Al Narges in the WGS 84 / UTM Zone 36N coordinate system is approximately 351,476.00 m Easting and 3,320,892.00 m Northing (Lat: 30.0100° N, Lon: 31.4600° E)."
+    "content": "El Narges is located in Al Rehab City, New Cairo. The true geographic center of Al Narges in the WGS 84 / UTM Zone 36N coordinate system is approximately 3,504,845.00 m Easting and 3,510,428.00 m Northing (Lat: 30.0535° N, Lon: 31.4845° E)."
+  },
+  {
+    "title": "Spatial Zones & Proximity to Amenities",
+    "category": "Project",
+    "subcategory": "Location & Proximity",
+    "content": "The El Narges compound is geographically divided to help buyers choose based on proximity to amenities. 1) The Educational & Fitness Zone (Northern Sector): Contains Villa Models S and U. These are located directly adjacent to the International School, the main Clubhouse, and the Gym, making them perfect for families wanting walking access to schools and sports. 2) The Commercial Hub (Eastern Sector): Contains the G+3 Luxury Apartments. These are situated very close to the commercial mall, retail shops, clinics, and the main gate for rapid transit. 3) The Tranquility Zone (Southern Sector): Features the ultra-luxury standalone villas (Models X and Z). These are intentionally placed far from the main gates, schools, and commercial areas to ensure maximum privacy, quietness, and exclusivity, surrounded by dense landscaping."
   },
   {
     "title": "Architectural Guidelines & Exterior Restrictions",
@@ -107,7 +113,7 @@ const knowledgeChunks = [
     "title": "FAQ: Why do my GIS coordinates plot near Al Rehab City?",
     "category": "Company",
     "subcategory": "FAQs",
-    "content": "If your spatial data or CAD files for El Narges are plotting near Al Rehab City or the Cairo-Suez Road (e.g., around coordinates 354,298E, 3,326,563N), this is a known GIS discrepancy. It is typically caused by a digitizing offset or an incorrect local engineering grid. To correct this, apply a spatial shift of approximately -5,670 meters Northing and -2,820 meters Easting to align the geometry with the true absolute national grid coordinates for El Narges in WGS 84 / UTM Zone 36N."
+    "content": "If your spatial data or CAD files for El Narges are plotting near Al Rehab City, this is actually the correct and accurate geographic location of the compound. The project's 3D models and geographic data are anchored precisely at Lat: 30.0535° N, Lon: 31.4845° E."
   },
   {
     "title": "5-Year ROI Projection Models: Apartments vs Villas",
@@ -132,6 +138,72 @@ const knowledgeChunks = [
     "category": "Company",
     "subcategory": "Company policies",
     "content": "Investors may resell or transfer ownership of their unit prior to physical handover, provided that at least 50% of the total unit price has been settled. A formal Assignment of Contract must be executed at the El Narges Sales Office, accompanied by a 3% transfer fee applied to the original contract value. The new buyer assumes the remaining installment schedule without penalty."
+  },
+  {
+    "title": "1. Plumbing & Hydronics",
+    "category": "Engineering",
+    "subcategory": "Plumbing",
+    "content": "Advanced Valve & Flow Control: Isolation Valves must be DZR (Dezincification Resistant) Brass, Pegler Yorkshire PN25 rated. Gate valves larger than 2\" must be resilient-seated ductile iron (AVK) with EPDM coated wedges. PRVs: Ground and first-floor units must utilize Watts or Caleffi PRVs set strictly to 3.5 Bar (50 PSI). High-pressure zones must include a Y-strainer before the PRV to prevent diaphragm debris damage. Thermostatic Control: Central hot water systems require TMVs calibrated to deliver water at exactly 43°C to fixtures to prevent scalding, while calorifiers are maintained at 60°C to prevent Legionella bacteria growth. Piping Metrics & Testing: Potable Water (PPR) EGIC PN20 green pipes. Fusion welding at exactly 260°C ± 5°C. Hydrostatic pressure testing is mandatory: System must be pressurized to 10 Bar (1.5x working pressure) for 24 hours with a max allowable pressure drop of 0.2 Bar. Drainage & Acoustics: Class 5 UPVC. Horizontal branch drains require a strict 1.5% to 2% slope. Suspended drainage passing over habitable spaces must be wrapped in 13mm Armacell acoustic elastomeric insulation to reduce noise below 30 dBA. Hot water lines must be insulated with 9mm closed-cell nitrile rubber. Pumping Systems & Arrestors: VFD Booster Pumps (Grundfos CMBE 3-62 units). Inverter parameter setpoint: 3.0 Bar constant pressure. Dry-run protection delay set to 5 seconds. Expansion/Pressure Tanks: Varem 50L/80L tanks. Pre-charge air pressure must be checked bi-annually and maintained at 0.2 Bar below the pump's cut-in pressure (e.g., 1.8 Bar pre-charge for a 2.0 Bar cut-in). Water Hammer Arrestors: Sioux Chief piston-type arrestors required on all manifolds supplying washing machines and dishwashers to absorb transient pressure spikes exceeding 150 PSI."
+  },
+  {
+    "title": "2. Electrical Systems",
+    "category": "Engineering",
+    "subcategory": "Electrical",
+    "content": "Breaker Capacities: Sub-distribution boards (SDBs) use Schneider Acti9. Residential MCBs must have a minimum short-circuit breaking capacity (Icu) of 6kA. Main panel incomers require 10kA to 15kA ratings. RCCB Sensitivity: 30mA trip threshold for all wet areas and general sockets. 100mA to 300mA delayed-trip RCCBs used for main feeder fire protection. RCCB trip testing must be conducted semi-annually. Phase Balancing: Three-phase panels must be balanced so that the neutral current does not exceed 10% of the phase current. Phase loading must be monitored via panel-mounted multi-function digital meters (MFMs). Grounding/Earthing: Total earth pit resistance must be strictly < 2.0 Ohms. Copper-clad steel earth rods (16mm x 3m) chemically bonded. Exothermic welding (Cadweld) required for underground connections. Insulation Resistance (Megger): Annual testing required. Phase-to-Phase and Phase-to-Earth insulation resistance must exceed 1.0 MegaOhm when tested at 500V DC. Power Quality: Total Harmonic Distortion (THD) on lighting and HVAC circuits must be kept below 5%. Active harmonic filters required on main distribution boards serving heavy VRF loads. Standby Power: Cummins 150kVA Generators. Diesel polishing systems required to run monthly to prevent fuel degradation and microbial growth. Automatic Transfer Switch (ATS) logic must engage generator load within 12 seconds of utility loss. Thermography: Bi-annual infrared (FLIR) thermographic inspections of all main electrical panels. Any connection showing a delta-T of > 10°C above ambient requires immediate retorquing to manufacturer Nm specifications."
+  },
+  {
+    "title": "3. Carpentry & Architectural Hardware",
+    "category": "Engineering",
+    "subcategory": "Carpentry",
+    "content": "Fire-Rated Wood & Acoustic Sealing: Entrance Doors are FD60 (60-minute fire-rated) solid core. Must feature dual-action perimeter seals: Intumescent strips combined with cold-smoke neoprene wiper seals. Doors must carry certified FD60 labels on the hinge edge. Acoustic Performance: Doors separating corridors from bedrooms must achieve a Sound Transmission Class (STC) rating of 35. Automatic drop-down threshold seals (Planet or Hafele) are mandatory. Moisture Content: All structural and decorative timber must be kiln-dried to a strict 10% to 12% moisture content before installation to prevent warping in Egypt's arid climate. Advanced Hardware & Fasteners: Hinges must be SUS316 Marine-Grade Stainless Steel, 4-inch ball-bearing. Minimum 3 hinges per door, 4 for doors > 2.2m height or > 40kg. Locksets: ANSI Grade 1 heavy-duty mortise locks. Smart locks (Yale/Dormakaba) must have an IP55 weather-resistance rating for exterior villa use. Strike plates must anchor into the structural frame. Exterior Coatings: Outdoor pergolas require Jotun Woodshield with UV blockers. Re-coating required every 24 months. Substrate must be sanded to 120-grit before application."
+  },
+  {
+    "title": "4. HVAC & Air Conditioning",
+    "category": "Engineering",
+    "subcategory": "HVAC",
+    "content": "VRF System Limitations: For Daikin VRV / LG Multi V systems, absolute maximum equivalent piping length from ODU to furthest IDU is 165 meters. Max vertical height difference is 50 meters. Oil Return Cycles: Systems are programmed for an automatic oil return cycle every 8 hours. EEVs fully open during this 5-minute cycle. This is normal and not a fault. Refrigerant Leak Detection: R410A systems in enclosed basement areas require low-level oxygen depletion/refrigerant sniffer alarms tied to emergency exhaust fans. Concealed Ducted Units: External Static Pressure (ESP) designed for 50 Pa to 100 Pa. Ductwork from 22-gauge galvanized steel insulated with 25mm foil-faced fiberglass. Filters must be upgraded to MERV 13 for improved IAQ and replaced quarterly; coils must be chemically cleaned semi-annually. Ventilation Rates: Fresh air intake must provide a minimum of 0.35 Air Changes per Hour (ACH) per ASHRAE 62.1. Bathrooms require dedicated exhaust fans providing min 50 CFM. Condensate Drainage: Drain pans must have primary and secondary drain ports. Drain lines require a 1% slope (1cm drop per 1m run), insulated with 9mm elastomeric foam. U-traps are mandatory to overcome negative fan pressure."
+  },
+  {
+    "title": "5. Landscaping & Agriculture",
+    "category": "Engineering",
+    "subcategory": "Landscaping",
+    "content": "Soil Chemistry: Sweet soil mix (70% agricultural sand, 30% organic compost). Target pH between 6.5 and 7.0. Salinity (EC) must not exceed 2.5 dS/m. Irrigation Hydraulics: Mainline pressure 4.0 Bar; drip zone pressure reduced via inline PRVs to 2.0 Bar. Emitters (Netafim) are pressure-compensating at 2-4 L/H. Solenoid manifolds in heavy-duty Jumbo valve boxes over 15cm gravel drainage. ET-Based Scheduling: Rain Bird controllers adjust run times daily based on historical Evapotranspiration (ET) data and connected local rain sensors. Summer peak ET in New Cairo can reach 8mm/day; requires multiple short soak cycles to prevent runoff. Arboriculture & Phytopathology: Newly planted palms/trees require underground root-ball staking (Platipus) or triple-wire guying with rubber hose sleeves. Root Barriers: HDPE root barriers (60cm depth) mandatory where Ficus/aggressive-root trees are planted within 2m of hardscaping or trenches. Pest Management: Integrated Pest Management (IPM). Nematodes treated with Abamectin. Fungal Pythium blight requires rotation of Mefenoxam and Propamocarb fungicides to prevent chemical resistance."
+  },
+  {
+    "title": "6. Structural & Construction",
+    "category": "Engineering",
+    "subcategory": "Structural",
+    "content": "Concrete Properties & Curing: Standard structural elements use C40 concrete (40 MPa cylinder strength at 28 days). Slump test upon delivery must fall between 150mm - 180mm for pumped concrete. Rebar Cover Depths: 50mm cover for underground substructure exposed to soil moisture; 25mm for internal slabs; 40mm for exterior exposed columns. Curing Protocols: Wet burlap and continuous misting for 7 days, or application of curing compound (Sika Antisol-E) within 2 hours of final troweling to prevent plastic shrinkage cracking. Advanced Repair & Structural Injection: Non-moving structural cracks wider than 0.2mm must be injected with low-viscosity epoxy resin (Sikadur-52) via mechanical packers at 20-30 Bar pressure until refusal. Patching: Spalled areas require micro-silica modified, fiber-reinforced thixotropic mortar (Sika MonoTop-412 NFG). Pull-off adhesion strength > 1.5 MPa. Settlement Monitoring: Benchmark settlement pins on building corners. Allowable differential settlement is L/500. Active settlement requires geotechnical soil injection (polyurethane grout)."
+  },
+  {
+    "title": "7. Sanitation & Waste Management",
+    "category": "Engineering",
+    "subcategory": "Sanitation",
+    "content": "Underground Network & Manhole Hydraulics: Circular GRP or epoxy-coated concrete. Min internal diameter 1200mm for depths > 1.5m. Benching formed with sulfate-resistant cement, troweled smooth. Venting: Vertical soil/waste stacks must extend unreduced through the roof, terminating at least 900mm above finished roof level with a domed cowl. CCTV Inspection: Full robotic CCTV crawler inspection of main underground sewer network mandated every 5 years to check for root intrusion or sagging (bellies). FOG Management (Fats, Oils, Grease): Clubhouse commercial grease traps must provide min 30-minute hydraulic retention time at peak flow. Baffles must reduce flow velocity to < 0.05 m/s. Bio-Augmentation: Daily automated dosing of non-pathogenic, lipase-producing bacterial enzymes. Harsh chemical degreasers strictly banned. Chute Fire Safety: High-rise garbage chutes must feature a 1.5-hour fire-rated intake door and a 68°C sprinkler head installed at the top-most level and every alternate floor."
+  },
+  {
+    "title": "8. Elevators & Vertical Transport",
+    "category": "Engineering",
+    "subcategory": "Elevators",
+    "content": "Traction Dynamics & VFD Tuning: Max allowable cabin vibration is 15 milli-g peak-to-peak. Max acoustic noise is 55 dBA. Gearless motors (Schindler/Otis) use closed-loop vector VFDs. VFD Parameters: Jerk rate tuned to 1.0 m/s³. Door opening time set to 2.5s; dwell time set to 4.0s (adjustable via cabin COP). Rope Equalization: Traction steel ropes or PU belts must be tension-equalized annually using a digital tension meter. Variance > 5% causes uneven sheave wear. Critical Safety Component Testing: Overspeed Governor actuation speed mechanically calibrated and sealed at exactly 1.15x rated cabin speed. Progressive safety gears must arrest cabin in free-fall within 0.2g to 1.0g deceleration (drop tests conducted bi-annually). Buffer Compression: Oil buffers require level checks. Plunger return time must be < 90 seconds after full compression. ARD (Automatic Rescue Device): Phase-loss detection must trigger ARD within 3 seconds. The inverter drives the motor in the direction of least mechanical resistance to reach nearest floor."
+  },
+  {
+    "title": "9. Infrastructure & Networks",
+    "category": "Engineering",
+    "subcategory": "Infrastructure",
+    "content": "Trenching, Bedding & HDPE Networks: For HDPE water mains, trench must provide min 150mm bed of compacted, stone-free sharp sand below pipe, and 300mm sand cover above pipe before aggregate backfill. Electrofusion Welding: PE100 fittings. Pipe ends mechanically scraped and cleaned with 90% Isopropyl alcohol. Barcode scanners automatically set voltage/cooling times. Hydrostatic Verification: Underground mains tested in 500m sections. Filled, bled of air, raised to 1.5x working pressure for 2 hours, then held for 24 hours. Asphalt Reinstatement: Sub-base aggregate compacted to 98% modified Proctor density. Tack coat (RC-70) applied. HMA rolled at temp not less than 135°C. Telecom Banks: Fiber-optic FTTH networks run through heavy-wall corrugated UPVC duct banks. 50mm spacing via plastic interlocking spacers. Warning tape 'FIBER OPTIC' placed 30cm above duct bank."
+  },
+  {
+    "title": "10. Firefighting, Safety & BMS",
+    "category": "Engineering",
+    "subcategory": "Firefighting",
+    "content": "Wet-Pipe Sprinklers & Fire Pumps: Residential areas classed as NFPA 13 Light Hazard. Parking basements are Ordinary Hazard Group 1. NFPA 25 annual flow testing required for all sprinklers and pumps. Pump Hydraulics: UL/FM Patterson fire pump must provide 100% rated flow at 100% rated pressure. At 'churn', pressure must not exceed 140% of rated pressure. Must provide 150% flow at >= 65% rated pressure. Zone Control: Each floor features a Zone Control Valve Assembly (ZCVA) with butterfly isolation valve, tamper switch, water flow indicator, and test/drain valve. Fire Alarm & Building Management (BMS): Addressable smoke detectors. Basement parking uses fixed-temp/rate-of-rise heat detectors. Double-knock (cross-zoning) logic required to trigger evacuation. BMS Integration: HVAC, pumps, panels communicate via BACnet/IP or Modbus TCP/IP to central Niagara server. On fire alarm, BMS recalls elevators to ground, shuts down HVAC AHUs, and starts stairwell pressurization fans."
+  },
+  {
+    "title": "Appendix: Rapid Reference Parameters",
+    "category": "Engineering",
+    "subcategory": "Parameters",
+    "content": "Residential PRVs (Water): 3.5 Bar (50 PSI) Maximum. PPR Fusion Welding: 260°C ± 5°C. Electrical Earth Pit: < 2.0 Ohms. Electrical Insulation: > 1.0 MegaOhm. Timber / Carpentry: 10% to 12% Moisture. VRF Refrigerant (Daikin/LG): Max Eq. Pipe Length 165 Meters. Concealed Ducted AC: 50 Pa to 100 Pa. Structural Concrete: C40 (40 MPa). Concrete Cover (Substructure): 50mm (High Durability). Grease Traps: 30 Minutes Min. Elevators (Ride Quality): < 15 milli-g Peak. HDPE Water Mains: 1.5x Working Pressure (24h). Fire Pump (Churn): < 140% Rated Pressure."
   }
 ];
 

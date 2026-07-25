@@ -1,0 +1,92 @@
+El Narges Compound
+Master Knowledge Base (User & Owner RAG Data)
+
+---
+
+1. El Narges Master Plan & Land Allocation
+Category: Project (Master plans)
+The El Narges Compound spans 45 acres in Al Rehab City, New Cairo. The development strictly adheres to an 18% low-density footprint, dedicating 82% of the total area to landscaped green parks, crystal water features, and pedestrian greenways. The residential zoning is divided into two distinct neighborhoods: The Villa Cluster (standalone villas and twin houses) and The Residences (G+3 luxury apartment buildings).
+
+2. El Narges Geographic Boundaries & Coordinates
+Category: Project (Master plans)
+El Narges is located in Al Rehab City, New Cairo. The true geographic center of Al Narges in the WGS 84 / UTM Zone 36N coordinate system is approximately 3,504,845.00 m Easting and 3,510,428.00 m Northing (Lat: 30.0535° N, Lon: 31.4845° E).
+
+3. Spatial Zones & Proximity to Amenities
+Category: Project (Location & Proximity)
+The El Narges compound is geographically divided to help buyers choose based on proximity to amenities. 1) The Educational & Fitness Zone (Northern Sector): Contains Villa Models S and U. These are located directly adjacent to the International School, the main Clubhouse, and the Gym, making them perfect for families wanting walking access to schools and sports. 2) The Commercial Hub (Eastern Sector): Contains the G+3 Luxury Apartments. These are situated very close to the commercial mall, retail shops, clinics, and the main gate for rapid transit. 3) The Tranquility Zone (Southern Sector): Features the ultra-luxury standalone villas (Models X and Z). These are intentionally placed far from the main gates, schools, and commercial areas to ensure maximum privacy, quietness, and exclusivity, surrounded by dense landscaping.
+
+4. Architectural Guidelines & Exterior Restrictions
+Category: Project (Developer specifications)
+To preserve community aesthetics and long-term property valuations, all units feature a unified Contemporary Mediterranean architectural style with natural stone cladding and warm earth-toned finishes. Homeowners are strictly prohibited from altering exterior paint colors, installing unauthorized window grilles, or enclosing open balconies. Any solar panel installations or rooftop pergolas must be pre-approved by the El Narges Architectural Review Committee (ARC) and must not exceed 2.5 meters in height.
+
+4. Smart Home & Sustainability Infrastructure
+Category: Project (Developer specifications)
+All residential units are pre-wired with fiber-optic FTTH (Fiber-to-the-Home) connections and integrated smart home hubs compatible with KNX and Zigbee protocols. Community infrastructure includes 100% solar-powered LED street lighting, automated drip irrigation for public landscaping using treated wastewater, and underground central garbage collection chutes. Dedicated electric vehicle (EV) fast-charging stations are installed in all basement parking levels and villa carports.
+
+5. Clubhouse & Recreational Amenities
+Category: Project (Marketing materials)
+The El Narges Clubhouse covers 3,500 square meters and serves as the social heart of the compound. Amenities include an Olympic-sized heated swimming pool, a fully equipped wellness spa and fitness center, coworking spaces with high-speed Wi-Fi, tennis and padel courts, and a kids' adventure park. Lifetime clubhouse membership is mandatory for all property owners and is included in the initial purchase contract.
+
+6. Capital Appreciation & Market Trends 2026
+Category: ROI (Market reports)
+Properties within the New Narges and Fifth Settlement corridors have demonstrated robust resilience, recording historical capital appreciation of 16% to 22% year-over-year. This growth is heavily driven by rapid infrastructure expansions, proximity to the New Administrative Capital (NAC), and the integration of smart-city management portals, which command a 12% price premium over traditional non-managed developments.
+
+7. Rental Yield Projections & Tenant Demand
+Category: ROI (Real estate investment guides)
+Investors targeting rental income can expect premium gross yields compared to the broader Cairo market, averaging between 6.5% and 8.5% annually. Standard long-term furnished leasing yields 7.8% on average, while short-term serviced executive rentals can achieve up to 9.5% gross yield during peak seasons. Two-bedroom apartments and twin houses represent the highest performing asset classes fueled by demand from GUC and AUC faculty.
+
+8. Liquidity Guarantee & Developer Buyback Options
+Category: ROI (Company investment criteria)
+To mitigate investor risk, El Narges offers a 'Liquidity Guarantee Protocol'. Investors who have settled at least 40% of their unit's total installment schedule may opt for a developer buyback at current market valuation (less a 5% administrative transaction fee) or receive priority matchmaking via the official El Narges Broker Portal.
+
+9. Official Payment Plans & Installment Structures
+Category: Company (Payment plans)
+El Narges offers four primary interest-free payment plans. 1) Standard Plan: 10% down payment with installments over 8 years (best for balanced end-users). 2) Extended Plan: 15% down payment over 10 years (lowest monthly commitment). 3) Fast Track: 40% down payment over 2 years (designed for high-liquidity buyers seeking heavy discounts). 4) Zero Entry: 0% down payment over 5 years (for short-term portfolio expanders).
+
+10. Financial Handover Policies & Maintenance Fees
+Category: Company (Company policies)
+Final delivery of any residential unit is contingent upon the settlement of at least 70% of the total contract value. Additionally, an 8% one-time maintenance deposit is required prior to unit handover to fund the perpetual facility management escrow. Standard delivery timelines are set at 36 months from contract signing for apartments, and 42 months for custom standalone villas.
+
+11. Community Rules: Pets, Parking, and Noise
+Category: Company (Company policies)
+El Narges is a pet-friendly community, limited to two domestic pets per unit, which must be leashed in public areas. Quiet hours are enforced from 11:00 PM to 7:00 AM on weekdays. Parking is restricted strictly to designated underground basements and villa carports; overnight curbside parking is prohibited to ensure emergency vehicle access.
+
+12. FAQ: Can I lease my property to third-party tenants?
+Category: Company (FAQs)
+Yes, property owners have full rights to lease their residential units. However, all lease agreements must be registered through the El Narges Portal at least 7 business days prior to tenant move-in. Tenants must undergo mandatory security clearance and receive digital access badges. Short-term rentals (under 30 days) require a specialized commercial leasing permit from facility management.
+
+13. FAQ: How are smart meters and utility billing managed?
+Category: Company (FAQs)
+All units are equipped with prepaid digital smart meters for electricity and water. Homeowners and registered tenants can monitor real-time utility consumption, recharge balances, and view historical billing directly through the El Narges Portal dashboard. Solar power generated by common area solar arrays is credited against public lighting and irrigation utility costs.
+
+14. FAQ: What security systems are deployed across the compound?
+Category: Company (FAQs)
+El Narges employs a multi-tiered security system featuring 24/7 AI-powered CCTV surveillance along all perimeter walls and public thoroughfares. Gatehouse access is automated via License Plate Recognition (LPR) for residents and QR-code visitor passes generated through the mobile app. Security foot patrols operate continuously, coordinated via GPS dispatch.
+
+15. FAQ: What is the process for modifying internal room layouts?
+Category: Company (FAQs)
+Homeowners may modify internal partition walls during the semi-finished delivery phase or post-handover, provided the modifications do not impact structural shear walls or columns. An engineering modification request must be submitted via the portal, accompanied by stamped architectural drawings from a certified engineer, along with a refundable construction security deposit.
+
+16. FAQ: How does the FIFO Broker Interest Request system work?
+Category: Company (FAQs)
+The El Narges Portal operates a First-In, First-Out (FIFO) queue for broker unit reservations. When a broker submits an interest request for an available property (Status 1), the system locks the priority timestamp. If approved by sales administration, the unit transitions to Reserved (Status 2) for a 48-hour payment window. If the client fails to complete the booking deposit within this timeframe, the unit automatically reverts to Available.
+
+17. FAQ: Why do my GIS coordinates plot near Al Rehab City?
+Category: Company (FAQs)
+If your spatial data or CAD files for El Narges are plotting near Al Rehab City, this is actually the correct and accurate geographic location of the compound. The project's 3D models and geographic data are anchored precisely at Lat: 30.0535° N, Lon: 31.4845° E.
+
+18. 5-Year ROI Projection Models: Apartments vs Villas
+Category: ROI (Market reports)
+For a 5-year investment horizon, our financial models project an annualized Return on Investment (ROI) of 18-22% for G+3 luxury apartments, driven by high rental demand from the nearby German University in Cairo (GUC). Standalone villas and twin houses project a 14-17% annualized ROI, primarily realized through capital appreciation rather than rental yields. Overall portfolio growth is secured by the compound's strict low-density (18%) footprint.
+
+19. Resale Value & Secondary Market Dynamics
+Category: ROI (Real estate investment guides)
+Properties in the El Narges compound historically maintain a 15% premium over the secondary market average in New Cairo. This premium is maintained due to the unified Contemporary Mediterranean architecture and mandatory facility management escrow. Resale properties typically spend fewer than 45 days on the market when listed through the official El Narges Broker Portal.
+
+20. Cancellation & Refund Policies
+Category: Company (Company policies)
+If a buyer chooses to cancel their reservation prior to signing the final contract, the booking deposit is fully refundable within 14 business days. Post-contract cancellations incur a 10% penalty on the total unit value to cover administrative and opportunity costs. Refunds are processed according to the original payment method and installment schedule over a maximum of 6 months.
+
+21. Transfer of Ownership & Resale Before Handover
+Category: Company (Company policies)
+Investors may resell or transfer ownership of their unit prior to physical handover, provided that at least 50% of the total unit price has been settled. A formal Assignment of Contract must be executed at the El Narges Sales Office, accompanied by a 3% transfer fee applied to the original contract value. The new buyer assumes the remaining installment schedule without penalty.

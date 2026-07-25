@@ -1,26 +1,73 @@
-import { useState } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import axios from 'axios';
+import { AuthContext } from '../context/AuthContext';
+
+const engineerQuestions = [
+  "What is the PRV pressure setting?",
+  "PPR fusion welding temp?",
+  "Elevator drop test protocol",
+  "RCD trip testing intervals"
+];
+
+const userQuestions = [
+  "What is the ROI on villas vs apartments?",
+  "Which villas are near the school and gym?",
+  "Where is the compound located exactly?",
+  "Can I lease my property to third party tenants?"
+];
 
 const ChatbotWidget = () => {
+  const auth = useContext(AuthContext);
+  const role = auth?.user?.role || 'user';
+  const isEngineer = role === 'engineer';
+  const suggestedQuestions = isEngineer ? engineerQuestions : userQuestions;
+
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<{ sender: 'user' | 'bot'; text: string }[]>([
-    { sender: 'bot', text: 'Hello! I am your AI assistant. How can I help you today?' }
-  ]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [messages, setMessages] = useState<{ sender: 'user' | 'bot'; text: string }[]>([]);
 
-  const handleSend = (e: React.FormEvent) => {
+  useEffect(() => {
+    setMessages([{ 
+      sender: 'bot', 
+      text: isEngineer 
+        ? 'Hello Engineer! I am your AI facility management assistant. How can I help you today?' 
+        : 'Hello! I am your El Narges AI Advisor. How can I help you find your dream home or manage your property?'
+    }]);
+  }, [isEngineer]);
+
+  const sendQuestionToAPI = async (questionText: string) => {
+    if (isLoading) return;
+    setMessages(prev => [...prev, { sender: 'user', text: questionText }]);
+    setIsLoading(true);
+
+    try {
+      const endpoint = isEngineer ? '/api/ai/engineer-ask' : '/api/ai/ask';
+      const payload = isEngineer ? { question: questionText } : { question: questionText, contextData: [] };
+      
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}${endpoint}`, payload);
+
+      setMessages(prev => [...prev, { sender: 'bot', text: response.data.reply }]);
+    } catch (error) {
+      console.error("Error asking engineer AI:", error);
+      setMessages(prev => [...prev, { sender: 'bot', text: "Sorry, I encountered an error. Please try again." }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || isLoading) return;
 
-    // Add user message
-    setMessages(prev => [...prev, { sender: 'user', text: input }]);
     const currentInput = input;
     setInput('');
+    await sendQuestionToAPI(currentInput);
+  };
 
-    // Placeholder for future RAG / Backend integration
-    setTimeout(() => {
-      setMessages(prev => [...prev, { sender: 'bot', text: `(Placeholder reply to: "${currentInput}") RAG backend will be integrated here later.` }]);
-    }, 1000);
+  const handleSuggestedClick = (question: string) => {
+    sendQuestionToAPI(question);
   };
 
   return createPortal(
@@ -59,11 +106,54 @@ const ChatbotWidget = () => {
                 borderBottomLeftRadius: msg.sender === 'bot' ? '2px' : '12px',
                 maxWidth: '85%',
                 fontSize: '14px',
-                lineHeight: '1.4'
+                lineHeight: '1.4',
+                whiteSpace: 'pre-wrap'
               }}>
                 {msg.text}
               </div>
             ))}
+            
+            {/* Suggested Questions */}
+            {messages.length === 1 && !isLoading && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
+                {suggestedQuestions.map((q, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleSuggestedClick(q)}
+                    style={{
+                      background: 'transparent',
+                      border: '1px solid #30363d',
+                      color: '#58a6ff',
+                      padding: '8px 12px',
+                      borderRadius: '16px',
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'background 0.2s',
+                      width: 'fit-content'
+                    }}
+                    onMouseOver={e => e.currentTarget.style.backgroundColor = '#1f6feb20'}
+                    onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            )}
+            
+            {isLoading && (
+              <div style={{ 
+                alignSelf: 'flex-start',
+                backgroundColor: '#21262d',
+                color: '#8b949e',
+                padding: '10px 14px',
+                borderRadius: '12px',
+                borderBottomLeftRadius: '2px',
+                fontSize: '14px'
+              }}>
+                Typing...
+              </div>
+            )}
           </div>
 
           {/* Input Area */}
@@ -73,10 +163,11 @@ const ChatbotWidget = () => {
               value={input} 
               onChange={e => setInput(e.target.value)} 
               placeholder="Type your message..." 
-              style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #30363d', backgroundColor: '#010409', color: '#fff' }}
+              disabled={isLoading}
+              style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #30363d', backgroundColor: '#010409', color: '#fff', opacity: isLoading ? 0.6 : 1 }}
             />
-            <button type="submit" style={{ marginLeft: '10px', padding: '10px 15px', backgroundColor: '#1f6feb', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
-              Send
+            <button type="submit" disabled={isLoading} style={{ marginLeft: '10px', padding: '10px 15px', backgroundColor: '#1f6feb', color: '#fff', border: 'none', borderRadius: '8px', cursor: isLoading ? 'not-allowed' : 'pointer', fontWeight: 'bold', opacity: isLoading ? 0.6 : 1 }}>
+              {isLoading ? '...' : 'Send'}
             </button>
           </form>
         </div>

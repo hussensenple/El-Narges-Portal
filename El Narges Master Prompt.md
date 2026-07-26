@@ -21,6 +21,9 @@ Act as an Expert System Architect, Full-Stack MERN Developer, and Web GIS Engine
 - **Account Settings** (users/owners can update personal info and secondary contact)
 - **Email Notifications** (booking approved/rejected/declined emails sent automatically)
 - **Onboarding Walkthrough Tour** (role-based interactive guided tour using a dark CSS spotlight mask backdrop for Visitors, Users, and Owners, trackable via `localStorage`, with a manual restart button `📖` in the top right)
+- **Engineer Portal & Maintenance Suite** (Technician directory, Active tasks, Utility network placeholder, Engineering AI RAG Assistant with manual knowledge base)
+- **ArcGIS Survey123 & ngrok Live Integration** (Real-time dual-database synchronization for technician registration via ngrok tunnel and Survey123 embedded dark form)
+- **One-Click System Launchers** (Start-Platform.bat and Stop-Platform.bat for seamless multi-service execution)
 
 The complete 4-step booking workflow is fully implemented:
 `User submits Interest (Pending) → Broker reviews → raises to Admin (Reserved) or Declines → Admin Approves (Sold/Owner promoted) or Rejects`
@@ -339,6 +342,10 @@ All core features from the original roadmap are **fully implemented and running*
 | Account Settings Modal | ✅ Done |
 | Broker Performance Dashboard | ✅ Done |
 | Building Completeness Check (ArcGIS) | ✅ Done |
+| Engineer Maintenance Suite (Technicians & Active Tasks) | ✅ Done |
+| ArcGIS Survey123 & ngrok Live Webhook Integration | ✅ Done |
+| Engineering AI RAG Assistant (Manual Knowledge Base) | ✅ Done |
+| One-Click System Launchers (.bat scripts) | ✅ Done |
 
 Both dev servers are currently running:
 - **Backend:** `http://localhost:5000` (Express + Socket.io + MongoDB)

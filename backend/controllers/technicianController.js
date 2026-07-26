@@ -79,3 +79,60 @@ exports.deleteTechnician = async (req, res) => {
     res.status(500).json({ msg: 'Server error deleting technician' });
   }
 };
+
+exports.addTechnicianFromSurvey123 = async (req, res) => {
+  try {
+    console.log("📥 Received Survey123 Webhook Payload:", JSON.stringify(req.body, null, 2));
+    const payload = req.body || {};
+    const feature = payload.feature || payload;
+    const attributes = feature.attributes || payload.attributes || payload;
+
+    const name = attributes.name || attributes.Name || attributes['Full Name'] || attributes.full_name || attributes.fullName || 'فني من Survey123';
+    const phone = attributes.phone || attributes.Phone || attributes['Phone Number'] || attributes.phone_number || attributes.phoneNumber || 'غير محدد';
+    const age = Number(attributes.age || attributes.Age || attributes['Age']) || 30;
+    
+    let rawSpec = attributes.specialization || attributes.Specialization || attributes['Specialization'] || attributes.spec || '';
+    const validSpecs = [
+      'Plumbing (سباكة)', 
+      'Electrical (كهرباء)', 
+      'Carpentry (نجارة)', 
+      'HVAC / Air Conditioning (تكييف وتبريد)', 
+      'Landscaping / Agriculture (زراعة ولاند سكيب)', 
+      'Structural / Construction (إنشاءات ومباني)', 
+      'Sanitation / Cleaning (نظافة وصرف صحي)',
+      'Elevators (مصاعد)',
+      'Infrastructure (بنية تحتية / شبكات المياه)',
+      'Other (أخرى)'
+    ];
+
+    let specialization = 'Other (أخرى)';
+    if (validSpecs.includes(rawSpec)) {
+      specialization = rawSpec;
+    } else if (rawSpec) {
+      const match = validSpecs.find(s => 
+        s.toLowerCase().includes(rawSpec.toString().toLowerCase()) || 
+        rawSpec.toString().toLowerCase().includes(s.split(' ')[0].toLowerCase())
+      );
+      if (match) specialization = match;
+    }
+
+    const addedBy = attributes.addedBy || attributes.added_by || null;
+
+    const technician = new Technician({
+      name,
+      phone,
+      age,
+      specialization,
+      addedBy
+    });
+
+    await technician.save();
+    console.log("✅ New Technician saved to MongoDB from Survey123:", technician.name, "| Spec:", specialization);
+    res.status(200).json({ success: true, technician });
+  } catch (error) {
+    console.error("❌ Survey123 Technician Webhook Error:", error);
+    res.status(500).json({ error: "Failed to process Survey123 webhook", details: error.message });
+  }
+};
+
+

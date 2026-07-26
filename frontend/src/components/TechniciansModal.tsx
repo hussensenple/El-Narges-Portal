@@ -18,12 +18,12 @@ interface TechniciansModalProps {
 }
 
 const SPECIALIZATIONS = [
-  'Plumbing (سباكة)', 
-  'Electrical (كهرباء)', 
-  'Carpentry (نجارة)', 
-  'HVAC / Air Conditioning (تكييف وتبريد)', 
-  'Landscaping / Agriculture (زراعة ولاند سكيب)', 
-  'Structural / Construction (إنشاءات ومباني)', 
+  'Plumbing (سباكة)',
+  'Electrical (كهرباء)',
+  'Carpentry (نجارة)',
+  'HVAC / Air Conditioning (تكييف وتبريد)',
+  'Landscaping / Agriculture (زراعة ولاند سكيب)',
+  'Structural / Construction (إنشاءات ومباني)',
   'Sanitation / Cleaning (نظافة وصرف صحي)',
   'Elevators (مصاعد)',
   'Infrastructure (بنية تحتية / شبكات المياه)',
@@ -34,16 +34,10 @@ const TechniciansModal = ({ onClose }: TechniciansModalProps) => {
   const [activeTab, setActiveTab] = useState<'add' | 'list'>('list');
   const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  
-  // Form State
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [age, setAge] = useState('');
-  const [specialization, setSpecialization] = useState(SPECIALIZATIONS[0]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [selectedSpecialization, setSelectedSpecialization] = useState<string>('All');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  
+
   // Complaints State
   const [complaints, setComplaints] = useState<any[]>([]);
 
@@ -102,36 +96,6 @@ const TechniciansModal = ({ onClose }: TechniciansModalProps) => {
     }
   };
 
-  const handleAddTechnician = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name || !phone || !age || !specialization) {
-      alert('Please fill all fields');
-      return;
-    }
-    
-    setIsSubmitting(true);
-    try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/technicians`, {
-        name, phone, age: Number(age), specialization
-      }, {
-        headers: { 'x-auth-token': token }
-      });
-      
-      alert('✅ Technician added successfully!');
-      setName('');
-      setPhone('');
-      setAge('');
-      setSpecialization(SPECIALIZATIONS[0]);
-      setActiveTab('list'); // Switch to list view to see the new addition
-    } catch (e: any) {
-      console.error("Error adding technician:", e);
-      alert(e.response?.data?.msg || 'Failed to add technician');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   // Group technicians by specialization
   const groupedTechnicians = SPECIALIZATIONS.reduce((acc, spec) => {
     acc[spec] = technicians.filter(t => t.specialization === spec);
@@ -143,15 +107,15 @@ const TechniciansModal = ({ onClose }: TechniciansModalProps) => {
     // 1. Get assigned issues from technicians' taskCount
     const group = groupedTechnicians[spec] || [];
     let assignedCount = group.reduce((sum, tech) => sum + (tech.taskCount || 0), 0);
-    
+
     // 2. Add unassigned/pending issues whose problemName matches this specialization
-    let unassignedCount = complaints.filter(c => 
-      c.status === 'Pending' && 
+    let unassignedCount = complaints.filter(c =>
+      c.status === 'Pending' &&
       (c.problemName === spec || c.assignedSpecialization === spec)
     ).length;
 
     // 3. Fallback: if we somehow have 'In Progress' complaints that weren't caught by taskCount 
-    let extraInProgress = complaints.filter(c => 
+    let extraInProgress = complaints.filter(c =>
       c.status === 'In Progress' && c.assignedSpecialization === spec
     ).length;
 
@@ -165,7 +129,7 @@ const TechniciansModal = ({ onClose }: TechniciansModalProps) => {
   return createPortal(
     <div onClick={onClose} style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(13, 17, 23, 0.85)', zIndex: 99999999, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
       <div onClick={(e) => { e.stopPropagation(); setIsDropdownOpen(false); }} style={{ backgroundColor: '#0d1117', width: '1100px', maxWidth: '96vw', height: '85vh', borderRadius: '16px', border: '1px solid #30363d', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.8)' }}>
-        
+
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #30363d', padding: '12px 20px' }}>
           <h2 style={{ margin: 0, color: '#fff', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '18px' }}>
@@ -176,13 +140,13 @@ const TechniciansModal = ({ onClose }: TechniciansModalProps) => {
 
         {/* Navigation Tabs */}
         <div style={{ display: 'flex', borderBottom: '1px solid #30363d', backgroundColor: '#161b22' }}>
-          <button 
+          <button
             onClick={() => setActiveTab('list')}
             style={{ flex: 1, padding: '12px', border: 'none', backgroundColor: activeTab === 'list' ? '#1f6feb' : 'transparent', color: activeTab === 'list' ? '#fff' : '#8b949e', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px', transition: '0.2s' }}
           >
             📋 Technicians Directory
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('add')}
             style={{ flex: 1, padding: '12px', border: 'none', backgroundColor: activeTab === 'add' ? '#2ea043' : 'transparent', color: activeTab === 'add' ? '#fff' : '#8b949e', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px', transition: '0.2s' }}
           >
@@ -191,64 +155,67 @@ const TechniciansModal = ({ onClose }: TechniciansModalProps) => {
         </div>
 
         {/* Content Area */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '20px', backgroundColor: '#0d1117' }}>
-          
-          {/* TAB: Add Technician */}
+        <div style={{ flex: 1, overflowY: activeTab === 'list' ? 'auto' : 'hidden', padding: activeTab === 'list' ? '15px' : '0px', backgroundColor: '#0d1117', display: 'flex', flexDirection: 'column' }}>
+
+          {/* TAB: Add Technician via Survey123 (AGOL + MongoDB Live Sync) */}
           {activeTab === 'add' && (
-            <div style={{ maxWidth: '500px', margin: '0 auto', backgroundColor: '#161b22', padding: '30px', borderRadius: '16px', border: '1px solid #30363d' }}>
-              <h3 style={{ margin: '0 0 20px 0', color: '#58a6ff', textAlign: 'center' }}>Register New Technician</h3>
-              <form onSubmit={handleAddTechnician} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                  <label style={{ color: '#c9d1d9', fontWeight: 'bold' }}>Full Name:</label>
-                  <input type="text" value={name} onChange={e => setName(e.target.value)} required placeholder="e.g. Ahmed Ali" style={{ padding: '12px', borderRadius: '8px', backgroundColor: '#0d1117', border: '1px solid #30363d', color: '#fff', fontSize: '15px' }} />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                  <label style={{ color: '#c9d1d9', fontWeight: 'bold' }}>Phone Number:</label>
-                  <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} required placeholder="01xxxxxxxxx" style={{ padding: '12px', borderRadius: '8px', backgroundColor: '#0d1117', border: '1px solid #30363d', color: '#fff', fontSize: '15px' }} />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                  <label style={{ color: '#c9d1d9', fontWeight: 'bold' }}>Age:</label>
-                  <input type="number" value={age} onChange={e => setAge(e.target.value)} required placeholder="e.g. 35" min="18" max="70" style={{ padding: '12px', borderRadius: '8px', backgroundColor: '#0d1117', border: '1px solid #30363d', color: '#fff', fontSize: '15px' }} />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                  <label style={{ color: '#c9d1d9', fontWeight: 'bold' }}>Specialization:</label>
-                  <select value={specialization} onChange={e => setSpecialization(e.target.value)} style={{ padding: '12px', borderRadius: '8px', backgroundColor: '#0d1117', border: '1px solid #30363d', color: '#fff', fontSize: '15px', cursor: 'pointer' }}>
-                    {SPECIALIZATIONS.map(spec => (
-                      <option key={spec} value={spec}>{spec}</option>
-                    ))}
-                  </select>
-                </div>
-                <button type="submit" disabled={isSubmitting} style={{ marginTop: '10px', padding: '14px', backgroundColor: isSubmitting ? '#2ea04388' : '#2ea043', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '16px', cursor: isSubmitting ? 'not-allowed' : 'pointer' }}>
-                  {isSubmitting ? 'Registering...' : 'Register Technician'}
-                </button>
-              </form>
+            <div style={{ width: '100%', flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#161b22', padding: '10px 20px', borderBottom: '1px solid #30363d', flexShrink: 0 }}>
+                <h3 style={{ margin: 0, color: '#58a6ff', fontSize: '15px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  ⚡ Register New Technician
+                </h3>
+                <a
+                  href="https://survey123.arcgis.com/share/3700b74cb725401cb567bbdbefa7c41c"
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ padding: '6px 12px', backgroundColor: '#21262d', color: '#58a6ff', border: '1px solid #30363d', borderRadius: '6px', textDecoration: 'none', fontWeight: 'bold', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px' }}
+                  title="Open Esri Survey123 external form"
+                >
+                  🌐 Esri Survey123 Link
+                </a>
+              </div>
+
+              <div style={{ width: '100%', flex: 1, backgroundColor: '#0d1117', overflow: 'hidden' }}>
+                <iframe
+                  src="https://survey123.arcgis.com/share/3700b74cb725401cb567bbdbefa7c41c?hide=navbar,footer"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 'none', display: 'block', width: '100%', height: '100%' }}
+                  title="Survey123 Technician Registration"
+                />
+              </div>
             </div>
           )}
+
+
+
+
+
 
           {/* TAB: Technicians Directory */}
           {activeTab === 'list' && (
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-              
+
               {/* Filter Pills */}
               {/* Custom Dropdown Filter */}
               <div style={{ marginBottom: '20px', position: 'relative', flexShrink: 0 }}>
                 <label style={{ display: 'block', color: '#c9d1d9', fontWeight: 'bold', marginBottom: '8px', fontSize: '14px' }}>Filter by Specialization:</label>
-                <div 
+                <div
                   onClick={(e) => { e.stopPropagation(); setIsDropdownOpen(!isDropdownOpen); }}
                   style={{ backgroundColor: '#161b22', border: '1px solid #30363d', borderRadius: '8px', padding: '14px 16px', color: '#fff', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '15px', fontWeight: 'bold' }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     {selectedSpecialization === 'All' ? 'All Specialists' : selectedSpecialization}
                     {selectedSpecialization !== 'All' && complaintCounts[selectedSpecialization] > 0 && (
-                       <span style={{ backgroundColor: '#da3633', color: '#fff', padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold' }}>{complaintCounts[selectedSpecialization]} Active Issues</span>
+                      <span style={{ backgroundColor: '#da3633', color: '#fff', padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold' }}>{complaintCounts[selectedSpecialization]} Active Issues</span>
                     )}
                   </div>
                   <span style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.2s' }}>▼</span>
                 </div>
-                
+
                 {isDropdownOpen && (
                   <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '8px', backgroundColor: '#161b22', border: '1px solid #30363d', borderRadius: '8px', zIndex: 10, maxHeight: '300px', overflowY: 'auto', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
-                    <div 
+                    <div
                       onClick={() => { setSelectedSpecialization('All'); setIsDropdownOpen(false); }}
                       style={{ padding: '14px 16px', cursor: 'pointer', color: selectedSpecialization === 'All' ? '#58a6ff' : '#c9d1d9', borderBottom: '1px solid #30363d', backgroundColor: selectedSpecialization === 'All' ? '#1f242c' : 'transparent', fontWeight: 'bold' }}
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1f242c'}
@@ -257,7 +224,7 @@ const TechniciansModal = ({ onClose }: TechniciansModalProps) => {
                       All Specialists
                     </div>
                     {sortedSpecializations.map(spec => (
-                      <div 
+                      <div
                         key={spec}
                         onClick={() => { setSelectedSpecialization(spec); setIsDropdownOpen(false); }}
                         style={{ padding: '14px 16px', cursor: 'pointer', color: selectedSpecialization === spec ? '#58a6ff' : '#c9d1d9', borderBottom: '1px solid #30363d', backgroundColor: selectedSpecialization === spec ? '#1f242c' : 'transparent', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 'bold' }}
@@ -309,7 +276,7 @@ const TechniciansModal = ({ onClose }: TechniciansModalProps) => {
                                   🚨 Tasks: {tech.taskCount || 0} Active
                                 </div>
                                 <div style={{ color: '#8b949e', fontSize: '10px', marginTop: '3px' }}>Added: {new Date(tech.createdAt).toLocaleDateString()}</div>
-                                <button 
+                                <button
                                   onClick={() => handleDeleteTechnician(tech._id)}
                                   style={{ marginTop: '8px', padding: '4px', backgroundColor: '#da363322', color: '#ff7b72', border: '1px solid #da3633', borderRadius: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }}
                                 >

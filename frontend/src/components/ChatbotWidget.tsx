@@ -4,10 +4,10 @@ import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 
 const engineerQuestions = [
-  "What is the PRV pressure setting?",
-  "PPR fusion welding temp?",
-  "Elevator drop test protocol",
-  "RCD trip testing intervals"
+  "What are the specs for PRV replacement? (ما هي مواصفات تغيير مخفض الضغط PRV؟)",
+  "What is the required MCB breaking capacity? (ما هي قدرة الفصل المطلوبة لقاطع MCB؟)",
+  "Which epoxy resin for structural crack injection? (ما هو الإيبوكسي المناسب لحقن الشروخ؟)",
+  "What are the elevator VFD jerk rate parameters? (ما هي بارامترات مغير سرعة المصعد؟)"
 ];
 
 const userQuestions = [
@@ -95,6 +95,35 @@ const ChatbotWidget = () => {
 
           {/* Chat History */}
           <div style={{ flex: 1, padding: '15px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            
+            {/* Suggested Questions at top */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
+              <span style={{ fontSize: '12px', color: '#8b949e' }}>Suggested Questions:</span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                {suggestedQuestions.map((q, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleSuggestedClick(q.split(' (')[0])}
+                    style={{
+                      background: 'transparent',
+                      border: '1px solid #30363d',
+                      color: '#58a6ff',
+                      padding: '6px 10px',
+                      borderRadius: '16px',
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'background 0.2s',
+                      width: 'fit-content'
+                    }}
+                    onMouseOver={e => e.currentTarget.style.backgroundColor = '#1f6feb20'}
+                    onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            </div>
             {messages.map((msg, idx) => (
               <div key={idx} style={{ 
                 alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start',
@@ -113,33 +142,7 @@ const ChatbotWidget = () => {
               </div>
             ))}
             
-            {/* Suggested Questions */}
-            {messages.length === 1 && !isLoading && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
-                {suggestedQuestions.map((q, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => handleSuggestedClick(q)}
-                    style={{
-                      background: 'transparent',
-                      border: '1px solid #30363d',
-                      color: '#58a6ff',
-                      padding: '8px 12px',
-                      borderRadius: '16px',
-                      fontSize: '13px',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      transition: 'background 0.2s',
-                      width: 'fit-content'
-                    }}
-                    onMouseOver={e => e.currentTarget.style.backgroundColor = '#1f6feb20'}
-                    onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}
-                  >
-                    {q}
-                  </button>
-                ))}
-              </div>
-            )}
+
             
             {isLoading && (
               <div style={{ 

@@ -25,6 +25,12 @@ Act as an Expert System Architect, Full-Stack MERN Developer, and Web GIS Engine
 The complete 4-step booking workflow is fully implemented:
 `User submits Interest (Pending) → Broker reviews → raises to Admin (Reserved) or Declines → Admin Approves (Sold/Owner promoted) or Rejects`
 
+**Recent Feature Updates (July 2026):**
+- **Engineer Dashboard Button:** A dedicated "Open Dashboard" button floats beside the Utility Network button for Engineers.
+- **AI Chatbot Spatial Filtering:** The AI now uses `definitionExpression` queries to completely hide non-matching units/buildings from the 3D map instead of just highlighting them.
+- **AI Spatial Guardrails:** Gemini is strictly forbidden from hallucinating unit counts; the frontend handles accurate proximity math and count generation.
+- **Top-Aligned AI Questions:** Bilingual suggested questions are moved to the top of the Chatbot widget.
+
 ---
 
 # 2. Tech Stack
@@ -221,9 +227,13 @@ Located under `frontend/src/components/admin/` and `frontend/src/pages/AdminRequ
 ## J. AI Advisor & Engineer Chatbot (Fully Implemented)
 
 `AIAdvisor.tsx` (Customer Facing):
-- Uses Google Gemini 3.5 Flash via the backend (`/api/ai/ask`)
-- Powered by a `KnowledgeBase` MongoDB collection seeded with compound/property information (filters out Engineering category)
-- Answers questions about available units, prices, location, and compound amenities
+- Uses Google Gemini Flash Latest via the backend (`/api/ai/ask`)
+- Powered by a `KnowledgeBase` MongoDB collection seeded with compound/property information (filters out Engineering category) and supplemented by live units, prices, and occupancy statuses mapped directly from the ArcGIS layers in the prompt context.
+- Answers questions about available/sold units, owner contact details, and compound amenities with real-time price awareness.
+- Supports bilingual interaction (Arabic or English), replying in the same language as the user query.
+- **Salary Affordability Evaluation (40% Rule):** When a user states their salary, the agent calculates their max monthly installment (40% of salary), matches it against the compound's 4 interest-free payment plans, recommends the best matching units and payment plans, and highlights these units on the 3D map.
+- **Dynamic Investment & ROI Planner:** If the user asks for investment advice, the AI calculates a 5-Year ROI (20% annualized for Apartments, 15% for Villas) based on the user's budget/salary, and generates a structured investment plan outlining expected profits.
+- **Family Size & Area Logic:** If the user mentions their family size (e.g., family of 4), the AI determines the recommended area (e.g. 150-220 sqm) and unit type (Apartment, TwinHouse, or Villa) according to Compound guidelines, sets `aiData.type`, and finds suitable units.
 - Visible only to authenticated non-broker/non-engineer users on the 3D map view
 - **Integrated Proximity Analysis:** Supports queries like *"apartments near gym within 5 mins"*. Calculates Haversine distance from services centroids (School, Hospital, Gym, Commercial) to filter map units.
 - **Integrated Closest Facility Road Routing:** Supports queries like *"closest services to unit 99"*. Triggers actual ArcGIS Network Analysis road routing (`closestFacility.solve`) to solve routes, draws colored 3D path lines on the map (School is Green, Hospital is Yellow, Gym is Red, Commercial is Blue), and prints exact routing distances and walking times in the chat.

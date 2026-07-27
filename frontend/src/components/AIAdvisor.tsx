@@ -123,6 +123,10 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
     const userMsg = overrideInput || input;
     if (!userMsg.trim()) return;
 
+    if (isFilterActive) {
+      handleResetFilter();
+    }
+
     setMessages(prev => [...prev, { sender: 'user', text: userMsg }]);
     if (!overrideInput) setInput('');
     setIsLoading(true);
@@ -146,7 +150,10 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
                   Number(f.attributes.BuildingType) === 2 ? "TwinHouse" :
                   "Apartment",
             price: f.attributes.Total_Price || f.attributes.Price,
-            status: String(f.attributes.Status).toLowerCase()
+            status: String(f.attributes.Status).toLowerCase(),
+            ownerName: f.attributes.Owner_Name || null,
+            ownerPhone: f.attributes.Owner_Phone || null,
+            ownerEmail: f.attributes.Owner_Gmail || null
           })));
         }
 
@@ -161,16 +168,28 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
             buildingFK: f.attributes.BuildingID_FK || f.attributes.BuildingID_FK || f.attributes.GlobalID_FK, 
             type: "Apartment",
             price: f.attributes.Price,
-            status: String(f.attributes.Status || 'available').toLowerCase()
+            status: String(f.attributes.Status || 'available').toLowerCase(),
+            ownerName: f.attributes.Owner_Name || null,
+            ownerPhone: f.attributes.Owner_Phone || null,
+            ownerEmail: f.attributes.Gmail || null
           })));
         }
       }
 
       const availableOnly = contextData.filter(u => u.status === 'available' || u.status === '1');
+      
+      const chatHistory = messages
+        .filter(m => m.text && !m.text.includes('Welcome to GeoTwin'))
+        .slice(-6)
+        .map(m => ({
+            role: m.sender === 'ai' ? 'model' : 'user',
+            text: m.text
+        }));
 
       const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/ai/ask`, { 
         question: userMsg,
-        contextData: availableOnly 
+        history: chatHistory,
+        contextData: contextData // Send ALL units to the backend
       });
       
       const { reply, isFilterQuery, filteredIds, nearTo, maxWalkingMinutes, action, actionUnitId } = res.data; 
@@ -296,8 +315,8 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
                   // Filter down to only nearby items
                   filteredItems = filteredItems.filter(u => nearbyIds.includes(u.id));
                   // Update reply with the real proximity-filtered count
-                  finalReplyText = `We found ${filteredItems.length} matching units within ${maxWalkingMinutes}-minute walking distance of the ${nearTo}. They have been highlighted on the map!`;
-                  console.log(`Proximity filter: ${nearbyIds.length} units within ${maxWalkingMinutes} min walk of ${nearTo}`);
+                  finalReplyText = `${reply}\n\n📍 Showing ${filteredItems.length} properties near the ${nearTo}.`;
+                  console.log(`Proximity filter: ${nearbyIds.length} properties within ${maxWalkingMinutes} min walk of ${nearTo}`);
                 }
               }
             }
@@ -326,14 +345,17 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
             villasLayer.visible = true;
             if (villaIds.length > 0) {
               const expr = `OBJECTID IN (${villaIds.join(',')})`;
+              villasLayer.definitionExpression = expr; // ✨ HIDE non-matching villas
               const q = villasLayer.createQuery(); q.where = expr; q.returnGeometry = true;
               const vRes = await villasLayer.queryFeatures(q);
               allVisualFeatures.push(...vRes.features);
+            } else {
+              villasLayer.definitionExpression = "1=0"; // HIDE all villas if none match
             }
           }
 
           // 2. فلترة العمارات باحترافية
-          const SAFE_LAYERS = ["Villas_Global", "roads_Global", "Trees", "Trees_Global", "Landscape_Global", "Landscape"];
+          const SAFE_LAYERS = ["Villas_Global", "roads_Global", "Trees", "Trees_Global", "Landscape_Global", "Landscape", "Services_Global", "Service_Territory_Global", "LandUse_Global"];
           const buildingLayers = view.map.allLayers.filter((l:any) => {
             if (!l.title) return false;
             // If it is NOT a safe layer, and it is a 3D/Feature layer, we treat it as a building layer to hide
@@ -345,8 +367,11 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
             if (apartmentBuildingFKs.length > 0) {
               for (const targetLayerToQuery of buildingLayers) {
                   try {
+                    const expr = `GlobalID IN (${apartmentBuildingFKs.join(',')})`;
+                    (targetLayerToQuery as any).definitionExpression = expr; // ✨ HIDE non-matching buildings
+                    
                     const bQuery = (targetLayerToQuery as any).createQuery();
-                    bQuery.where = `GlobalID IN (${apartmentBuildingFKs.join(',')})`;
+                    bQuery.where = expr;
                     bQuery.outFields = ["OBJECTID"];
                     bQuery.returnGeometry = true;
 
@@ -357,6 +382,8 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
                     console.error("Error applying filter to layer:", (targetLayerToQuery as any).title, err);
                   }
               }
+            } else {
+              buildingLayers.forEach((l:any) => l.definitionExpression = "1=0"); // HIDE all buildings if none match
             }
           }
 
@@ -364,39 +391,10 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
           if (allVisualFeatures.length > 0) {
             view.goTo(allVisualFeatures, { animate: true, duration: 2000 });
             
-            // Add cyan pins!
+            // Clear any old pins if they existed previously
             let hl = view.map.layers.find((l:any) => l.title === "AIHighlightsLayer") as GraphicsLayer;
-            if (!hl) {
-                hl = new GraphicsLayer({ title: "AIHighlightsLayer", elevationInfo: { mode: "relative-to-scene" } });
-                view.map.add(hl);
-            }
             if (hl) {
                 hl.removeAll();
-                allVisualFeatures.forEach(feature => {
-                    if (feature.geometry) {
-                        let targetGeom = feature.geometry;
-                        if (feature.geometry.type === "polygon" || feature.geometry.type === "multipatch") {
-                            targetGeom = feature.geometry.centroid || feature.geometry.extent?.center;
-                        }
-                        if (targetGeom) {
-                            hl.add(new Graphic({
-                                geometry: targetGeom,
-                                symbol: {
-                                    type: "point-3d",
-                                    symbolLayers: [{
-                                        type: "icon",
-                                        resource: { primitive: "circle" },
-                                        material: { color: [0, 255, 255, 0.9] },
-                                        size: 25,
-                                        outline: { color: "white", size: 2 }
-                                    }],
-                                    verticalOffset: { screenLength: 50, maxWorldLength: 100, minWorldLength: 20 },
-                                    callout: { type: "line", size: 2, color: [255, 255, 255, 0.8], border: { color: [0, 255, 255, 0.8] } }
-                                }
-                            }));
-                        }
-                    }
-                });
             }
           }
 
@@ -668,8 +666,37 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
             )}
 
             <div style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px', padding: '0 4px' }}>
+                <span style={{ fontSize: '12px', color: '#8b949e' }}>Suggested Questions (أسئلة مقترحة):</span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {[
+                    "We are a family of 5, what do you recommend? (نحن أسرة من 5 أفراد، بماذا تنصحني؟)",
+                    "My salary is 30000, what can I afford? (راتبي 30 ألف، ماذا أستطيع الشراء؟)",
+                    "I want an investment plan (أريد خطة استثمارية للعقارات)",
+                    "Show me villas near the gym (أظهر لي الفيلات القريبة من الجيم)"
+                  ].map((q, idx) => (
+                    <button 
+                      key={idx}
+                      onClick={() => handleSend(q.split(' (')[0])}
+                      style={{
+                        backgroundColor: '#21262d',
+                        color: '#58a6ff',
+                        border: '1px solid #30363d',
+                        borderRadius: '16px',
+                        padding: '6px 12px',
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                        transition: 'background-color 0.2s',
+                        textAlign: 'left'
+                      }}
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              </div>
               {messages.map((m, i) => (
-                <div key={i} style={{ alignSelf: m.sender === 'user' ? 'flex-end' : 'flex-start', backgroundColor: m.sender === 'user' ? '#1f6feb' : '#30363d', padding: '10px 14px', borderRadius: '12px', borderBottomRightRadius: m.sender === 'user' ? '2px' : '12px', borderBottomLeftRadius: m.sender === 'ai' ? '2px' : '12px', maxWidth: '85%', fontSize: '14px', lineHeight: '1.5', direction: 'ltr' }}>
+                <div key={i} style={{ alignSelf: m.sender === 'user' ? 'flex-end' : 'flex-start', backgroundColor: m.sender === 'user' ? '#1f6feb' : '#30363d', padding: '10px 14px', borderRadius: '12px', borderBottomRightRadius: m.sender === 'user' ? '2px' : '12px', borderBottomLeftRadius: m.sender === 'ai' ? '2px' : '12px', maxWidth: '85%', fontSize: '14px', lineHeight: '1.5', direction: 'ltr', whiteSpace: 'pre-wrap' }}>
                   {m.text}
                   
                   {m.action === 'BOOK_UNIT' && m.actionUnitId && (
@@ -688,39 +715,6 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
                 </div>
               ))}
               {isLoading && <div style={{ fontSize: '13px', color: '#8b949e', alignSelf: 'flex-start' }}>Thinking...</div>}
-              {messages.length === 1 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: 'auto', padding: '0 4px' }}>
-                  <span style={{ fontSize: '12px', color: '#8b949e' }}>Example questions:</span>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                    {[
-                      "What are the payment plans?", 
-                      "What is the ROI for apartments?",
-                      "What is the cancellation policy?",
-                      "Are pets allowed in the compound?",
-                      "Show me villas under 70 million",
-                      "Show me apartments under 10 million"
-                    ].map((q, idx) => (
-                      <button 
-                        key={idx}
-                        onClick={() => handleSend(q)}
-                        style={{
-                          backgroundColor: '#21262d',
-                          color: '#58a6ff',
-                          border: '1px solid #30363d',
-                          borderRadius: '16px',
-                          padding: '6px 12px',
-                          fontSize: '12px',
-                          cursor: 'pointer',
-                          transition: 'background-color 0.2s',
-                          textAlign: 'left'
-                        }}
-                      >
-                        {q}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
             
             <div style={{ padding: '12px', borderTop: '1px solid #30363d', display: 'flex', gap: '8px', backgroundColor: '#0d1117' }}>

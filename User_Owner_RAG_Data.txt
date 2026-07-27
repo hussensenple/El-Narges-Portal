@@ -90,3 +90,24 @@ If a buyer chooses to cancel their reservation prior to signing the final contra
 21. Transfer of Ownership & Resale Before Handover
 Category: Company (Company policies)
 Investors may resell or transfer ownership of their unit prior to physical handover, provided that at least 50% of the total unit price has been settled. A formal Assignment of Contract must be executed at the El Narges Sales Office, accompanied by a 3% transfer fee applied to the original contract value. The new buyer assumes the remaining installment schedule without penalty.
+
+22. Salary Affordability & Installment Suitability Guidelines
+Category: Company (Payment plans)
+To guide buyers on financial suitability, the El Narges compound applies a logical affordability rule: a customer's maximum monthly installment should not exceed 40% of their net monthly salary.
+For example:
+- If a customer's monthly salary is 20,000 EGP, their maximum monthly installment is 8,000 EGP.
+- If a customer's monthly salary is 50,000 EGP, their maximum monthly installment is 20,000 EGP.
+- If a customer's monthly salary is 100,000 EGP, their maximum monthly installment is 40,000 EGP.
+- If a customer's monthly salary is 200,000 EGP, their maximum monthly installment is 80,000 EGP.
+
+When a client states their monthly salary, the AI Agent must automatically:
+1. Calculate their maximum affordable monthly installment (40% of the salary).
+2. Review the live catalog of available properties and their prices.
+3. Compute the monthly installment for each available property under the compound's payment plans:
+   - Standard Plan: Down payment = 10%, remaining 90% divided over 8 years (96 months). Monthly installment = (Price * 0.90) / 96.
+   - Extended Plan: Down payment = 15%, remaining 85% divided over 10 years (120 months). Monthly installment = (Price * 0.85) / 120.
+   - Fast Track: Down payment = 40%, remaining 60% divided over 2 years (24 months). Monthly installment = (Price * 0.60) / 24.
+   - Zero Entry: Down payment = 0%, remaining 100% divided over 5 years (60 months). Monthly installment = Price / 60.
+4. Filter and select the suitable properties and the corresponding installment plans where the monthly installment is less than or equal to the client's max affordable installment.
+5. If none of the available properties fit their salary, the agent should politely explain the math, show the closest/cheapest options, and state the minimum salary required for them.
+

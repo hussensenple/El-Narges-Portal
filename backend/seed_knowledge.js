@@ -140,6 +140,18 @@ const knowledgeChunks = [
     "content": "Investors may resell or transfer ownership of their unit prior to physical handover, provided that at least 50% of the total unit price has been settled. A formal Assignment of Contract must be executed at the El Narges Sales Office, accompanied by a 3% transfer fee applied to the original contract value. The new buyer assumes the remaining installment schedule without penalty."
   },
   {
+    "title": "Salary Affordability & Installment Suitability Guidelines",
+    "category": "Company",
+    "subcategory": "Payment plans",
+    "content": "To guide buyers on financial suitability, the El Narges compound applies a logical affordability rule: a customer's maximum monthly installment should not exceed 40% of their net monthly salary. For example, if a customer's monthly salary is 20,000 EGP, their maximum monthly installment is 8,000 EGP. If a customer's monthly salary is 50,000 EGP, their maximum monthly installment is 20,000 EGP. When a client states their monthly salary, the AI Agent must automatically: 1) Calculate their maximum affordable monthly installment (40% of salary). 2) Review the live catalog of available properties and their prices. 3) Compute monthly installments under the compound's payment plans: Standard Plan (10% down, 8 years/96 months, Monthly = [Price * 0.90]/96), Extended Plan (15% down, 10 years/120 months, Monthly = [Price * 0.85]/120), Fast Track (40% down, 2 years/24 months, Monthly = [Price * 0.60]/24), Zero Entry (0% down, 5 years/60 months, Monthly = Price/60). 4) Filter and select available properties and payment plans where the monthly installment is <= the client's max affordable installment. 5) If none of the available properties fit their salary, the agent should politely explain the math, show the closest/cheapest options, and state the minimum salary required for them."
+  },
+  {
+    "title": "Family Size & Space Allocation Guidelines",
+    "category": "Company",
+    "subcategory": "Company policies",
+    "content": "To ensure optimal living conditions, the El Narges Compound recommends the following space allocations based on family size: 1) Family of 1 to 2 members: Requires an Apartment, ideally between 90 sqm and 140 sqm. 2) Family of 3 to 4 members: Requires a spacious Apartment or TwinHouse, ideally between 150 sqm and 220 sqm. 3) Family of 5 or more members: Requires a Standalone Villa or TwinHouse, ideally 250 sqm and above. The AI Agent must use this logical data when a user mentions their family size to recommend the suitable unit type and area, and then select the appropriate units from the catalog."
+  },
+  {
     "title": "1. Plumbing & Hydronics",
     "category": "Engineering",
     "subcategory": "Plumbing",

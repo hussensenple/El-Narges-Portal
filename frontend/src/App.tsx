@@ -275,11 +275,24 @@ const CustomerInterface = () => {
         )}
       </div>
 
+
       <div style={{ position: 'absolute', top: '20px', left: '70px', zIndex: 1000, display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
         
         <button id="tour-map-toggle" title={mapMode === '3D' ? "Switch to 2D Map" : "Switch to 3D Map"} onClick={() => setMapMode(mapMode === '3D' ? '2D' : '3D')} className="map-icon-btn inactive">
           {mapMode === '3D' ? <Icons.Map2D /> : <Icons.Map3D />}
         </button>
+
+        {/* Dashboard Button (Engineer) - Left of UN button, only in UN mode */}
+        {auth?.user?.role === 'engineer' && mapMode === 'UN' && (
+          <button 
+            title="Open ArcGIS Dashboard"
+            onClick={() => window.open('https://www.arcgis.com/apps/dashboards/bd9339de2519498b96a80bde6d0d0155#', '_blank')} 
+            className="map-icon-btn active"
+            style={{ backgroundColor: '#238636', color: '#fff', borderColor: '#238636', width: 'auto', padding: '0 12px', fontSize: '12px', fontWeight: 'bold' }}
+          >
+            📊 Dashboard
+          </button>
+        )}
 
         {/* Utility Network Button (Engineer) - MOVED HERE */}
         {auth?.user?.role === 'engineer' && (

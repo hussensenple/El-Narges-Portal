@@ -4,17 +4,21 @@ import { io } from 'socket.io-client';
 import AdminComplaintsTab from '../components/AdminComplaintsTab'; // 👈 استيراد التابة الجديدة
 import PropertyManagementTab from '../components/admin/PropertyManagementTab';
 import AdminDashboardTab from '../components/admin/AdminDashboardTab';
+import AdminAIChatbotTab from '../components/admin/AdminAIChatbotTab';
+import PropertyAssignCatalog from '../components/admin/modals/PropertyAssignCatalog';
+import LogoIcon from '../components/LogoIcon';
 
 import RolesWidget from '../components/admin/RolesWidget';
 import RejectionAnalysisTab from '../components/admin/RejectionAnalysisTab';
 
 const AdminPortal = () => {
 // حالة التابات بعد دمج الشكاوى (شغلك) والصلاحيات (شغل صاحبك)
-  const [activeTab, setActiveTab] = useState<'analytics' | 'requests' | 'complaints' | 'roles' | 'properties' | 'rejections'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'chatbot' | 'requests' | 'complaints' | 'roles' | 'properties' | 'rejections'>('analytics');
   const [complaintsCount, setComplaintsCount] = useState(0);
   const [requests, setRequests] = useState([]);
   const [selectedRequests, setSelectedRequests] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [chatbotAssignUser, setChatbotAssignUser] = useState<{ id: string, role: string } | null>(null);
 
   const fetchRequests = async () => {
     try {
@@ -154,26 +158,51 @@ const AdminPortal = () => {
 
 
   return (
-    <div style={{ backgroundColor: '#0d1117', color: '#c9d1d9', height: '100vh', display: 'flex', flexDirection: 'column', fontFamily: 'sans-serif' }}>
+    <div style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-secondary)', height: '100vh', display: 'flex', flexDirection: 'column', fontFamily: 'sans-serif' }}>
       
       {/* 🚀 شريط التابات (Navigation Bar) */}
-      <div style={{ display: 'flex', backgroundColor: '#161b22', padding: '10px 20px', borderBottom: '1px solid #30363d', gap: '15px' }}>
-        <h2 style={{ margin: '0 20px 0 0', color: '#58a6ff' }}>El Narges Portal</h2>
+      <div style={{ display: 'flex', alignItems: 'center', backgroundColor: 'var(--bg-secondary)', padding: '10px 20px', borderBottom: '1px solid var(--border-color)', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <LogoIcon width={36} height={36} />
+          {/* Theme Toggle Button */}
+          <button 
+            title="Toggle Theme" 
+            onClick={() => {
+              const currentTheme = document.documentElement.getAttribute('data-theme');
+              const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+              document.documentElement.setAttribute('data-theme', newTheme);
+              localStorage.setItem('theme', newTheme);
+            }} 
+            style={{ fontSize: '18px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            🌓
+          </button>
+        </div>
+        
+        <div style={{ flex: 1 }}></div>
+
+        {/* 🤖 زر الشات بوت على شمال Analytics */}
+        <button 
+          onClick={() => setActiveTab('chatbot')}
+          style={{ backgroundColor: activeTab === 'chatbot' ? 'var(--accent-green-bg)' : 'transparent', color: '#3fb950', border: '1px solid #3fb950', padding: '10px 20px', fontSize: '13px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s', display: 'flex', alignItems: 'center', textAlign: 'center', lineHeight: '1.2' }}
+        >
+          🤖 AI<br/>Assistant
+        </button>
         
         <button 
           onClick={() => setActiveTab('analytics')}
-          style={{ backgroundColor: activeTab === 'analytics' ? '#1f6feb' : 'transparent', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s' }}
+          style={{ backgroundColor: activeTab === 'analytics' ? 'var(--accent-blue-bg)' : 'transparent', color: 'var(--text-primary)', border: 'none', padding: '10px 20px', fontSize: '13px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s', textAlign: 'center', lineHeight: '1.2' }}
         >
-          📈 Analytics Overview
+          📈 Analytics<br/>Overview
         </button>
 
         <button 
           onClick={() => setActiveTab('requests')}
-          style={{ backgroundColor: activeTab === 'requests' ? '#1f6feb' : 'transparent', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s', position: 'relative' }}
+          style={{ backgroundColor: activeTab === 'requests' ? 'var(--accent-blue-bg)' : 'transparent', color: 'var(--text-primary)', border: 'none', padding: '10px 20px', fontSize: '13px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s', display: 'flex', alignItems: 'center', textAlign: 'center', lineHeight: '1.2' }}
         >
-          📥 Booking Requests
+          <div>📥 Booking<br/>Requests</div>
           {requests.length > 0 && (
-            <span style={{ backgroundColor: '#f85149', color: '#fff', borderRadius: '50%', padding: '2px 8px', marginLeft: '8px', fontSize: '12px' }}>
+            <span style={{ backgroundColor: 'var(--accent-red)', color: 'var(--text-primary)', borderRadius: '50%', padding: '2px 8px', marginLeft: '8px', fontSize: '12px' }}>
               {requests.length}
             </span>
           )}
@@ -182,12 +211,12 @@ const AdminPortal = () => {
         {/* 👈 زرار الشكاوى بقى زيه زيهم بيغير التابة */}
         <button 
           onClick={() => setActiveTab('complaints')}
-          style={{ backgroundColor: activeTab === 'complaints' ? '#1f6feb' : 'transparent', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s', position: 'relative' }}
+          style={{ backgroundColor: activeTab === 'complaints' ? 'var(--accent-blue-bg)' : 'transparent', color: 'var(--text-primary)', border: 'none', padding: '10px 20px', fontSize: '13px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s', display: 'flex', alignItems: 'center', textAlign: 'center', lineHeight: '1.2' }}
         >
-          🛡️ Complaints
+          <div>🛡️ Complaints</div>
           {/* 👈 البادج الأحمر هيظهر بس لو في شكاوى (بيقرا من الـ State اللي جاية من الابن) */}
           {complaintsCount > 0 && (
-            <span style={{ backgroundColor: '#da3633', color: '#fff', borderRadius: '50%', padding: '2px 8px', marginLeft: '8px', fontSize: '12px' }}>
+            <span style={{ backgroundColor: 'var(--accent-red-bg)', color: 'var(--text-primary)', borderRadius: '50%', padding: '2px 8px', marginLeft: '8px', fontSize: '12px' }}>
               {complaintsCount}
             </span>
           )}
@@ -196,31 +225,31 @@ const AdminPortal = () => {
         <button 
           onClick={() => setActiveTab('roles')}
           style={{
-            backgroundColor: activeTab === 'roles' ? '#1f6feb' : 'transparent',
-            color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s'
+            backgroundColor: activeTab === 'roles' ? 'var(--accent-blue-bg)' : 'transparent',
+            color: 'var(--text-primary)', border: 'none', padding: '10px 20px', fontSize: '13px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s', textAlign: 'center', lineHeight: '1.2'
           }}
         >
-          👥 Roles Management
+          👥 Roles<br/>Management
         </button>
         
         <button 
           onClick={() => setActiveTab('properties')}
           style={{
-            backgroundColor: activeTab === 'properties' ? '#1f6feb' : 'transparent',
-            color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s'
+            backgroundColor: activeTab === 'properties' ? 'var(--accent-blue-bg)' : 'transparent',
+            color: 'var(--text-primary)', border: 'none', padding: '10px 20px', fontSize: '13px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s', textAlign: 'center', lineHeight: '1.2'
           }}
         >
-          🏢 Property Management
+          🏢 Property<br/>Management
         </button>
 
         <button 
           onClick={() => setActiveTab('rejections')}
           style={{
-            backgroundColor: activeTab === 'rejections' ? '#1f6feb' : 'transparent',
-            color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s'
+            backgroundColor: activeTab === 'rejections' ? 'var(--accent-blue-bg)' : 'transparent',
+            color: 'var(--text-primary)', border: 'none', padding: '10px 20px', fontSize: '13px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s', textAlign: 'center', lineHeight: '1.2'
           }}
         >
-          📉 Analyze Rejections
+          📉 Analyze<br/>Rejections
         </button>
 
       </div>
@@ -237,24 +266,24 @@ const AdminPortal = () => {
         <div style={{ display: activeTab === 'requests' ? 'block' : 'none', padding: '20px', height: '100%', overflowY: 'auto' }}>
           <div style={{ padding: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2 style={{ margin: 0, color: '#58a6ff' }}>Pending Requests</h2>
+              <h2 style={{ margin: 0, color: 'var(--accent-blue)' }}>Pending Requests</h2>
               {selectedRequests.length > 0 && (
                 <div style={{ display: 'flex', gap: '10px' }}>
-                  <button onClick={handleBulkApprove} disabled={isProcessing} style={{ backgroundColor: '#238636', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: isProcessing ? 'not-allowed' : 'pointer', fontWeight: 'bold', opacity: isProcessing ? 0.7 : 1 }}>
+                  <button onClick={handleBulkApprove} disabled={isProcessing} style={{ backgroundColor: 'var(--accent-green-bg)', color: 'var(--text-primary)', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: isProcessing ? 'not-allowed' : 'pointer', fontWeight: 'bold', opacity: isProcessing ? 0.7 : 1 }}>
                     {isProcessing ? 'Processing...' : `Approve Selected (${selectedRequests.length})`}
                   </button>
-                  <button onClick={() => openRejectModal(null, true)} disabled={isProcessing} style={{ backgroundColor: '#da3633', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: isProcessing ? 'not-allowed' : 'pointer', fontWeight: 'bold', opacity: isProcessing ? 0.7 : 1 }}>
+                  <button onClick={() => openRejectModal(null, true)} disabled={isProcessing} style={{ backgroundColor: 'var(--accent-red-bg)', color: 'var(--text-primary)', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: isProcessing ? 'not-allowed' : 'pointer', fontWeight: 'bold', opacity: isProcessing ? 0.7 : 1 }}>
                     {isProcessing ? 'Processing...' : `Reject Selected (${selectedRequests.length})`}
                   </button>
                 </div>
               )}
             </div>
             {requests.length === 0 ? (
-              <p style={{ color: '#8b949e' }}>No pending requests.</p>
+              <p style={{ color: 'var(--text-muted)' }}>No pending requests.</p>
             ) : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', backgroundColor: '#161b22', borderRadius: '8px', overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', backgroundColor: 'var(--bg-secondary)', borderRadius: '8px', overflow: 'hidden' }}>
                 <thead>
-                  <tr style={{ backgroundColor: '#21262d', color: '#c9d1d9' }}>
+                  <tr style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }}>
                     <th style={{ padding: '12px', width: '40px' }}>
                       <input 
                         type="checkbox" 
@@ -271,7 +300,7 @@ const AdminPortal = () => {
                 </thead>
                 <tbody>
                   {requests.map((req: { _id: string, objectId?: number, unitId: string, userId?: { name: string, phone: string } }) => (
-                    <tr key={req._id} style={{ borderTop: '1px solid #30363d', backgroundColor: selectedRequests.includes(req._id) ? '#1f6feb22' : 'transparent' }}>
+                    <tr key={req._id} style={{ borderTop: '1px solid var(--border-color)', backgroundColor: selectedRequests.includes(req._id) ? 'var(--accent-blue-bg)22' : 'transparent' }}>
                       <td style={{ padding: '12px' }}>
                         <input 
                           type="checkbox" 
@@ -284,8 +313,8 @@ const AdminPortal = () => {
                       <td style={{ padding: '12px' }}>{req.userId?.name}</td>
                       <td style={{ padding: '12px' }}>{req.userId?.phone}</td>
                       <td style={{ padding: '12px' }}>
-                        <button onClick={() => handleApprove(req._id)} style={{ marginRight: '10px', backgroundColor: '#238636', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>Approve</button>
-                        <button onClick={() => openRejectModal(req._id, false)} style={{ backgroundColor: '#da3633', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>Reject</button>
+                        <button onClick={() => handleApprove(req._id)} style={{ marginRight: '10px', backgroundColor: 'var(--accent-green-bg)', color: 'var(--text-primary)', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>Approve</button>
+                        <button onClick={() => openRejectModal(req._id, false)} style={{ backgroundColor: 'var(--accent-red-bg)', color: 'var(--text-primary)', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>Reject</button>
                       </td>
                     </tr>
                   ))}
@@ -320,22 +349,23 @@ const AdminPortal = () => {
           <RejectionAnalysisTab />
         </div>
 
+      {/* Reject Modal */}
       {rejectModalState && (
         <div style={{ position: 'fixed', inset: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 3000 }}>
           <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)' }} onClick={closeRejectModal} />
-          <div style={{ position: 'relative', width: '400px', backgroundColor: '#161b22', borderRadius: '12px', border: '1px solid #30363d', display: 'flex', flexDirection: 'column', zIndex: 3001, overflow: 'hidden' }}>
-            <div style={{ padding: '15px 20px', borderBottom: '1px solid #30363d', backgroundColor: '#0d1117' }}>
-              <h3 style={{ margin: 0, color: '#f85149' }}>
+          <div style={{ position: 'relative', width: '400px', backgroundColor: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', zIndex: 3001, overflow: 'hidden' }}>
+            <div style={{ padding: '15px 20px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)' }}>
+              <h3 style={{ margin: 0, color: 'var(--accent-red)' }}>
                 {rejectModalState.isBulk ? `Reject ${selectedRequests.length} Requests` : 'Reject Request'}
               </h3>
             </div>
             <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
               <div>
-                <label style={{ display: 'block', marginBottom: '8px', color: '#c9d1d9', fontSize: '14px', fontWeight: 'bold' }}>Reason for Rejection *</label>
+                <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)', fontSize: '14px', fontWeight: 'bold' }}>Reason for Rejection *</label>
                 <select 
                   value={rejectReason} 
                   onChange={(e) => setRejectReason(e.target.value)}
-                  style={{ width: '100%', padding: '10px', backgroundColor: '#0d1117', color: '#fff', border: '1px solid #30363d', borderRadius: '6px' }}
+                  style={{ width: '100%', padding: '10px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '6px' }}
                 >
                   <option value="" disabled>Select a reason...</option>
                   {adminRejectReasonsList.map(r => (
@@ -344,31 +374,55 @@ const AdminPortal = () => {
                 </select>
               </div>
               <div>
-                <label style={{ display: 'block', marginBottom: '8px', color: '#c9d1d9', fontSize: '14px', fontWeight: 'bold' }}>Extra Notes (Optional)</label>
+                <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)', fontSize: '14px', fontWeight: 'bold' }}>Extra Notes (Optional)</label>
                 <textarea 
                   value={rejectNotes}
                   onChange={(e) => setRejectNotes(e.target.value)}
                   placeholder="Provide any additional details..."
-                  style={{ width: '100%', padding: '10px', backgroundColor: '#0d1117', color: '#fff', border: '1px solid #30363d', borderRadius: '6px', minHeight: '80px', resize: 'vertical' }}
+                  style={{ width: '100%', padding: '10px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '6px', minHeight: '80px', resize: 'vertical' }}
                 />
               </div>
             </div>
-            <div style={{ padding: '15px 20px', borderTop: '1px solid #30363d', display: 'flex', justifyContent: 'flex-end', gap: '10px', backgroundColor: '#0d1117' }}>
+            <div style={{ padding: '15px 20px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'flex-end', gap: '10px', backgroundColor: 'var(--bg-primary)' }}>
               <button 
                 onClick={closeRejectModal} 
-                style={{ backgroundColor: 'transparent', border: '1px solid #8b949e', color: '#8b949e', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                style={{ backgroundColor: 'transparent', border: '1px solid var(--text-muted)', color: 'var(--text-muted)', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
               >
                 Cancel
               </button>
               <button 
                 onClick={submitReject} 
                 disabled={!rejectReason || isProcessing}
-                style={{ backgroundColor: rejectReason ? '#da3633' : '#444c56', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: rejectReason ? 'pointer' : 'not-allowed', fontWeight: 'bold' }}
+                style={{ backgroundColor: rejectReason ? 'var(--accent-red-bg)' : '#444c56', color: 'var(--text-primary)', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: rejectReason ? 'pointer' : 'not-allowed', fontWeight: 'bold' }}
               >
                 {isProcessing ? 'Processing...' : 'Confirm Reject'}
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* التابة السادسة: الذكاء الاصطناعي */}
+      <div style={{ display: activeTab === 'chatbot' ? 'flex' : 'none', height: '100%', flexDirection: 'column', overflowY: 'hidden' }}>
+        <AdminAIChatbotTab 
+          onAssignUnits={(userId, role) => setChatbotAssignUser({ id: userId, role })} 
+        />
+      </div>
+
+      {/* Catalog Modal opened by AI */}
+      {chatbotAssignUser && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 10000 }}>
+          <PropertyAssignCatalog
+            userId={chatbotAssignUser.id}
+            targetRole={chatbotAssignUser.role as any}
+            pendingRoleData={{ manualId: '', newRole: '' as any }} // Dummy data since role is already committed
+            roleAlreadyCommitted={true}
+            onClose={() => setChatbotAssignUser(null)}
+            onSuccess={() => {
+              setChatbotAssignUser(null);
+              alert('✅ تم تعيين الوحدات بنجاح!');
+            }}
+          />
         </div>
       )}
 

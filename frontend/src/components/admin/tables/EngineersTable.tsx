@@ -39,40 +39,40 @@ const EngineersTable = () => {
           placeholder="🔍 Search by Manual Engineer ID..." 
           value={searchId}
           onChange={(e) => setSearchId(e.target.value)}
-          style={{ padding: '8px', borderRadius: '4px', border: '1px solid #30363d', backgroundColor: '#0d1117', color: '#fff', width: '250px' }}
+          style={{ padding: '8px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', width: '250px' }}
         />
       </div>
 
       <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
         <thead>
-          <tr style={{ backgroundColor: '#21262d', textAlign: 'left' }}>
-            <th style={{ padding: '12px', borderBottom: '1px solid #30363d' }}>Engineer ID</th>
-            <th style={{ padding: '12px', borderBottom: '1px solid #30363d' }}>Name & Contact</th>
-            <th style={{ padding: '12px', borderBottom: '1px solid #30363d' }}>Grad Year (Age)</th>
-            <th style={{ padding: '12px', borderBottom: '1px solid #30363d' }}>Actions</th>
+          <tr style={{ backgroundColor: 'var(--bg-tertiary)', textAlign: 'left' }}>
+            <th style={{ padding: '12px', borderBottom: '1px solid var(--border-color)' }}>Engineer ID</th>
+            <th style={{ padding: '12px', borderBottom: '1px solid var(--border-color)' }}>Name & Contact</th>
+            <th style={{ padding: '12px', borderBottom: '1px solid var(--border-color)' }}>Grad Year (Age)</th>
+            <th style={{ padding: '12px', borderBottom: '1px solid var(--border-color)' }}>Actions</th>
           </tr>
         </thead>
         <tbody>
           {loading ? (
-            <tr><td colSpan={4} style={{ padding: '20px', textAlign: 'center', color: '#8b949e' }}>Loading...</td></tr>
+            <tr><td colSpan={4} style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>Loading...</td></tr>
           ) : filteredUsers.length === 0 ? (
-            <tr><td colSpan={4} style={{ padding: '20px', textAlign: 'center', color: '#8b949e' }}>No engineer found.</td></tr>
+            <tr><td colSpan={4} style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>No engineer found.</td></tr>
           ) : (
             filteredUsers.map(user => (
-              <tr key={user._id} style={{ borderBottom: '1px solid #30363d' }}>
+              <tr key={user._id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                 <td style={{ padding: '12px', fontWeight: 'bold', color: '#e34c26' }}>{user.profile?.manualId}</td>
                 <td style={{ padding: '12px' }}>
                   <div style={{ fontWeight: 'bold' }}>{user.name}</div>
-                  <div style={{ fontSize: '11px', color: '#8b949e' }}>{user.phone}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{user.phone}</div>
                 </td>
-                <td style={{ padding: '12px', color: '#8b949e' }}>
+                <td style={{ padding: '12px', color: 'var(--text-muted)' }}>
                   {user.profile?.graduationYear || 'N/A'} ({user.profile?.age ? `${user.profile.age} yrs` : 'N/A'})
                 </td>
                 <td style={{ padding: '12px', display: 'flex', gap: '8px' }}>
-                  <button onClick={() => setEditingUser(user)} style={{ backgroundColor: '#21262d', color: '#fff', border: '1px solid #30363d', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>✏️ Edit</button>
+                  <button onClick={() => setEditingUser(user)} style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>✏️ Edit</button>
                   <button 
                     onClick={() => setSelectedUser(user)}
-                    style={{ backgroundColor: '#da3633', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}
+                    style={{ backgroundColor: 'var(--accent-red-bg)', color: 'var(--text-primary)', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}
                   >
                     🔄 Revoke
                   </button>

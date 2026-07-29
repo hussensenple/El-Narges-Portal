@@ -285,87 +285,87 @@ const UnitCatalog = ({ view, onClose }: UnitCatalogProps) => {
 
   return (
     <>
-      <div style={{ position: 'absolute', top: `${pos.y}px`, left: `${pos.x}px`, width: '80vw', height: '80vh', minWidth: '400px', minHeight: '300px', backgroundColor: '#0d1117', borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.7)', display: 'flex', flexDirection: 'column', color: '#c9d1d9', fontFamily: 'sans-serif', zIndex: 1000, resize: 'both', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', top: `${pos.y}px`, left: `${pos.x}px`, width: '80vw', height: '80vh', minWidth: '400px', minHeight: '300px', backgroundColor: 'var(--bg-primary)', borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.7)', display: 'flex', flexDirection: 'column', color: 'var(--text-secondary)', fontFamily: 'sans-serif', zIndex: 1000, resize: 'both', overflow: 'hidden' }}>
         
-        <div onMouseDown={handleMouseDown} style={{ padding: '16px 24px', borderBottom: '1px solid #30363d', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#161b22', cursor: isDragging ? 'grabbing' : 'grab' }}>
-          <h2 style={{ margin: 0, color: '#fff', fontSize: '1.2rem', userSelect: 'none' }}>🏢 Property Catalog</h2>
+        <div onMouseDown={handleMouseDown} style={{ padding: '16px 24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-secondary)', cursor: isDragging ? 'grabbing' : 'grab' }}>
+          <h2 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.2rem', userSelect: 'none' }}>🏢 Property Catalog</h2>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
             {auth?.user && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', backgroundColor: '#21262d', padding: '6px 12px', borderRadius: '20px', border: '1px solid #30363d' }}>
-                <span style={{ color: '#58a6ff' }}>👤 {auth.user.name}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', backgroundColor: 'var(--bg-tertiary)', padding: '6px 12px', borderRadius: '20px', border: '1px solid var(--border-color)' }}>
+                <span style={{ color: 'var(--accent-blue)' }}>👤 {auth.user.name}</span>
                 <button onClick={auth.logout} style={{ background: 'none', border: 'none', color: '#ff7b72', cursor: 'pointer', fontWeight: 'bold' }}>Sign Out</button>
               </div>
             )}
-            <button onMouseDown={(e) => e.stopPropagation()} onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#8b949e', fontSize: '24px', cursor: 'pointer' }}>×</button>
+            <button onMouseDown={(e) => e.stopPropagation()} onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '24px', cursor: 'pointer' }}>×</button>
           </div>
         </div>
 
-        <div style={{ padding: '16px 24px', display: 'flex', gap: '16px', borderBottom: '1px solid #30363d', flexWrap: 'wrap', alignItems: 'center' }}>
-          <input type="text" placeholder="🔍 Search by ID..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ flex: 1, minWidth: '120px', padding: '10px', borderRadius: '6px', border: '1px solid #30363d', backgroundColor: '#010409', color: '#fff' }} />
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #30363d', backgroundColor: '#010409', color: '#fff', cursor: 'pointer' }}>
+        <div style={{ padding: '16px 24px', display: 'flex', gap: '16px', borderBottom: '1px solid var(--border-color)', flexWrap: 'wrap', alignItems: 'center' }}>
+          <input type="text" placeholder="🔍 Search by ID..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ flex: 1, minWidth: '120px', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }} />
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', cursor: 'pointer' }}>
             <option value="All">All Statuses</option> <option value="Available">Available</option> <option value="Reserved">Reserved</option> <option value="Sold">Sold</option>
           </select>
-          <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #30363d', backgroundColor: '#010409', color: '#fff', cursor: 'pointer' }}>
+          <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} style={{ padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', cursor: 'pointer' }}>
             <option value="All Types">All Types</option> 
             <option value="Apartment">Apartment</option> 
             <option value="Villa">Villa</option> 
             <option value="TwinHouse">TwinHouse</option>
           </select>
-          <input type="number" placeholder="💰 Max Price (M EGP)..." value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} min="0" step="any" style={{ padding: '10px', borderRadius: '6px', border: '1px solid #30363d', backgroundColor: '#010409', color: '#fff', width: '180px' }} />
-          <button onClick={handleResetFilters} style={{ padding: '10px 16px', backgroundColor: '#d29922', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>🔄 Reset</button>
+          <input type="number" placeholder="💰 Max Price (M EGP)..." value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} min="0" step="any" style={{ padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', width: '180px' }} />
+          <button onClick={handleResetFilters} style={{ padding: '10px 16px', backgroundColor: 'var(--accent-gold)', color: 'var(--text-primary)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>🔄 Reset</button>
           <button 
             onClick={loadUnitsData}
             disabled={isLoading}
             title="Sync latest status from ArcGIS Online"
-            style={{ padding: '10px 16px', backgroundColor: isLoading ? '#21262d' : '#1f6feb', color: '#fff', border: 'none', borderRadius: '6px', cursor: isLoading ? 'not-allowed' : 'pointer', fontWeight: 'bold', opacity: isLoading ? 0.6 : 1 }}
+            style={{ padding: '10px 16px', backgroundColor: isLoading ? 'var(--bg-tertiary)' : 'var(--accent-blue-bg)', color: 'var(--text-primary)', border: 'none', borderRadius: '6px', cursor: isLoading ? 'not-allowed' : 'pointer', fontWeight: 'bold', opacity: isLoading ? 0.6 : 1 }}
           >
             {isLoading ? '⏳ Syncing...' : '🔃 Refresh'}
           </button>
         </div>
         
-        <div style={{ padding: '12px 24px 0', color: '#8b949e', fontSize: '14px' }}>
-          📊 Total Displayed Units: <strong style={{ color: '#fff' }}>{filteredUnits.length}</strong> unit
+        <div style={{ padding: '12px 24px 0', color: 'var(--text-muted)', fontSize: '14px' }}>
+          📊 Total Displayed Units: <strong style={{ color: 'var(--text-primary)' }}>{filteredUnits.length}</strong> unit
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px', alignContent: 'start' }}>
-          {isLoading && <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: '#58a6ff' }}>Loading Units...</div>}
-          {filteredUnits.length === 0 && !isLoading && <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: '#8b949e', padding: '40px' }}>No units match your criteria. 🕵️‍♂️</div>}
+          {isLoading && <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: 'var(--accent-blue)' }}>Loading Units...</div>}
+          {filteredUnits.length === 0 && !isLoading && <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: 'var(--text-muted)', padding: '40px' }}>No units match your criteria. 🕵️‍♂️</div>}
 
           {filteredUnits.map((unit, idx) => {
             // ✅ Normalize status for badge — handles "Available","Sold","1","4" from live GIS data
             const status = String(unit.attributes.Status ?? 'available').toLowerCase();
             const isAvailable = status === 'available' || status === '1';
             const isReserved  = status === 'reserved'  || status === '3';
-            const badgeColor  = isAvailable ? '#2ea043' : (isReserved ? '#d29922' : '#f85149');
-            const borderColor = isAvailable ? '#2ea04355' : (isReserved ? '#d2992255' : '#f8514955');
+            const badgeColor  = isAvailable ? 'var(--accent-green)' : (isReserved ? 'var(--accent-gold)' : 'var(--accent-red)');
+            const borderColor = isAvailable ? 'var(--accent-green)55' : (isReserved ? 'var(--accent-gold)55' : 'var(--accent-red)55');
             const rawPrice = unit.attributes.Price; // ✅ Correct field name (Total_Price doesn't exist)
             const formattedPrice = rawPrice ? (Number(rawPrice) / 1000000).toFixed(2) + ' M EGP' : 'Contact Sales';
             const unitType = unit.attributes.DisplayType;
 
             return (
-              <div key={idx} onClick={() => handleCardClick(unit)} style={{ background: '#161b22', padding: '20px', borderRadius: '10px', border: `1px solid ${borderColor}`, cursor: 'pointer', transition: 'transform 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
+              <div key={idx} onClick={() => handleCardClick(unit)} style={{ background: 'var(--bg-secondary)', padding: '20px', borderRadius: '10px', border: `1px solid ${borderColor}`, cursor: 'pointer', transition: 'transform 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <strong style={{ color: '#fff', fontSize: '1.2rem' }}>Unit #{unit.attributes.OBJECTID}</strong>
+                  <strong style={{ color: 'var(--text-primary)', fontSize: '1.2rem' }}>Unit #{unit.attributes.OBJECTID}</strong>
                   <span style={{ border: `1px solid ${badgeColor}`, color: badgeColor, padding: '4px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase' }}>{isAvailable ? 'Available' : (isReserved ? 'Reserved' : 'Sold')}</span>
                 </div>
-                <div style={{ fontSize: '13px', color: '#8b949e', marginBottom: '20px', lineHeight: '1.8' }}>
-                  <div>🧱 Type: <strong style={{ color: '#fff' }}>{unitType}</strong></div>
+                <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px', lineHeight: '1.8' }}>
+                  <div>🧱 Type: <strong style={{ color: 'var(--text-primary)' }}>{unitType}</strong></div>
                   
                   {/* 🚀 التعديل: ترجمة أرقام الموديل للحروف المعتمدة بناءً على الـ Domain */}
                   {(unitType === 'Villa' || unitType === 'TwinHouse') && unit.attributes.VillaModel && (
-                    <div>🏡 Model: <strong style={{ color: '#fff' }}>
+                    <div>🏡 Model: <strong style={{ color: 'var(--text-primary)' }}>
                       {{ '1': 'A', '2': 'B', '3': 'D', '4': 'E' }[String(unit.attributes.VillaModel)] || unit.attributes.VillaModel}
                     </strong></div>
                   )}
                   
-                  <div>💰 Price: <strong style={{ color: '#fff' }}>{formattedPrice}</strong></div>
+                  <div>💰 Price: <strong style={{ color: 'var(--text-primary)' }}>{formattedPrice}</strong></div>
                 </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
-                  <button onClick={(e) => { e.stopPropagation(); setDesignImage(`/${unit.attributes.Image_Name || 'A.png'}`); }} style={{ flex: 1, padding: '10px', backgroundColor: '#21262d', color: '#c9d1d9', border: '1px solid #30363d', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', fontSize: '13px' }}>
+                  <button onClick={(e) => { e.stopPropagation(); setDesignImage(`/${unit.attributes.Image_Name || 'A.png'}`); }} style={{ flex: 1, padding: '10px', backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', fontSize: '13px' }}>
                     📐 Design
                   </button>
-                  <button onClick={(e) => handleBuyClick(e, unit)} disabled={!isAvailable} style={{ flex: 2, padding: '10px', backgroundColor: isAvailable ? '#1f6feb' : '#21262d', color: isAvailable ? '#fff' : '#8b949e', border: 'none', borderRadius: '6px', cursor: isAvailable ? 'pointer' : 'not-allowed', fontWeight: 'bold' }}>
+                  <button onClick={(e) => handleBuyClick(e, unit)} disabled={!isAvailable} style={{ flex: 2, padding: '10px', backgroundColor: isAvailable ? 'var(--accent-blue-bg)' : 'var(--bg-tertiary)', color: isAvailable ? 'var(--text-primary)' : 'var(--text-muted)', border: 'none', borderRadius: '6px', cursor: isAvailable ? 'pointer' : 'not-allowed', fontWeight: 'bold' }}>
                     {isAvailable ? "Proceed to Buy" : "Not Available"}
                   </button>
                 </div>
@@ -387,14 +387,14 @@ const UnitCatalog = ({ view, onClose }: UnitCatalogProps) => {
 
       {bookingUnit && !showAuthModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000 }}>
-          <div style={{ backgroundColor: '#161b22', padding: '24px', borderRadius: '12px', border: '1px solid #30363d', width: '320px', textAlign: 'center', color: '#c9d1d9', fontFamily: 'sans-serif' }}>
-            <h3 style={{ margin: '0 0 16px 0', color: '#fff' }}>📝 Confirm Booking Request</h3>
-            <p style={{ color: '#8b949e', fontSize: '14px', marginBottom: '20px', lineHeight: '1.5' }}>Are you sure you want to request the purchase of unit #<strong style={{color: '#fff'}}>{bookingUnit.attributes.OBJECTID}</strong>?</p>
+          <div style={{ backgroundColor: 'var(--bg-secondary)', padding: '24px', borderRadius: '12px', border: '1px solid var(--border-color)', width: '320px', textAlign: 'center', color: 'var(--text-secondary)', fontFamily: 'sans-serif' }}>
+            <h3 style={{ margin: '0 0 16px 0', color: 'var(--text-primary)' }}>📝 Confirm Booking Request</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '20px', lineHeight: '1.5' }}>Are you sure you want to request the purchase of unit #<strong style={{color: 'var(--text-primary)'}}>{bookingUnit.attributes.OBJECTID}</strong>?</p>
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={submitBookingRequest} disabled={isLoading} style={{ flex: 1, padding: '10px', backgroundColor: '#238636', color: '#fff', border: 'none', borderRadius: '6px', cursor: isLoading ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}>
+              <button onClick={submitBookingRequest} disabled={isLoading} style={{ flex: 1, padding: '10px', backgroundColor: 'var(--accent-green-bg)', color: 'var(--text-primary)', border: 'none', borderRadius: '6px', cursor: isLoading ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}>
                 {isLoading ? 'Sending...' : 'Confirm & Request'}
               </button>
-              <button onClick={() => setBookingUnit(null)} disabled={isLoading} style={{ flex: 1, padding: '10px', backgroundColor: '#21262d', color: '#8b949e', border: '1px solid #30363d', borderRadius: '6px', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => setBookingUnit(null)} disabled={isLoading} style={{ flex: 1, padding: '10px', backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-muted)', border: '1px solid var(--border-color)', borderRadius: '6px', cursor: 'pointer' }}>Cancel</button>
             </div>
           </div>
         </div>
@@ -402,8 +402,8 @@ const UnitCatalog = ({ view, onClose }: UnitCatalogProps) => {
 
       {designImage && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 3000 }} onClick={() => setDesignImage(null)}>
-          <div style={{ position: 'relative', backgroundColor: '#161b22', padding: '15px', borderRadius: '12px', border: '1px solid #30363d', maxWidth: '90%', maxHeight: '90%', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
-            <button onClick={() => setDesignImage(null)} style={{ position: 'absolute', top: '-12px', right: '-12px', background: '#f85149', border: 'none', color: '#fff', fontSize: '18px', cursor: 'pointer', width: '30px', height: '30px', borderRadius: '50%', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+          <div style={{ position: 'relative', backgroundColor: 'var(--bg-secondary)', padding: '15px', borderRadius: '12px', border: '1px solid var(--border-color)', maxWidth: '90%', maxHeight: '90%', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
+            <button onClick={() => setDesignImage(null)} style={{ position: 'absolute', top: '-12px', right: '-12px', background: 'var(--accent-red)', border: 'none', color: 'var(--text-primary)', fontSize: '18px', cursor: 'pointer', width: '30px', height: '30px', borderRadius: '50%', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
             <img src={designImage} alt="Property Design" style={{ maxWidth: '100%', maxHeight: '80vh', objectFit: 'contain', borderRadius: '8px' }} />
           </div>
         </div>

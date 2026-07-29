@@ -116,7 +116,7 @@ const BuildingSidebar = ({ buildingId, villaData, onClose }: BuildingSidebarProp
   const statusLabel = (s: any) => isSoldStatus(s) ? 'Sold / Reserved' : 'Available';
   const statusColor = (s: any) => isSoldStatus(s) ? '#ff7b72' : '#3fb950';
   const statusBg    = (s: any) => isSoldStatus(s) ? 'rgba(218,54,51,0.15)' : 'rgba(35,134,54,0.15)';
-  const borderColor = (s: any) => isSoldStatus(s) ? '#da3633' : '#238636';
+  const borderColor = (s: any) => isSoldStatus(s) ? 'var(--accent-red-bg)' : 'var(--accent-green-bg)';
 
   // ── Shared container ─────────────────────────────────────────────────────
   const isVillaMode = !!villaData;
@@ -143,14 +143,14 @@ const BuildingSidebar = ({ buildingId, villaData, onClose }: BuildingSidebarProp
       maxWidth: 'calc(100vw - 32px)',
       backgroundColor: 'rgba(13, 17, 23, 0.97)',
       backdropFilter: 'blur(12px)',
-      border: '1px solid #30363d',
+      border: '1px solid var(--border-color)',
       borderRadius: '14px',
       boxShadow: '0 12px 40px rgba(0,0,0,0.6)',
       zIndex: 1000,
       display: 'flex',
       flexDirection: 'column',
       animation: 'slideInRight 0.25s ease-out',
-      color: '#c9d1d9',
+      color: 'var(--text-secondary)',
       fontFamily: "'Inter', sans-serif",
       overflow: 'hidden'
     }}>
@@ -165,17 +165,17 @@ const BuildingSidebar = ({ buildingId, villaData, onClose }: BuildingSidebarProp
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         padding: '14px 18px',
-        borderBottom: '1px solid #21262d',
+        borderBottom: '1px solid var(--bg-tertiary)',
         background: 'rgba(33,38,45,0.7)',
         borderTopLeftRadius: '14px',
         borderTopRightRadius: '14px',
         flexShrink: 0
       }}>
-        <h3 style={{ margin: 0, color: '#58a6ff', fontSize: '1rem', fontWeight: 700 }}>{title}</h3>
+        <h3 style={{ margin: 0, color: 'var(--accent-blue)', fontSize: '1rem', fontWeight: 700 }}>{title}</h3>
         <button
           onClick={onClose}
           style={{
-            background: '#da3633', border: 'none', color: '#fff', cursor: 'pointer',
+            background: 'var(--accent-red-bg)', border: 'none', color: 'var(--text-primary)', cursor: 'pointer',
             fontSize: '0.85rem', width: '26px', height: '26px', borderRadius: '50%',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             transition: '0.2s', boxShadow: '0 2px 6px rgba(0,0,0,0.4)', flexShrink: 0
@@ -197,7 +197,7 @@ const BuildingSidebar = ({ buildingId, villaData, onClose }: BuildingSidebarProp
           const id = villaData.OBJECTID;
           return (
             <div style={{
-              backgroundColor: '#0d1117',
+              backgroundColor: 'var(--bg-primary)',
               border: `1px solid ${borderColor(villaData.Status)}`,
               borderRadius: '12px',
               overflow: 'hidden',
@@ -205,25 +205,25 @@ const BuildingSidebar = ({ buildingId, villaData, onClose }: BuildingSidebarProp
               flexShrink: 0
             }}>
               {/* ID badge */}
-              <div style={{ background: '#161b22', padding: '8px 14px', borderBottom: '1px solid #21262d', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ color: '#8b949e', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Property ID</span>
+              <div style={{ background: 'var(--bg-secondary)', padding: '8px 14px', borderBottom: '1px solid var(--bg-tertiary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Property ID</span>
                 <code style={{
-                  backgroundColor: '#21262d', color: '#58a6ff', padding: '2px 8px',
+                  backgroundColor: 'var(--bg-tertiary)', color: 'var(--accent-blue)', padding: '2px 8px',
                   borderRadius: '6px', fontSize: '13px', fontWeight: 700,
                   cursor: 'pointer', userSelect: 'all'
                 }} title="Click to copy" onClick={() => navigator.clipboard.writeText(String(id))}>
                   #{id}
                 </code>
-                <span style={{ color: '#8b949e', fontSize: '10px', marginLeft: 'auto' }}>📋 click to copy</span>
+                <span style={{ color: 'var(--text-muted)', fontSize: '10px', marginLeft: 'auto' }}>📋 click to copy</span>
               </div>
 
               <div style={{ padding: '14px' }}>
                 <div style={{ marginBottom: '10px' }}>
-                  <span style={{ color: '#e6edf3', fontWeight: 700, fontSize: '15px' }}>{villaData.BuildingType || 'Villa'}</span>
-                  {villaData.VillaModel && <span style={{ color: '#8b949e', fontSize: '12px', marginLeft: '8px' }}>Model {villaData.VillaModel}</span>}
+                  <span style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: '15px' }}>{villaData.BuildingType || 'Villa'}</span>
+                  {villaData.VillaModel && <span style={{ color: 'var(--text-muted)', fontSize: '12px', marginLeft: '8px' }}>Model {villaData.VillaModel}</span>}
                   {(villaData.UnitArea || villaData.Area) && (
-                    <div style={{ marginTop: '4px', color: '#8b949e', fontSize: '12px' }}>
-                      📐 Area: <strong style={{ color: '#c9d1d9' }}>{villaData.UnitArea || villaData.Area} m²</strong>
+                    <div style={{ marginTop: '4px', color: 'var(--text-muted)', fontSize: '12px' }}>
+                      📐 Area: <strong style={{ color: 'var(--text-secondary)' }}>{villaData.UnitArea || villaData.Area} m²</strong>
                     </div>
                   )}
                 </div>
@@ -248,7 +248,7 @@ const BuildingSidebar = ({ buildingId, villaData, onClose }: BuildingSidebarProp
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px',
                       padding: '10px', marginBottom: '10px',
                       background: 'linear-gradient(to right, #2563eb, #1d4ed8)',
-                      color: '#fff', textDecoration: 'none', borderRadius: '8px',
+                      color: 'var(--text-primary)', textDecoration: 'none', borderRadius: '8px',
                       fontWeight: 700, fontSize: '13px',
                       boxShadow: '0 3px 8px rgba(37,99,235,0.4)'
                     }}
@@ -262,12 +262,12 @@ const BuildingSidebar = ({ buildingId, villaData, onClose }: BuildingSidebarProp
                   <button
                     onClick={handleBookVilla}
                     style={{
-                      width: '100%', padding: '10px', backgroundColor: '#238636',
-                      color: '#fff', border: 'none', borderRadius: '8px',
+                      width: '100%', padding: '10px', backgroundColor: 'var(--accent-green-bg)',
+                      color: 'var(--text-primary)', border: 'none', borderRadius: '8px',
                       cursor: 'pointer', fontWeight: 700, fontSize: '13px', transition: '0.2s'
                     }}
-                    onMouseOver={e => e.currentTarget.style.backgroundColor = '#2ea043'}
-                    onMouseOut={e  => e.currentTarget.style.backgroundColor = '#238636'}
+                    onMouseOver={e => e.currentTarget.style.backgroundColor = 'var(--accent-green)'}
+                    onMouseOut={e  => e.currentTarget.style.backgroundColor = 'var(--accent-green-bg)'}
                   >
                     🔖 Book Now
                   </button>
@@ -280,9 +280,9 @@ const BuildingSidebar = ({ buildingId, villaData, onClose }: BuildingSidebarProp
         {/* ════════════ BUILDING MODE ════════════ */}
         {!isVillaMode && (
           loading
-            ? <div style={{ textAlign: 'center', color: '#8b949e', marginTop: '20px' }}>Loading apartments…</div>
+            ? <div style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '20px' }}>Loading apartments…</div>
             : units.length === 0
-              ? <div style={{ textAlign: 'center', color: '#8b949e', marginTop: '20px' }}>No apartments found for this building.</div>
+              ? <div style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '20px' }}>No apartments found for this building.</div>
               : units.map((unit, idx) => {
                 const sold = isSoldStatus(unit.Status);
                 const priceM = unit.Price ? (unit.Price / 1_000_000).toFixed(2) : null;
@@ -292,7 +292,7 @@ const BuildingSidebar = ({ buildingId, villaData, onClose }: BuildingSidebarProp
 
                 return (
                   <div key={idx} style={{
-                    backgroundColor: '#0d1117',
+                    backgroundColor: 'var(--bg-primary)',
                     border: `1px solid ${borderColor(unit.Status)}`,
                     borderRadius: '12px',
                     overflow: 'hidden',
@@ -301,13 +301,13 @@ const BuildingSidebar = ({ buildingId, villaData, onClose }: BuildingSidebarProp
                   }}>
                     {/* ID badge row */}
                     <div style={{
-                      background: '#161b22', padding: '7px 14px', borderBottom: '1px solid #21262d',
+                      background: 'var(--bg-secondary)', padding: '7px 14px', borderBottom: '1px solid var(--bg-tertiary)',
                       display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap'
                     }}>
-                      <span style={{ color: '#8b949e', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Apt ID</span>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Apt ID</span>
                       <code
                         style={{
-                          backgroundColor: '#21262d', color: '#58a6ff', padding: '2px 8px',
+                          backgroundColor: 'var(--bg-tertiary)', color: 'var(--accent-blue)', padding: '2px 8px',
                           borderRadius: '6px', fontSize: '12px', fontWeight: 700,
                           cursor: 'pointer', userSelect: 'all'
                         }}
@@ -318,18 +318,18 @@ const BuildingSidebar = ({ buildingId, villaData, onClose }: BuildingSidebarProp
                       </code>
                       {floorLabel && (
                         <span style={{
-                          backgroundColor: 'rgba(88,166,255,0.12)', color: '#58a6ff',
+                          backgroundColor: 'rgba(88,166,255,0.12)', color: 'var(--accent-blue)',
                           padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600
                         }}>🏗️ {floorLabel}</span>
                       )}
-                      <span style={{ color: '#8b949e', fontSize: '10px', marginLeft: 'auto' }}>📋</span>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '10px', marginLeft: 'auto' }}>📋</span>
                     </div>
 
                     <div style={{ padding: '12px 14px' }}>
                       {/* Area */}
                       {(unit.UnitArea || unit.Area) && (
-                        <div style={{ marginBottom: '8px', color: '#8b949e', fontSize: '12px' }}>
-                          📐 Area: <strong style={{ color: '#c9d1d9' }}>{unit.UnitArea || unit.Area} m²</strong>
+                        <div style={{ marginBottom: '8px', color: 'var(--text-muted)', fontSize: '12px' }}>
+                          📐 Area: <strong style={{ color: 'var(--text-secondary)' }}>{unit.UnitArea || unit.Area} m²</strong>
                         </div>
                       )}
 
@@ -352,8 +352,8 @@ const BuildingSidebar = ({ buildingId, villaData, onClose }: BuildingSidebarProp
                           style={{
                             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
                             padding: '8px', marginBottom: '8px',
-                            background: 'rgba(33,38,45,0.9)', border: '1px solid #30363d',
-                            color: '#58a6ff', textDecoration: 'none', borderRadius: '7px',
+                            background: 'rgba(33,38,45,0.9)', border: '1px solid var(--border-color)',
+                            color: 'var(--accent-blue)', textDecoration: 'none', borderRadius: '7px',
                             fontWeight: 700, fontSize: '12px', transition: '0.2s'
                           }}
                         >
@@ -366,12 +366,12 @@ const BuildingSidebar = ({ buildingId, villaData, onClose }: BuildingSidebarProp
                         <button
                           onClick={() => handleBookApartment(unit)}
                           style={{
-                            width: '100%', padding: '8px', backgroundColor: '#238636',
-                            color: '#fff', border: 'none', borderRadius: '7px',
+                            width: '100%', padding: '8px', backgroundColor: 'var(--accent-green-bg)',
+                            color: 'var(--text-primary)', border: 'none', borderRadius: '7px',
                             cursor: 'pointer', fontWeight: 700, fontSize: '12px', transition: '0.2s'
                           }}
-                          onMouseOver={e => e.currentTarget.style.backgroundColor = '#2ea043'}
-                          onMouseOut={e  => e.currentTarget.style.backgroundColor = '#238636'}
+                          onMouseOver={e => e.currentTarget.style.backgroundColor = 'var(--accent-green)'}
+                          onMouseOut={e  => e.currentTarget.style.backgroundColor = 'var(--accent-green-bg)'}
                         >
                           🔖 Book Now
                         </button>

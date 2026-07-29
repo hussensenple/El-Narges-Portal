@@ -250,12 +250,12 @@ const ClosestServices = ({ view }: ClosestServicesProps) => {
 
   return (
     <div style={{
-      backgroundColor: '#0d1117', height: 'auto', maxHeight: 'calc(100vh - 160px)', overflowY: 'auto', overflowX: 'hidden',
-      fontFamily: "'Inter', 'Segoe UI', Roboto, sans-serif", color: '#c9d1d9', borderRadius: '12px', border: '1px solid #30363d',
+      backgroundColor: 'var(--bg-primary)', height: 'auto', maxHeight: 'calc(100vh - 160px)', overflowY: 'auto', overflowX: 'hidden',
+      fontFamily: "'Inter', 'Segoe UI', Roboto, sans-serif", color: 'var(--text-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)',
       width: '320px', padding: '20px', boxSizing: 'border-box', boxShadow: '0 8px 24px rgba(0,0,0,0.6)'
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', paddingBottom: '12px', borderBottom: '1px solid #30363d' }}>
-        <h3 style={{ fontWeight: 800, color: '#ffffff', margin: 0, fontSize: '16px' }}>📍 Closest Services</h3>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', paddingBottom: '12px', borderBottom: '1px solid var(--border-color)' }}>
+        <h3 style={{ fontWeight: 800, color: 'var(--text-primary)', margin: 0, fontSize: '16px' }}>📍 Closest Services</h3>
       </div>
 
       <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
@@ -266,8 +266,8 @@ const ClosestServices = ({ view }: ClosestServicesProps) => {
           }}
           disabled={!view}
           style={{
-            flex: 2, padding: '12px', backgroundColor: !view ? '#21262d' : (isSelecting ? 'transparent' : '#238636'),
-            color: !view ? '#8b949e' : (isSelecting ? '#ff7b72' : '#ffffff'), border: isSelecting ? '1px solid #da3633' : '1px solid #238636',
+            flex: 2, padding: '12px', backgroundColor: !view ? 'var(--bg-tertiary)' : (isSelecting ? 'transparent' : 'var(--accent-green-bg)'),
+            color: !view ? 'var(--text-muted)' : (isSelecting ? '#ff7b72' : 'var(--text-primary)'), border: isSelecting ? '1px solid var(--accent-red-bg)' : '1px solid var(--accent-green-bg)',
             borderRadius: '8px', fontWeight: 600, fontSize: '13px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px'
           }}
         >
@@ -277,7 +277,7 @@ const ClosestServices = ({ view }: ClosestServicesProps) => {
         <button
           onClick={clearRoutes}
           style={{
-            flex: 1, padding: '12px', backgroundColor: '#21262d', color: '#c9d1d9', border: '1px solid #30363d', borderRadius: '8px', fontWeight: 600, fontSize: '13px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px'
+            flex: 1, padding: '12px', backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 600, fontSize: '13px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px'
           }}
         >
           <Icons.Trash /> Clear
@@ -285,13 +285,13 @@ const ClosestServices = ({ view }: ClosestServicesProps) => {
       </div>
 
       {isSelecting && (
-        <div style={{ textAlign: 'center', fontSize: '12px', color: '#58a6ff', marginBottom: '20px', padding: '8px', backgroundColor: 'rgba(56, 139, 253, 0.1)', borderRadius: '6px' }}>
+        <div style={{ textAlign: 'center', fontSize: '12px', color: 'var(--accent-blue)', marginBottom: '20px', padding: '8px', backgroundColor: 'rgba(56, 139, 253, 0.1)', borderRadius: '6px' }}>
           👉 Click on any Building or Villa...
         </div>
       )}
 
       {isCalculating && (
-        <div style={{ textAlign: 'center', fontSize: '13px', color: '#d29922', fontWeight: 600, marginBottom: '20px' }}>
+        <div style={{ textAlign: 'center', fontSize: '13px', color: 'var(--accent-gold)', fontWeight: 600, marginBottom: '20px' }}>
           ⏳ Calculating routes...
         </div>
       )}
@@ -301,12 +301,12 @@ const ClosestServices = ({ view }: ClosestServicesProps) => {
           const colors: any = { hospital: '#eab308', school: '#22c55e', commercial: '#3b82f6', gym: '#ef4444' };
           const TypeIcon: any = Icons[type.charAt(0).toUpperCase() + type.slice(1) as keyof typeof Icons];
           return (
-            <div key={type} style={{ backgroundColor: '#161b22', padding: '14px', borderRadius: '8px', border: '1px solid #30363d', borderLeft: `4px solid ${colors[type]}` }}>
+            <div key={type} style={{ backgroundColor: 'var(--bg-secondary)', padding: '14px', borderRadius: '8px', border: '1px solid var(--border-color)', borderLeft: `4px solid ${colors[type]}` }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                 <div style={{ color: colors[type] }}><TypeIcon /></div>
-                <div style={{ fontSize: '12px', color: '#8b949e', fontWeight: 700, textTransform: 'uppercase' }}>{type}</div>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>{type}</div>
               </div>
-              <div style={{ fontSize: '15px', color: '#ffffff', fontWeight: 700, paddingLeft: '24px' }}>
+              <div style={{ fontSize: '15px', color: 'var(--text-primary)', fontWeight: 700, paddingLeft: '24px' }}>
                 {routeInfo[type] || '---'}
               </div>
             </div>

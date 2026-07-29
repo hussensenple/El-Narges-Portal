@@ -116,7 +116,7 @@ const WalkthroughTour = ({ role, userName, onClose }: WalkthroughTourProps) => {
             height: rect.height + 12,
             borderRadius: '12px',
             boxShadow: '0 0 0 9999px rgba(10, 15, 23, 0.85)',
-            border: '3px solid #1f6feb',
+            border: '3px solid var(--accent-blue-bg)',
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             zIndex: 99999,
             pointerEvents: 'none',
@@ -219,9 +219,9 @@ const WalkthroughTour = ({ role, userName, onClose }: WalkthroughTourProps) => {
         ref={cardRef} 
         style={{
           ...cardStyle,
-          backgroundColor: '#0d1117',
-          color: '#c9d1d9',
-          border: '1px solid #30363d',
+          backgroundColor: 'var(--bg-primary)',
+          color: 'var(--text-secondary)',
+          border: '1px solid var(--border-color)',
           borderRadius: '16px',
           padding: '24px',
           boxShadow: '0 12px 40px rgba(0, 0, 0, 0.8)',
@@ -232,21 +232,21 @@ const WalkthroughTour = ({ role, userName, onClose }: WalkthroughTourProps) => {
       >
         {/* Step indicator */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <span style={{ fontSize: '12px', fontWeight: 700, color: '#58a6ff', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--accent-blue)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             Compound Guide
           </span>
-          <span style={{ fontSize: '12px', color: '#8b949e', fontWeight: 600 }}>
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>
             {currentStepIndex + 1} of {steps.length}
           </span>
         </div>
 
         {/* Title */}
-        <h4 style={{ margin: '0 0 10px 0', fontSize: '17px', fontWeight: 800, color: '#ffffff', lineHeight: 1.3 }}>
+        <h4 style={{ margin: '0 0 10px 0', fontSize: '17px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.3 }}>
           {currentStep.title}
         </h4>
 
         {/* Description */}
-        <p style={{ margin: '0 0 24px 0', fontSize: '13.5px', color: '#8b949e', lineHeight: 1.5 }}>
+        <p style={{ margin: '0 0 24px 0', fontSize: '13.5px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
           {currentStep.description}
         </p>
 
@@ -257,7 +257,7 @@ const WalkthroughTour = ({ role, userName, onClose }: WalkthroughTourProps) => {
             style={{
               background: 'transparent',
               border: 'none',
-              color: '#8b949e',
+              color: 'var(--text-muted)',
               cursor: 'pointer',
               fontSize: '13px',
               fontWeight: 600,
@@ -266,7 +266,7 @@ const WalkthroughTour = ({ role, userName, onClose }: WalkthroughTourProps) => {
               transition: 'all 0.2s',
             }}
             onMouseOver={(e) => (e.currentTarget.style.color = '#ff7b72')}
-            onMouseOut={(e) => (e.currentTarget.style.color = '#8b949e')}
+            onMouseOut={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
           >
             Skip Tour
           </button>
@@ -276,9 +276,9 @@ const WalkthroughTour = ({ role, userName, onClose }: WalkthroughTourProps) => {
               <button 
                 onClick={handlePrev}
                 style={{
-                  background: '#21262d',
-                  border: '1px solid #30363d',
-                  color: '#c9d1d9',
+                  background: 'var(--bg-tertiary)',
+                  border: '1px solid var(--border-color)',
+                  color: 'var(--text-secondary)',
                   cursor: 'pointer',
                   fontSize: '13px',
                   fontWeight: 600,
@@ -286,8 +286,8 @@ const WalkthroughTour = ({ role, userName, onClose }: WalkthroughTourProps) => {
                   borderRadius: '8px',
                   transition: 'all 0.2s',
                 }}
-                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#30363d')}
-                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#21262d')}
+                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = 'var(--border-color)')}
+                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)')}
               >
                 Previous
               </button>
@@ -296,9 +296,9 @@ const WalkthroughTour = ({ role, userName, onClose }: WalkthroughTourProps) => {
             <button 
               onClick={handleNext}
               style={{
-                background: '#1f6feb',
-                border: '1px solid #1f6feb',
-                color: '#ffffff',
+                background: 'var(--accent-blue-bg)',
+                border: '1px solid var(--accent-blue-bg)',
+                color: 'var(--text-primary)',
                 cursor: 'pointer',
                 fontSize: '13px',
                 fontWeight: 700,
@@ -308,7 +308,7 @@ const WalkthroughTour = ({ role, userName, onClose }: WalkthroughTourProps) => {
                 transition: 'all 0.2s',
               }}
               onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#388bfd')}
-              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#1f6feb')}
+              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = 'var(--accent-blue-bg)')}
             >
               {currentStepIndex === steps.length - 1 ? 'Finish' : 'Next'}
             </button>

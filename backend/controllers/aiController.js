@@ -1,5 +1,6 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const KnowledgeBase = require("../models/KnowledgeBase");
+const User = require("../models/User");
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const embeddingModel = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
@@ -331,4 +332,97 @@ const askEngineerAI = async (req, res) => {
   }
 };
 
-module.exports = { askAI, askEngineerAI };
+const askAdminAI = async (req, res) => {
+  try {
+    const { question } = req.body;
+    
+    const users = await User.find().select('username phone email role _id');
+    const usersContext = users.map(u => ({ id: u._id, name: u.username, phone: u.phone, email: u.email, role: u.role }));
+    
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+    
+    const prompt = `
+      You are an Admin AI Assistant for the El-Narges Compound.
+      Your task is to parse the admin's command and return structured actions.
+      The admin might want to change the role of one or more users, assign them units, OR bulk update prices of properties based on their Model.
+      
+      Admin Command: "${question}"
+      
+      Registered Users Context:
+      ${JSON.stringify(usersContext, null, 2)}
+      
+      Rules:
+      1. Identify all users mentioned in the command for role changes. Match them to the Registered Users Context using their name, phone, or email.
+      2. For role changes: determine the new role ("owner", "broker", "user", "engineer", "admin"). If the admin ONLY asks to assign extra units to an existing owner or broker, keep "newRole" identical to their currentRole. Extract any specific unit numbers mentioned for that user into the "unitsToAssign" array. If the command says "downgrade to user" or "remove role" or "revoke", the new role is "user".
+      3. For bulk price updates: If the admin asks to change the price of properties based on their model (e.g., "Make ModelU apartments 5 million", "تعديل سعر فلل TwinHouse لـ 10 مليون"), you must generate an "UPDATE_PRICE_BY_MODEL" action.
+         - "modelType": Extract the model name exactly (e.g., "ModelX", "ModelU", "ModelS", "ModelZ" for apartments, or "StandAlone", "TwinHouse", "TownHouse" for villas).
+         - "propertyType": Determine if they mean "apartment" (شقق) or "villa" (فلل).
+         - "newPrice": Extract the numeric value of the new price. If they say "5 million" or "5 مليون", output 5000000.
+      4. The response MUST be strictly in JSON format without markdown wrapping, containing "reply" and "actions" array.
+      5. The "actions" array can contain objects of different types:
+      
+      For Role Changes:
+      {
+        "action": "CHANGE_ROLE",
+        "userId": "MongoDB ID of the matched user",
+        "userName": "Name of the matched user",
+        "currentRole": "The user's current role",
+        "newRole": "The new role to assign",
+        "unitsToAssign": ["unitId1", "unitId2"]
+      }
+      (If you cannot find a matching user for a role change, set userId to null and explain in the reply)
+
+      For Price Updates:
+      {
+        "action": "UPDATE_PRICE_BY_MODEL",
+        "modelType": "ModelU",
+        "propertyType": "apartment",
+        "newPrice": 5000000
+      }
+      
+      6. The "reply" must be a conversational confirmation strictly in English.
+    `;
+
+    const responseResult = await generateWithRetry(model, prompt);
+    const responseText = responseResult.response.text();
+    const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+    const aiData = JSON.parse(cleanJson);
+
+    res.status(200).json(aiData);
+
+  } catch (error) {
+    console.error("Admin AI Error:", error);
+    res.status(500).json({ error: "Sorry, an error occurred in the Admin AI." });
+  }
+};
+const generateChatTitle = async (req, res) => {
+  try {
+    const { firstMessage } = req.body;
+    if (!firstMessage) {
+      return res.status(400).json({ title: "New Chat" });
+    }
+
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+    const prompt = `
+      You are an AI assistant. Summarize the user's intent in 3 to 5 words to be used as a chat title.
+      Do not include quotes, periods, or extra text. Reply strictly in English.
+      
+      User Message: "${firstMessage}"
+    `;
+
+    const responseResult = await generateWithRetry(model, prompt);
+    let title = responseResult.response.text().trim().replace(/['"]+/g, '');
+    
+    // Ensure title is short
+    if (title.split(' ').length > 8) {
+      title = title.split(' ').slice(0, 5).join(' ') + '...';
+    }
+
+    res.status(200).json({ title });
+  } catch (error) {
+    console.error("AI Title Gen Error:", error);
+    res.status(500).json({ title: "New Chat" });
+  }
+};
+
+module.exports = { askAI, askEngineerAI, askAdminAI, generateChatTitle };

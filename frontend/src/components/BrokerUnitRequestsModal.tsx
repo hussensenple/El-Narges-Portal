@@ -82,54 +82,54 @@ const BrokerUnitRequestsModal = ({ unit, requests, onClose, onRefresh }: BrokerU
     <div style={{ position: 'fixed', inset: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2100 }}>
       <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)' }} onClick={onClose} />
       
-      <div style={{ position: 'relative', width: '600px', maxHeight: '80vh', backgroundColor: '#161b22', borderRadius: '12px', border: '1px solid #30363d', display: 'flex', flexDirection: 'column', zIndex: 2101, overflow: 'hidden' }}>
+      <div style={{ position: 'relative', width: '600px', maxHeight: '80vh', backgroundColor: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', zIndex: 2101, overflow: 'hidden' }}>
         
         {/* Header */}
-        <div style={{ padding: '20px', borderBottom: '1px solid #30363d', backgroundColor: '#0d1117', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ padding: '20px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h3 style={{ margin: 0, color: '#58a6ff' }}>
+            <h3 style={{ margin: 0, color: 'var(--accent-blue)' }}>
               Requests for {unit.unitName?.includes('شقة') ? 'Apartment' : unit.unitName?.includes('فيلا') ? 'Villa' : unit.unitName || 'Unit'} #{unit.objectId || unit.OBJECTID || unit.arcgisId}
             </h3>
           </div>
-          <button onClick={onClose} style={{ background: 'transparent', border: '1px solid #30363d', color: '#8b949e', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>✖</button>
+          <button onClick={onClose} style={{ background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-muted)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>✖</button>
         </div>
 
         {/* List */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
           {requests.length === 0 ? (
-            <div style={{ textAlign: 'center', color: '#8b949e', padding: '40px 0' }}>No pending requests for this unit.</div>
+            <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '40px 0' }}>No pending requests for this unit.</div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               {(() => {
                 const isAnyReserved = requests.some(r => r.status === 'Reserved');
                 return requests.map((req) => (
-                  <div key={req._id} style={{ backgroundColor: '#0d1117', border: `1px solid ${req.status === 'Reserved' ? '#d29922' : '#30363d'}`, borderRadius: '8px', padding: '16px' }}>
+                  <div key={req._id} style={{ backgroundColor: 'var(--bg-primary)', border: `1px solid ${req.status === 'Reserved' ? 'var(--accent-gold)' : 'var(--border-color)'}`, borderRadius: '8px', padding: '16px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                      <h4 style={{ margin: 0, color: '#e6edf3' }}>{req.customerName}</h4>
-                      <span style={{ fontSize: '12px', color: '#8b949e' }}>
+                      <h4 style={{ margin: 0, color: 'var(--text-primary)' }}>{req.customerName}</h4>
+                      <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                         {new Date(req.createdAt).toLocaleString()}
                       </span>
                     </div>
                     
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '15px', fontSize: '13px', color: '#c9d1d9' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '15px', fontSize: '13px', color: 'var(--text-secondary)' }}>
                       <div>📞 {req.customerPhone}</div>
                       <div>✉️ {req.customerGmail}</div>
                     </div>
 
                     <div style={{ display: 'flex', gap: '10px' }}>
                       {req.status === 'Reserved' ? (
-                        <div style={{ flex: 1, backgroundColor: '#d2992222', color: '#d29922', padding: '8px', borderRadius: '6px', textAlign: 'center', fontWeight: 'bold', border: '1px solid #d29922' }}>
+                        <div style={{ flex: 1, backgroundColor: 'var(--accent-gold)22', color: 'var(--accent-gold)', padding: '8px', borderRadius: '6px', textAlign: 'center', fontWeight: 'bold', border: '1px solid var(--accent-gold)' }}>
                           ⏳ Under Admin Review
                         </div>
                       ) : (
                         <>
                           {decliningRequestId === req._id ? (
-                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', backgroundColor: '#21262d', padding: '15px', borderRadius: '8px', border: '1px solid #30363d' }}>
-                              <h5 style={{ margin: 0, color: '#fff' }}>Provide Decline Reason</h5>
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', backgroundColor: 'var(--bg-tertiary)', padding: '15px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                              <h5 style={{ margin: 0, color: 'var(--text-primary)' }}>Provide Decline Reason</h5>
                               <select 
                                 value={declineReason} 
                                 onChange={(e) => setDeclineReason(e.target.value)}
-                                style={{ width: '100%', padding: '10px', backgroundColor: '#0d1117', color: '#fff', border: '1px solid #30363d', borderRadius: '6px' }}
+                                style={{ width: '100%', padding: '10px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '6px' }}
                               >
                                 <option value="" disabled>Select a reason...</option>
                                 {declineReasonsList.map(r => (
@@ -141,21 +141,21 @@ const BrokerUnitRequestsModal = ({ unit, requests, onClose, onRefresh }: BrokerU
                                 value={declineNotes}
                                 onChange={(e) => setDeclineNotes(e.target.value)}
                                 placeholder="Extra notes (optional)"
-                                style={{ width: '100%', padding: '10px', backgroundColor: '#0d1117', color: '#fff', border: '1px solid #30363d', borderRadius: '6px', minHeight: '60px', resize: 'vertical' }}
+                                style={{ width: '100%', padding: '10px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '6px', minHeight: '60px', resize: 'vertical' }}
                               />
                               
                               <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
                                 <button
                                   onClick={() => handleAction(req._id, 'decline')}
                                   disabled={processingId === req._id || !declineReason}
-                                  style={{ flex: 1, backgroundColor: declineReason ? '#da3633' : '#444c56', color: '#fff', border: 'none', padding: '8px', borderRadius: '6px', cursor: declineReason ? 'pointer' : 'not-allowed', fontWeight: 'bold' }}
+                                  style={{ flex: 1, backgroundColor: declineReason ? 'var(--accent-red-bg)' : '#444c56', color: 'var(--text-primary)', border: 'none', padding: '8px', borderRadius: '6px', cursor: declineReason ? 'pointer' : 'not-allowed', fontWeight: 'bold' }}
                                 >
                                   {processingId === req._id ? 'Processing...' : 'Confirm Decline'}
                                 </button>
                                 <button
                                   onClick={() => setDecliningRequestId(null)}
                                   disabled={processingId === req._id}
-                                  style={{ flex: 1, backgroundColor: 'transparent', border: '1px solid #8b949e', color: '#8b949e', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                                  style={{ flex: 1, backgroundColor: 'transparent', border: '1px solid var(--text-muted)', color: 'var(--text-muted)', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
                                 >
                                   Cancel
                                 </button>
@@ -166,7 +166,7 @@ const BrokerUnitRequestsModal = ({ unit, requests, onClose, onRefresh }: BrokerU
                               <button
                                 onClick={() => handleAction(req._id, 'raise')}
                                 disabled={processingId === req._id || isAnyReserved}
-                                style={{ flex: 1, backgroundColor: isAnyReserved ? '#444c56' : '#238636', color: isAnyReserved ? '#8b949e' : '#fff', border: 'none', padding: '8px', borderRadius: '6px', cursor: isAnyReserved ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}
+                                style={{ flex: 1, backgroundColor: isAnyReserved ? '#444c56' : 'var(--accent-green-bg)', color: isAnyReserved ? 'var(--text-muted)' : 'var(--text-primary)', border: 'none', padding: '8px', borderRadius: '6px', cursor: isAnyReserved ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}
                                 title={isAnyReserved ? "Another request is currently under review." : ""}
                               >
                                 {processingId === req._id ? 'Processing...' : '⬆️ Raise to Admin'}
@@ -174,7 +174,7 @@ const BrokerUnitRequestsModal = ({ unit, requests, onClose, onRefresh }: BrokerU
                               <button
                                 onClick={() => handleDeclineClick(req._id)}
                                 disabled={processingId === req._id}
-                                style={{ flex: 1, backgroundColor: 'transparent', border: '1px solid #f85149', color: '#f85149', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                                style={{ flex: 1, backgroundColor: 'transparent', border: '1px solid var(--accent-red)', color: 'var(--accent-red)', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
                               >
                                 ✖ Decline
                               </button>

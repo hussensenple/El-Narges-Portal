@@ -6,7 +6,9 @@ interface Property {
   GlobalID?: string;
   Status: string | number;
   Price?: number;
-  BuildingType?: string;
+  BuildingType?: string | number;
+  BuildingModel?: string;
+  VillaModel?: string;
   sourceLayer: string;
   arcgisId: string | number;
 }
@@ -17,6 +19,8 @@ const PropertyManagementTab = () => {
   const [editingId, setEditingId] = useState<string | number | null>(null);
   const [newPrice, setNewPrice] = useState<number | string>('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState('All Types');
+  const [modelFilter, setModelFilter] = useState('All Models');
 
   const fetchProperties = async () => {
     try {
@@ -27,10 +31,26 @@ const PropertyManagementTab = () => {
       const villas = res.data.villas || [];
       const buildings = res.data.buildings || [];
       
+      // Create a map of BuildingID_FK -> BuildingModel for fast lookup
+      const buildingModelMap: { [key: string]: string } = {};
+      buildings.forEach((b: any) => {
+        if (b.GlobalID) {
+          buildingModelMap[b.GlobalID] = b.BuildingModel;
+        }
+      });
+
       let allProps = [
-        ...units.map((u: any) => ({ ...u, sourceLayer: 'Units', arcgisId: u.OBJECTID })),
-        ...villas.map((v: any) => ({ ...v, sourceLayer: 'Villas_Global', arcgisId: v.GlobalID })),
-        ...buildings.map((b: any) => ({ ...b, sourceLayer: 'Buildings_Global', arcgisId: b.GlobalID }))
+        ...units.map((u: any) => ({ 
+          ...u, 
+          sourceLayer: 'Units', 
+          arcgisId: u.OBJECTID,
+          BuildingModel: buildingModelMap[u.BuildingID_FK]
+        })),
+        ...villas.map((v: any) => ({ 
+          ...v, 
+          sourceLayer: 'Villas_Global', 
+          arcgisId: v.GlobalID 
+        }))
       ];
 
       // Filter only Available units
@@ -49,6 +69,15 @@ const PropertyManagementTab = () => {
 
   useEffect(() => {
     fetchProperties();
+
+    const handlePricesUpdated = () => {
+      fetchProperties();
+    };
+
+    window.addEventListener('pricesUpdated', handlePricesUpdated);
+    return () => {
+      window.removeEventListener('pricesUpdated', handlePricesUpdated);
+    };
   }, []);
 
   const handleEditClick = (prop: Property) => {
@@ -77,42 +106,123 @@ const PropertyManagementTab = () => {
     }
   };
 
+  const getDisplayType = (prop: Property) => {
+    if (prop.sourceLayer === 'Units') return 'Apartment';
+    if (prop.sourceLayer === 'Villas_Global') {
+      return prop.BuildingType === 2 || prop.BuildingType === '2' ? 'TwinHouse' : 'Villa';
+    }
+    return 'Building';
+  };
+
+  const getDisplayModel = (prop: Property) => {
+    if (prop.sourceLayer === 'Units') {
+      if (!prop.BuildingModel) return 'N/A';
+      const bMap: any = { '1': 'ModelX', '2': 'ModelU', '3': 'ModelS', '4': 'ModelZ' };
+      return bMap[String(prop.BuildingModel)] || prop.BuildingModel;
+    } else {
+      if (!prop.VillaModel) return 'N/A';
+      const vMap: any = { '1': 'A', '2': 'B', '3': 'D', '4': 'E' };
+      return vMap[String(prop.VillaModel)] || prop.VillaModel;
+    }
+  };
+
+  const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setTypeFilter(e.target.value);
+    setModelFilter('All Models');
+  };
+
+  const filteredProperties = properties.filter(p => {
+    const idString = (p.OBJECTID?.toString() || p.GlobalID?.substring(0,8) || '').toLowerCase();
+    const matchesSearch = idString.includes(searchTerm.toLowerCase());
+    
+    const displayType = getDisplayType(p);
+    const matchesType = typeFilter === 'All Types' || displayType === typeFilter;
+    
+    const displayModel = getDisplayModel(p);
+    const matchesModel = modelFilter === 'All Models' || displayModel === modelFilter;
+    
+    return matchesSearch && matchesType && matchesModel;
+  });
+
   return (
-    <div style={{ padding: '20px', height: '100%', overflowY: 'auto' }}>
+    <div style={{ padding: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h2 style={{ color: '#58a6ff', margin: 0 }}>🏢 Property Management</h2>
-        <input 
-          type="text" 
-          placeholder="Search by ID..." 
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ padding: '10px 15px', borderRadius: '6px', border: '1px solid #30363d', backgroundColor: '#0d1117', color: '#fff', width: '250px' }}
-        />
+        <h2 style={{ color: 'var(--accent-blue)', margin: 0 }}>
+          🏢 Property Management 
+          <span style={{ fontSize: '16px', color: 'var(--text-muted)', marginLeft: '10px' }}>
+            ({filteredProperties.length} Units)
+          </span>
+        </h2>
+        <div style={{ display: 'flex', gap: '15px' }}>
+          <select 
+            value={typeFilter}
+            onChange={handleTypeChange}
+            style={{ padding: '10px 15px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', cursor: 'pointer' }}
+          >
+            <option value="All Types">All Types</option>
+            <option value="Apartment">Apartment</option>
+            <option value="Villa">Villa</option>
+            <option value="TwinHouse">TwinHouse</option>
+          </select>
+          
+          {typeFilter !== 'All Types' && (
+            <select 
+              value={modelFilter}
+              onChange={(e) => setModelFilter(e.target.value)}
+              style={{ padding: '10px 15px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', cursor: 'pointer' }}
+            >
+              <option value="All Models">All Models</option>
+              {typeFilter === 'Apartment' && (
+                <>
+                  <option value="ModelX">ModelX</option>
+                  <option value="ModelU">ModelU</option>
+                  <option value="ModelS">ModelS</option>
+                  <option value="ModelZ">ModelZ</option>
+                </>
+              )}
+              {(typeFilter === 'Villa' || typeFilter === 'TwinHouse') && (
+                <>
+                  <option value="A">A</option>
+                  <option value="B">B</option>
+                  <option value="D">D</option>
+                  <option value="E">E</option>
+                </>
+              )}
+            </select>
+          )}
+
+          <input 
+            type="text" 
+            placeholder="Search by ID..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ padding: '10px 15px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', width: '250px' }}
+          />
+        </div>
       </div>
       
       {loading ? (
-        <p style={{ color: '#8b949e' }}>Loading properties...</p>
+        <p style={{ color: 'var(--text-muted)' }}>Loading properties...</p>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', backgroundColor: '#161b22', borderRadius: '8px', overflow: 'hidden' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', backgroundColor: 'var(--bg-secondary)', borderRadius: '8px', overflow: 'hidden' }}>
           <thead>
-            <tr style={{ backgroundColor: '#21262d', color: '#c9d1d9' }}>
+            <tr style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }}>
               <th style={{ padding: '12px' }}>ID</th>
               <th style={{ padding: '12px' }}>Type</th>
+              <th style={{ padding: '12px' }}>Model</th>
               <th style={{ padding: '12px' }}>Status</th>
               <th style={{ padding: '12px' }}>Price</th>
               <th style={{ padding: '12px' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {properties.filter(p => {
-              const idString = (p.OBJECTID?.toString() || p.GlobalID?.substring(0,8) || '').toLowerCase();
-              return idString.includes(searchTerm.toLowerCase());
-            }).map((prop, idx) => (
-              <tr key={idx} style={{ borderTop: '1px solid #30363d' }}>
+            {filteredProperties.map((prop, idx) => (
+              <tr key={idx} style={{ borderTop: '1px solid var(--border-color)' }}>
                 <td style={{ padding: '12px' }}>{prop.OBJECTID || prop.GlobalID?.substring(0,8)}</td>
-                <td style={{ padding: '12px' }}>{prop.sourceLayer === 'Units' ? 'Apartment' : prop.sourceLayer === 'Villas_Global' ? 'Villa' : 'Building'}</td>
+                <td style={{ padding: '12px' }}>{getDisplayType(prop)}</td>
+                <td style={{ padding: '12px' }}>{getDisplayModel(prop)}</td>
                 <td style={{ padding: '12px' }}>
-                  <span style={{ color: '#2ea043', fontWeight: 'bold' }}>
+                  <span style={{ color: 'var(--accent-green)', fontWeight: 'bold' }}>
                     {String(prop.Status).toLowerCase() === '1' || String(prop.Status).toLowerCase() === 'available' ? 'Available' : prop.Status}
                   </span>
                 </td>
@@ -122,7 +232,7 @@ const PropertyManagementTab = () => {
                       type="number" 
                       value={newPrice} 
                       onChange={(e) => setNewPrice(e.target.value)}
-                      style={{ padding: '6px', borderRadius: '4px', border: '1px solid #30363d', backgroundColor: '#0d1117', color: '#fff' }}
+                      style={{ padding: '6px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
                     />
                   ) : (
                     <span>{prop.Price ? prop.Price.toLocaleString() : 'N/A'}</span>
@@ -131,11 +241,11 @@ const PropertyManagementTab = () => {
                 <td style={{ padding: '12px' }}>
                   {editingId === prop.arcgisId ? (
                     <div style={{ display: 'flex', gap: '8px' }}>
-                      <button onClick={() => handleSavePrice(prop)} style={{ backgroundColor: '#238636', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>Save</button>
-                      <button onClick={() => setEditingId(null)} style={{ backgroundColor: '#da3633', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>Cancel</button>
+                      <button onClick={() => handleSavePrice(prop)} style={{ backgroundColor: 'var(--accent-green-bg)', color: 'var(--text-primary)', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>Save</button>
+                      <button onClick={() => setEditingId(null)} style={{ backgroundColor: 'var(--accent-red-bg)', color: 'var(--text-primary)', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>Cancel</button>
                     </div>
                   ) : (
-                    <button onClick={() => handleEditClick(prop)} style={{ backgroundColor: '#1f6feb', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>Edit Price</button>
+                    <button onClick={() => handleEditClick(prop)} style={{ backgroundColor: 'var(--accent-blue-bg)', color: 'var(--text-primary)', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>Edit Price</button>
                   )}
                 </td>
               </tr>

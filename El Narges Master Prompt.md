@@ -355,6 +355,10 @@ All core features from the original roadmap are **fully implemented and running*
 | Engineer Maintenance Suite (Technicians & Active Tasks) | ✅ Done |
 | ArcGIS Survey123 & ngrok Live Webhook Integration | ✅ Done |
 | Engineering AI RAG Assistant (Manual Knowledge Base) | ✅ Done |
+| ArcGIS Dashboard In-App Portal Integration (UNDashboardModal) | ✅ Done |
+| ArcGIS Email Sync & Retroactive Gmail Synchronization | ✅ Done |
+| Property Management Advanced Dependent Filtering | ✅ Done |
+| Admin AI Chatbot for Roles Management | ✅ Done |
 | One-Click System Launchers (.bat scripts) | ✅ Done |
 
 Both dev servers are currently running:

@@ -158,8 +158,8 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
         symbolLayers: [{
           type: "icon", 
           resource: { primitive: "circle" },
-          material: { color: "#da3633" },
-          outline: { color: "#ffffff", size: 2 },
+          material: { color: "var(--accent-red-bg)" },
+          outline: { color: "var(--text-primary)", size: 2 },
           size: "20px"
         }]
       };
@@ -284,45 +284,45 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
   };
 
   return (
-    <div style={{ display: 'flex', width: '100%', height: '100%', backgroundColor: '#0d1117' }}>
+    <div style={{ display: 'flex', width: '100%', height: '100%', backgroundColor: 'var(--bg-primary)' }}>
       
-      <div style={{ width: '450px', height: '100%', overflowY: 'auto', borderRight: '1px solid #30363d', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: '20px', backgroundColor: '#161b22', borderBottom: '1px solid #30363d', position: 'sticky', top: 0, zIndex: 10 }}>
-          <h2 style={{ margin: 0, color: '#fff', fontSize: '1.4rem' }}>🛡️ Admin Complaints</h2>
+      <div style={{ width: '450px', height: '100%', overflowY: 'auto', borderRight: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '20px', backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', position: 'sticky', top: 0, zIndex: 10 }}>
+          <h2 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.4rem' }}>🛡️ Admin Complaints</h2>
         </div>
 
         <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {isLoading ? (
-            <div style={{ textAlign: 'center', color: '#58a6ff' }}>Loading complaints... ⏳</div>
+            <div style={{ textAlign: 'center', color: 'var(--accent-blue)' }}>Loading complaints... ⏳</div>
           ) : complaints.length === 0 ? (
-            <div style={{ textAlign: 'center', color: '#8b949e' }}>No pending complaints found. 🎉</div>
+            <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No pending complaints found. 🎉</div>
           ) : (
             complaints.map((complaint) => (
-              <div key={complaint._id} style={{ backgroundColor: '#161b22', border: '1px solid #30363d', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div key={complaint._id} style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', backgroundColor: complaint.type === 'external' ? '#a371f722' : '#f0883e22', color: complaint.type === 'external' ? '#a371f7' : '#f0883e', border: `1px solid ${complaint.type === 'external' ? '#a371f755' : '#f0883e55'}` }}>
                     {complaint.specialization || (complaint.type === 'external' ? '🛣️ External' : '🏠 Internal')}
                   </span>
                   <button 
                     onClick={() => handleTogglePriority(complaint._id, complaint.priority || 'Normal')}
-                    style={{ backgroundColor: complaint.priority === 'High' ? '#da3633' : '#30363d', color: '#fff', border: 'none', padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s' }}
+                    style={{ backgroundColor: complaint.priority === 'High' ? 'var(--accent-red-bg)' : 'var(--border-color)', color: 'var(--text-primary)', border: 'none', padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s' }}
                   >
                     {complaint.priority === 'High' ? '🚨 High Priority' : '⬇️ Normal Priority'}
                   </button>
-                  <span style={{ fontSize: '12px', color: '#8b949e' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                     {complaint.createdAt ? new Date(complaint.createdAt).toLocaleDateString() : ''}
                   </span>
                 </div>
-                <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#fff' }}>
-                  {(complaint as any).problemName || complaint.title} <span style={{color: '#58a6ff', fontSize: '12px', fontWeight: 'normal'}}>({complaint.status})</span>
+                <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+                  {(complaint as any).problemName || complaint.title} <span style={{color: 'var(--accent-blue)', fontSize: '12px', fontWeight: 'normal'}}>({complaint.status})</span>
                 </div>
                 {complaint.ownerId && (
-                  <div style={{ fontSize: '13px', color: '#c9d1d9', marginTop: '-4px', marginBottom: '4px' }}>
+                  <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '-4px', marginBottom: '4px' }}>
                     👤 <strong>{complaint.ownerId.name}</strong> 
                     {complaint.ownerId.phone ? ` 📞 ${complaint.ownerId.phone}` : ''}
                   </div>
                 )}
-                <p style={{ margin: 0, color: '#c9d1d9', fontSize: '15px', lineHeight: '1.5' }}>{complaint.description}</p>
+                <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '15px', lineHeight: '1.5' }}>{complaint.description}</p>
                 
                 {complaint.images && complaint.images.length > 0 && (
                   <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '5px' }}>
@@ -332,7 +332,7 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
                         src={img} 
                         alt="Complaint attached" 
                         onClick={() => setDesignImage(img)}
-                        style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #30363d', cursor: 'pointer' }} 
+                        style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--border-color)', cursor: 'pointer' }} 
                       />
                     ))}
                   </div>
@@ -340,18 +340,18 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
 
                 <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
                   {complaint.type === 'internal' && (
-                    <button onClick={() => setDesignImage('/A.png')} style={{ flex: 1, backgroundColor: '#21262d', color: '#c9d1d9', border: '1px solid #30363d', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>📐 Explore Plan</button>
+                    <button onClick={() => setDesignImage('/A.png')} style={{ flex: 1, backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>📐 Explore Plan</button>
                   )}
                   <button 
                     onClick={() => handleZoomToMap(complaint)}
-                    style={{ flex: 1, backgroundColor: '#1f6feb', color: '#fff', border: 'none', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                    style={{ flex: 1, backgroundColor: 'var(--accent-blue-bg)', color: 'var(--text-primary)', border: 'none', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
                   >
                     🗺️ Map
                   </button>
                 </div>
-                <div style={{ display: 'flex', gap: '10px', marginTop: '10px', borderTop: '1px solid #30363d', paddingTop: '16px' }}>
-                  <button onClick={() => setActiveComplaint(complaint)} style={{ flex: 1, backgroundColor: 'transparent', color: '#58a6ff', border: '1px solid #58a6ff', padding: '10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>💬 Chat</button>
-                  <button onClick={() => handleAction(complaint._id, 'dismiss')} style={{ flex: 1, backgroundColor: 'transparent', color: '#da3633', border: '1px solid #da3633', padding: '10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>❌ Dismiss</button>
+                <div style={{ display: 'flex', gap: '10px', marginTop: '10px', borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
+                  <button onClick={() => setActiveComplaint(complaint)} style={{ flex: 1, backgroundColor: 'transparent', color: 'var(--accent-blue)', border: '1px solid var(--accent-blue)', padding: '10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>💬 Chat</button>
+                  <button onClick={() => handleAction(complaint._id, 'dismiss')} style={{ flex: 1, backgroundColor: 'transparent', color: 'var(--accent-red-bg)', border: '1px solid var(--accent-red-bg)', padding: '10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>❌ Dismiss</button>
                 </div>
               </div>
             ))
@@ -361,7 +361,7 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
 
       <div style={{ flex: 1, height: '100%', position: 'relative' }}>
         <div ref={mapDiv} style={{ width: '100%', height: '100%' }} />
-        <div style={{ position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)', backgroundColor: 'rgba(13,17,23,0.85)', padding: '10px 20px', borderRadius: '20px', color: '#fff', border: '1px solid #30363d', pointerEvents: 'none', backdropFilter: 'blur(5px)' }}>
+        <div style={{ position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)', backgroundColor: 'rgba(13,17,23,0.85)', padding: '10px 20px', borderRadius: '20px', color: 'var(--text-primary)', border: '1px solid var(--border-color)', pointerEvents: 'none', backdropFilter: 'blur(5px)' }}>
           Click "Explore on 3D Map" to locate the issue 📍
         </div>
       </div>
@@ -384,7 +384,7 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
           onClick={() => setDesignImage(null)}
           style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 9999999, display: 'flex', justifyContent: 'center', alignItems: 'center' }}
         >
-          <img src={designImage} alt="Enlarged design" style={{ maxWidth: '90%', maxHeight: '90%', borderRadius: '12px', border: '2px solid #58a6ff' }} />
+          <img src={designImage} alt="Enlarged design" style={{ maxWidth: '90%', maxHeight: '90%', borderRadius: '12px', border: '2px solid var(--accent-blue)' }} />
           <button onClick={() => setDesignImage(null)} style={{ position: 'absolute', top: '20px', right: '30px', background: 'transparent', color: '#ff7b72', border: 'none', fontSize: '30px', cursor: 'pointer' }}>✕</button>
         </div>
       )}

@@ -22,6 +22,7 @@ interface MapViewerProps {
   isWeatherOpen: boolean;
   setIsWeatherOpen: (isOpen: boolean) => void;
   isBasemapOpen: boolean;
+  onOpenUNModal?: (coords?: any) => void;
 }
 
 const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen, isBasemapOpen }: MapViewerProps) => {
@@ -83,22 +84,22 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
               content: `
                 <div style="font-family: 'Inter', sans-serif; padding: 5px;">
                   <div style="background: linear-gradient(135deg, #1f2937, #111827); border-radius: 12px; padding: 20px; text-align: center; border: 1px solid #374151; margin-bottom: 15px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);">
-                    <h2 style="margin: 0; color: #fff; font-size: 22px; font-weight: 700; letter-spacing: 1px;">{BuildingType}</h2>
+                    <h2 style="margin: 0; color: var(--text-primary); font-size: 22px; font-weight: 700; letter-spacing: 1px;">{BuildingType}</h2>
                     <p style="margin: 5px 0 0 0; color: #9ca3af; font-size: 13px;">Model <strong style="color: #60a5fa; font-size: 14px;">{VillaModel}</strong></p>
                   </div>
                   
                   <div style="display: flex; justify-content: space-between; align-items: center; background: #1f2937; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid {expression/status_color}; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);">
                     <div>
-                      <span style="display: block; color: #8b949e; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Status</span>
+                      <span style="display: block; color: var(--text-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Status</span>
                       <strong style="color: {expression/status_color}; font-size: 14px; padding: 4px 8px; background: rgba(0,0,0,0.2); border-radius: 6px;">{expression/status_text}</strong>
                     </div>
                     <div style="text-align: right;">
-                      <span style="display: block; color: #8b949e; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Price</span>
+                      <span style="display: block; color: var(--text-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Price</span>
                       <strong style="color: #3fb950; font-size: 15px;">{expression/price_in_m} M EGY</strong>
                     </div>
                   </div>
 
-                  <a href="{expression/villa_image}" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; background: linear-gradient(to right, #2563eb, #1d4ed8); color: #fff; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.4);">
+                  <a href="{expression/villa_image}" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; background: linear-gradient(to right, #2563eb, #1d4ed8); color: var(--text-primary); text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.4);">
                     <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                     View Full Design
                   </a>
@@ -120,7 +121,7 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
                 {
                   name: "status_color",
                   title: "Status Color",
-                  expression: "var v = $feature.Status; if (TypeOf(v) == 'Number') { if (v == 1) { return '#3fb950'; } else if (v == 4 || v == 3 || v == 2) { return '#f85149'; } else { return '#d29922'; } } else { var s = Lower(Trim(Text(v))); if (s == 'available' || s == '1') { return '#3fb950'; } else if (s == 'sold' || s == 'reserved' || s == '4' || s == '3' || s == '2') { return '#f85149'; } else { return '#d29922'; } }"
+                  expression: "var v = $feature.Status; if (TypeOf(v) == 'Number') { if (v == 1) { return '#3fb950'; } else if (v == 4 || v == 3 || v == 2) { return 'var(--accent-red)'; } else { return 'var(--accent-gold)'; } } else { var s = Lower(Trim(Text(v))); if (s == 'available' || s == '1') { return '#3fb950'; } else if (s == 'sold' || s == 'reserved' || s == '4' || s == '3' || s == '2') { return 'var(--accent-red)'; } else { return 'var(--accent-gold)'; } }"
                 },
                 {
                   name: "status_text",
@@ -134,22 +135,22 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
               title: "Building Details",
               content: `
                 <div style="font-family: 'Inter', sans-serif; padding: 0;">
-                  <a href="{expression/building_image}" target="_blank" style="display: block; padding: 12px; margin-bottom: 15px; text-align: center; background: #21262d; color: #58a6ff; text-decoration: none; font-size: 14px; border-radius: 8px; border: 1px solid #30363d; font-weight: bold;">🔍 View Design</a>
+                  <a href="{expression/building_image}" target="_blank" style="display: block; padding: 12px; margin-bottom: 15px; text-align: center; background: var(--bg-tertiary); color: var(--accent-blue); text-decoration: none; font-size: 14px; border-radius: 8px; border: 1px solid var(--border-color); font-weight: bold;">🔍 View Design</a>
                   <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px;">
-                    <div style="background: rgba(22, 27, 34, 0.8); padding: 8px; border-radius: 6px; border: 1px solid #30363d;">
-                      <span style="color: #8b949e; display: block; font-size: 10px; text-transform: uppercase;">Status</span>
+                    <div style="background: rgba(22, 27, 34, 0.8); padding: 8px; border-radius: 6px; border: 1px solid var(--border-color);">
+                      <span style="color: var(--text-muted); display: block; font-size: 10px; text-transform: uppercase;">Status</span>
                       <strong style="color: {expression/status_color};">{expression/status_text}</strong>
                     </div>
-                    <div style="background: rgba(22, 27, 34, 0.8); padding: 8px; border-radius: 6px; border: 1px solid #30363d;">
-                      <span style="color: #8b949e; display: block; font-size: 10px; text-transform: uppercase;">Floors</span>
-                      <strong style="color: #e6edf3;">{FloorsCount}</strong>
+                    <div style="background: rgba(22, 27, 34, 0.8); padding: 8px; border-radius: 6px; border: 1px solid var(--border-color);">
+                      <span style="color: var(--text-muted); display: block; font-size: 10px; text-transform: uppercase;">Floors</span>
+                      <strong style="color: var(--text-primary);">{FloorsCount}</strong>
                     </div>
-                    <div style="background: rgba(22, 27, 34, 0.8); padding: 8px; border-radius: 6px; border: 1px solid #30363d; grid-column: span 2;">
-                      <span style="color: #8b949e; display: block; font-size: 10px; text-transform: uppercase;">Model</span>
-                      <strong style="color: #e6edf3;">{BuildingModel}</strong>
+                    <div style="background: rgba(22, 27, 34, 0.8); padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); grid-column: span 2;">
+                      <span style="color: var(--text-muted); display: block; font-size: 10px; text-transform: uppercase;">Model</span>
+                      <strong style="color: var(--text-primary);">{BuildingModel}</strong>
                     </div>
                   </div>
-                  <div style="margin-top: 15px; padding: 8px; background: rgba(31, 111, 235, 0.1); border: 1px solid rgba(31, 111, 235, 0.3); border-radius: 6px; color: #58a6ff; font-size: 11px; text-align: center;">
+                  <div style="margin-top: 15px; padding: 8px; background: rgba(31, 111, 235, 0.1); border: 1px solid rgba(31, 111, 235, 0.3); border-radius: 6px; color: var(--accent-blue); font-size: 11px; text-align: center;">
                     <em>💡 Sidebar opened with apartment details.</em>
                   </div>
                   <div style="display: none;">{GlobalID}{globalid}</div>
@@ -164,7 +165,7 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
                 {
                   name: "status_color",
                   title: "Status Color",
-                  expression: "var v = $feature.Status; if (TypeOf(v) == 'Number') { if (v == 1) { return '#3fb950'; } else if (v == 4 || v == 3 || v == 2) { return '#f85149'; } else { return '#d29922'; } } else { var s = Lower(Trim(Text(v))); if (s == 'available' || s == '1') { return '#3fb950'; } else if (s == 'sold' || s == 'reserved' || s == '4' || s == '3' || s == '2') { return '#f85149'; } else { return '#d29922'; } }"
+                  expression: "var v = $feature.Status; if (TypeOf(v) == 'Number') { if (v == 1) { return '#3fb950'; } else if (v == 4 || v == 3 || v == 2) { return 'var(--accent-red)'; } else { return 'var(--accent-gold)'; } } else { var s = Lower(Trim(Text(v))); if (s == 'available' || s == '1') { return '#3fb950'; } else if (s == 'sold' || s == 'reserved' || s == '4' || s == '3' || s == '2') { return 'var(--accent-red)'; } else { return 'var(--accent-gold)'; } }"
                 },
                 {
                   name: "status_text",
@@ -473,9 +474,9 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
                             symbolLayers: [{
                               type: "icon",
                               resource: { primitive: "circle" },
-                              material: { color: "#da3633" },
+                              material: { color: "var(--accent-red-bg)" },
                               size: "20px",
-                              outline: { color: "#ffffff", size: 2 }
+                              outline: { color: "var(--text-primary)", size: 2 }
                             }]
                           }
                         });
@@ -532,8 +533,8 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
 
         <div style={{
           display: isLayersOpen ? 'block' : 'none',
-          backgroundColor: '#161b22',
-          border: '1px solid #30363d',
+          backgroundColor: 'var(--bg-secondary)',
+          border: '1px solid var(--border-color)',
           borderRadius: '8px',
           boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
           overflow: 'hidden',
@@ -547,8 +548,8 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
 
         <div style={{
           display: isBasemapOpen ? 'block' : 'none',
-          backgroundColor: '#161b22',
-          border: '1px solid #30363d',
+          backgroundColor: 'var(--bg-secondary)',
+          border: '1px solid var(--border-color)',
           borderRadius: '8px',
           boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
           overflow: 'hidden',

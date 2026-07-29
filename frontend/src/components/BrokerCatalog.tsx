@@ -112,11 +112,11 @@ const BrokerCatalog = ({ view, onClose }: BrokerCatalogProps) => {
 
   const statusLabel = (s: any) => {
     const v = String(s).toLowerCase();
-    if (v === '1' || v === 'available') return { label: 'Available', color: '#2ea043' };
-    if (v === '2' || v === 'interested') return { label: 'Interested', color: '#d29922' };
+    if (v === '1' || v === 'available') return { label: 'Available', color: 'var(--accent-green)' };
+    if (v === '2' || v === 'interested') return { label: 'Interested', color: 'var(--accent-gold)' };
     if (v === '3' || v === 'reserved') return { label: 'Reserved', color: '#8957e5' };
-    if (v === '4' || v === 'sold') return { label: 'Sold', color: '#f85149' };
-    return { label: 'Other', color: '#8b949e' };
+    if (v === '4' || v === 'sold') return { label: 'Sold', color: 'var(--accent-red)' };
+    return { label: 'Other', color: 'var(--text-muted)' };
   };
 
   const renderUnitCard = (unit: any, type: 'Apartment' | 'Villa') => {
@@ -129,8 +129,8 @@ const BrokerCatalog = ({ view, onClose }: BrokerCatalogProps) => {
         onClick={() => setSelectedUnit(unit)}
         style={{ 
           position: 'relative',
-          backgroundColor: '#0d1117', 
-          border: `1px solid ${unitRequests.length > 0 ? '#f85149' : '#30363d'}`, 
+          backgroundColor: 'var(--bg-primary)', 
+          border: `1px solid ${unitRequests.length > 0 ? 'var(--accent-red)' : 'var(--border-color)'}`, 
           borderRadius: '10px', 
           padding: '16px',
           cursor: 'pointer',
@@ -139,19 +139,19 @@ const BrokerCatalog = ({ view, onClose }: BrokerCatalogProps) => {
         }}
       >
         {unitRequests.length > 0 && (
-          <div style={{ position: 'absolute', top: '-10px', right: '-10px', backgroundColor: '#f85149', color: '#fff', borderRadius: '20px', padding: '4px 10px', fontSize: '12px', fontWeight: 'bold', boxShadow: '0 2px 8px rgba(0,0,0,0.5)', zIndex: 2 }}>
+          <div style={{ position: 'absolute', top: '-10px', right: '-10px', backgroundColor: 'var(--accent-red)', color: 'var(--text-primary)', borderRadius: '20px', padding: '4px 10px', fontSize: '12px', fontWeight: 'bold', boxShadow: '0 2px 8px rgba(0,0,0,0.5)', zIndex: 2 }}>
             {unitRequests.length} Request{unitRequests.length > 1 ? 's' : ''}
           </div>
         )}
         
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-          <span style={{ fontWeight: 'bold', color: '#fff', fontSize: '15px' }}>
+          <span style={{ fontWeight: 'bold', color: 'var(--text-primary)', fontSize: '15px' }}>
             {type} #{unit.objectId || unit.arcgisId}
           </span>
           <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
             <button 
               onClick={(e) => handleZoom(e, unit)}
-              style={{ backgroundColor: '#21262d', color: '#c9d1d9', border: '1px solid #30363d', borderRadius: '4px', padding: '2px 6px', fontSize: '10px', cursor: 'pointer', transition: 'all 0.2s' }}
+              style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)', borderRadius: '4px', padding: '2px 6px', fontSize: '10px', cursor: 'pointer', transition: 'all 0.2s' }}
               title="Zoom to Unit"
             >
               🔍
@@ -162,7 +162,7 @@ const BrokerCatalog = ({ view, onClose }: BrokerCatalogProps) => {
           </div>
         </div>
         
-        <div style={{ color: '#8b949e', fontSize: '13px' }}>
+        <div style={{ color: 'var(--text-muted)', fontSize: '13px' }}>
           Click to view details and manage requests.
         </div>
       </div>
@@ -182,28 +182,28 @@ const BrokerCatalog = ({ view, onClose }: BrokerCatalogProps) => {
   const { apts, vils } = getCategorizedUnits();
 
   return (
-    <div style={{ position: 'fixed', top: '50px', left: '50%', transform: 'translateX(-50%)', width: '850px', maxHeight: '80vh', backgroundColor: '#161b22', borderRadius: '12px', border: '1px solid #30363d', display: 'flex', flexDirection: 'column', zIndex: 1001, boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
+    <div style={{ position: 'fixed', top: '50px', left: '50%', transform: 'translateX(-50%)', width: '850px', maxHeight: '80vh', backgroundColor: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', zIndex: 1001, boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
       
       {/* Header */}
-      <div style={{ padding: '20px', borderBottom: '1px solid #30363d', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0d1117', borderRadius: '12px 12px 0 0' }}>
+      <div style={{ padding: '20px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-primary)', borderRadius: '12px 12px 0 0' }}>
         <div>
-          <h2 style={{ margin: 0, color: '#58a6ff' }}>📋 My Property Catalog</h2>
-          <p style={{ margin: '4px 0 0', color: '#8b949e', fontSize: '13px' }}>View your assigned units and manage incoming requests.</p>
+          <h2 style={{ margin: 0, color: 'var(--accent-blue)' }}>📋 My Property Catalog</h2>
+          <p style={{ margin: '4px 0 0', color: 'var(--text-muted)', fontSize: '13px' }}>View your assigned units and manage incoming requests.</p>
         </div>
-        <button onClick={onClose} style={{ backgroundColor: 'transparent', border: '1px solid #30363d', color: '#8b949e', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>✖ Close</button>
+        <button onClick={onClose} style={{ backgroundColor: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-muted)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>✖ Close</button>
       </div>
 
       {/* Content */}
       <div style={{ padding: '20px', overflowY: 'auto', flex: 1 }}>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#8b949e' }}>Loading your properties...</div>
+          <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Loading your properties...</div>
         ) : units.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#8b949e' }}>You have no properties assigned yet.</div>
+          <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>You have no properties assigned yet.</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {apts.length > 0 && (
               <div>
-                <h3 style={{ color: '#e6edf3', borderBottom: '1px solid #30363d', paddingBottom: '8px', marginBottom: '15px' }}>Apartments</h3>
+                <h3 style={{ color: 'var(--text-primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px', marginBottom: '15px' }}>Apartments</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '15px' }}>
                   {apts.map(u => renderUnitCard(u, 'Apartment'))}
                 </div>
@@ -212,7 +212,7 @@ const BrokerCatalog = ({ view, onClose }: BrokerCatalogProps) => {
             
             {vils.length > 0 && (
               <div>
-                <h3 style={{ color: '#e6edf3', borderBottom: '1px solid #30363d', paddingBottom: '8px', marginBottom: '15px' }}>Villas</h3>
+                <h3 style={{ color: 'var(--text-primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px', marginBottom: '15px' }}>Villas</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '15px' }}>
                   {vils.map(u => renderUnitCard(u, 'Villa'))}
                 </div>

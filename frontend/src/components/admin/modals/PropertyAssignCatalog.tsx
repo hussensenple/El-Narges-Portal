@@ -125,9 +125,9 @@ const PropertyAssignCatalog = ({ userId, targetRole, pendingRoleData, roleAlread
 
   const statusLabel = (s: any) => {
     const v = String(s).toLowerCase();
-    if (v === '1' || v === 'available') return { label: 'Available', color: '#2ea043' };
-    if (v === '2' || v === 'interested') return { label: 'Interested', color: '#d29922' };
-    return { label: 'Other', color: '#8b949e' };
+    if (v === '1' || v === 'available') return { label: 'Available', color: 'var(--accent-green)' };
+    if (v === '2' || v === 'interested') return { label: 'Interested', color: 'var(--accent-gold)' };
+    return { label: 'Other', color: 'var(--text-muted)' };
   };
 
   const filteredVillas = villas.filter(v =>
@@ -140,15 +140,15 @@ const PropertyAssignCatalog = ({ userId, targetRole, pendingRoleData, roleAlread
 
   return (
     <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000 }}>
-      <div style={{ backgroundColor: '#161b22', borderRadius: '12px', width: '900px', height: '85vh', border: '1px solid #30363d', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ backgroundColor: 'var(--bg-secondary)', borderRadius: '12px', width: '900px', height: '85vh', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* Header */}
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid #30363d', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0d1117' }}>
+        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-primary)' }}>
           <div>
-            <h3 style={{ margin: 0, color: '#58a6ff' }}>
+            <h3 style={{ margin: 0, color: 'var(--accent-blue)' }}>
               {targetRole === 'owner' ? '🏡 Assign Property to New Owner' : '📋 Assign Properties to Broker'}
             </h3>
-            <p style={{ margin: '4px 0 0', color: roleCommitted ? '#2ea043' : '#d29922', fontSize: '13px' }}>
+            <p style={{ margin: '4px 0 0', color: roleCommitted ? 'var(--accent-green)' : 'var(--accent-gold)', fontSize: '13px' }}>
               {roleCommitted
                 ? `✅ Role committed. Assign more properties or click "Done".`
                 : `⚠️ Role not saved yet — must assign at least 1 property to confirm.`
@@ -156,11 +156,11 @@ const PropertyAssignCatalog = ({ userId, targetRole, pendingRoleData, roleAlread
             </p>
           </div>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            {targetRole === 'broker' && selectedUnits.size > 0 && (
+            {selectedUnits.size > 0 && (
               <button
                 onClick={handleAssignSelected}
                 disabled={assigning === 'all'}
-                style={{ padding: '8px 16px', backgroundColor: '#1f6feb', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                style={{ padding: '8px 16px', backgroundColor: 'var(--accent-blue-bg)', color: 'var(--text-primary)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
               >
                 {assigning === 'all' ? 'Assigning...' : `Assign ${selectedUnits.size} Selected`}
               </button>
@@ -168,7 +168,7 @@ const PropertyAssignCatalog = ({ userId, targetRole, pendingRoleData, roleAlread
             {roleCommitted && (
               <button
                 onClick={onSuccess}
-                style={{ padding: '8px 16px', backgroundColor: '#238636', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                style={{ padding: '8px 16px', backgroundColor: 'var(--accent-green-bg)', color: 'var(--text-primary)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
               >
                 Done ✓
               </button>
@@ -180,7 +180,7 @@ const PropertyAssignCatalog = ({ userId, targetRole, pendingRoleData, roleAlread
                 }
                 onClose();
               }}
-              style={{ backgroundColor: 'transparent', border: '1px solid #30363d', color: '#8b949e', fontSize: '18px', cursor: 'pointer', borderRadius: '6px', padding: '4px 10px' }}
+              style={{ backgroundColor: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '18px', cursor: 'pointer', borderRadius: '6px', padding: '4px 10px' }}
             >
               ✖
             </button>
@@ -188,31 +188,31 @@ const PropertyAssignCatalog = ({ userId, targetRole, pendingRoleData, roleAlread
         </div>
 
         {/* Search */}
-        <div style={{ padding: '12px 24px', borderBottom: '1px solid #30363d' }}>
+        <div style={{ padding: '12px 24px', borderBottom: '1px solid var(--border-color)' }}>
           <input
             type="text"
             placeholder={targetRole === 'broker' ? '🔍 Search by Building ID or Unit ID...' : '🔍 Search by Property ID...'}
             value={searchId}
             onChange={(e) => setSearchId(e.target.value)}
-            style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #30363d', backgroundColor: '#0d1117', color: '#fff', fontSize: '14px', boxSizing: 'border-box' }}
+            style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '14px', boxSizing: 'border-box' }}
           />
         </div>
 
         {/* Content */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
           {loading ? (
-            <div style={{ textAlign: 'center', color: '#8b949e', paddingTop: '60px' }}>Loading properties from ArcGIS...</div>
+            <div style={{ textAlign: 'center', color: 'var(--text-muted)', paddingTop: '60px' }}>Loading properties from ArcGIS...</div>
           ) : (
             <>
               {/* Apartments section — grouped by building for broker, flat for owner */}
               {units.length > 0 && (
                 <div style={{ marginBottom: '30px' }}>
-                  <h4 style={{ color: '#58a6ff', borderBottom: '1px solid #30363d', paddingBottom: '8px' }}>🏢 Apartments</h4>
+                  <h4 style={{ color: 'var(--accent-blue)', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>🏢 Apartments</h4>
 
                   {targetRole === 'broker' ? (
                     filteredBuildings.map(([buildingId, buildingUnits]) => (
                       <div key={buildingId} style={{ marginBottom: '20px' }}>
-                        <div style={{ backgroundColor: '#21262d', padding: '8px 14px', borderRadius: '6px', marginBottom: '10px', fontWeight: 'bold', color: '#d29922', fontSize: '13px' }}>
+                        <div style={{ backgroundColor: 'var(--bg-tertiary)', padding: '8px 14px', borderRadius: '6px', marginBottom: '10px', fontWeight: 'bold', color: 'var(--accent-gold)', fontSize: '13px' }}>
                           🏗️ Building: {buildingId}
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
@@ -220,16 +220,16 @@ const PropertyAssignCatalog = ({ userId, targetRole, pendingRoleData, roleAlread
                             const s = statusLabel(unit.Status);
                             const price = unit.Price || unit.Total_Price;
                             return (
-                              <div key={unit.OBJECTID} style={{ backgroundColor: '#0d1117', border: `1px solid #30363d`, borderRadius: '8px', padding: '14px' }}>
+                              <div key={unit.OBJECTID} style={{ backgroundColor: 'var(--bg-primary)', border: `1px solid var(--border-color)`, borderRadius: '8px', padding: '14px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                  <span style={{ fontWeight: 'bold', color: '#fff' }}>Unit #{unit.OBJECTID}</span>
+                                  <span style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>Unit #{unit.OBJECTID}</span>
                                   <span style={{ color: s.color, fontSize: '11px', fontWeight: 'bold' }}>{s.label}</span>
                                 </div>
-                                {price && <div style={{ color: '#8b949e', fontSize: '12px', marginBottom: '10px' }}>💰 {(Number(price) / 1000000).toFixed(1)}M EGP</div>}
+                                {price && <div style={{ color: 'var(--text-muted)', fontSize: '12px', marginBottom: '10px' }}>💰 {(Number(price) / 1000000).toFixed(1)}M EGP</div>}
                                 <button
                                   onClick={() => toggleSelection(unit.arcgisId)}
                                   disabled={assigning === unit.arcgisId || assigning === 'all'}
-                                  style={{ width: '100%', padding: '7px', backgroundColor: assigning === unit.arcgisId ? '#21262d' : (selectedUnits.has(unit.arcgisId) ? '#2ea043' : '#1f6feb'), color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
+                                  style={{ width: '100%', padding: '7px', backgroundColor: assigning === unit.arcgisId ? 'var(--bg-tertiary)' : (selectedUnits.has(unit.arcgisId) ? 'var(--accent-green)' : 'var(--accent-blue-bg)'), color: 'var(--text-primary)', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
                                 >
                                   {assigning === unit.arcgisId ? 'Assigning...' : (selectedUnits.has(unit.arcgisId) ? '✓ Selected' : 'Select')}
                                 </button>
@@ -244,16 +244,16 @@ const PropertyAssignCatalog = ({ userId, targetRole, pendingRoleData, roleAlread
                       {units.filter(u => searchId === '' || String(u.OBJECTID).includes(searchId)).map(unit => {
                         const price = unit.Price || unit.Total_Price;
                         return (
-                          <div key={unit.OBJECTID} style={{ backgroundColor: '#0d1117', border: '1px solid #2ea04355', borderRadius: '8px', padding: '14px' }}>
-                            <div style={{ fontWeight: 'bold', color: '#fff', marginBottom: '4px' }}>Unit #{unit.OBJECTID}</div>
-                            <div style={{ color: '#2ea043', fontSize: '11px', fontWeight: 'bold', marginBottom: '8px' }}>✅ Available</div>
-                            {price && <div style={{ color: '#8b949e', fontSize: '12px', marginBottom: '10px' }}>💰 {(Number(price) / 1000000).toFixed(1)}M EGP</div>}
+                          <div key={unit.OBJECTID} style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--accent-green)55', borderRadius: '8px', padding: '14px' }}>
+                            <div style={{ fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: '4px' }}>Unit #{unit.OBJECTID}</div>
+                            <div style={{ color: 'var(--accent-green)', fontSize: '11px', fontWeight: 'bold', marginBottom: '8px' }}>✅ Available</div>
+                            {price && <div style={{ color: 'var(--text-muted)', fontSize: '12px', marginBottom: '10px' }}>💰 {(Number(price) / 1000000).toFixed(1)}M EGP</div>}
                             <button
-                              onClick={() => handleAssign(unit)}
-                              disabled={assigning === unit.arcgisId}
-                              style={{ width: '100%', padding: '7px', backgroundColor: assigning === unit.arcgisId ? '#21262d' : '#238636', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
+                              onClick={() => toggleSelection(unit.arcgisId)}
+                              disabled={assigning === unit.arcgisId || assigning === 'all'}
+                              style={{ width: '100%', padding: '7px', backgroundColor: assigning === unit.arcgisId ? 'var(--bg-tertiary)' : (selectedUnits.has(unit.arcgisId) ? 'var(--accent-green)' : 'var(--accent-blue-bg)'), color: 'var(--text-primary)', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
                             >
-                              {assigning === unit.arcgisId ? 'Assigning...' : '+ Assign to Owner'}
+                              {assigning === unit.arcgisId ? 'Assigning...' : (selectedUnits.has(unit.arcgisId) ? '✓ Selected' : 'Select')}
                             </button>
                           </div>
                         );
@@ -266,25 +266,25 @@ const PropertyAssignCatalog = ({ userId, targetRole, pendingRoleData, roleAlread
               {/* Villas section */}
               {filteredVillas.length > 0 && (
                 <div>
-                  <h4 style={{ color: '#d29922', borderBottom: '1px solid #30363d', paddingBottom: '8px' }}>🏡 Villas & Twin Houses</h4>
+                  <h4 style={{ color: 'var(--accent-gold)', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>🏡 Villas & Twin Houses</h4>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
                     {filteredVillas.map(villa => {
                       const s = statusLabel(villa.Status);
                       const modelMap: Record<string, string> = { '1': 'Model A', '2': 'Model B', '3': 'Model D', '4': 'Model E' };
                       return (
-                        <div key={villa.OBJECTID} style={{ backgroundColor: '#0d1117', border: `1px solid #30363d`, borderRadius: '8px', padding: '14px' }}>
+                        <div key={villa.OBJECTID} style={{ backgroundColor: 'var(--bg-primary)', border: `1px solid var(--border-color)`, borderRadius: '8px', padding: '14px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                            <span style={{ fontWeight: 'bold', color: '#fff' }}>Villa #{villa.OBJECTID}</span>
+                            <span style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>Villa #{villa.OBJECTID}</span>
                             <span style={{ color: s.color, fontSize: '11px', fontWeight: 'bold' }}>{s.label}</span>
                           </div>
-                          {villa.VillaModel && <div style={{ color: '#8b949e', fontSize: '12px', marginBottom: '4px' }}>🏡 {modelMap[String(villa.VillaModel)] || villa.VillaModel}</div>}
-                          {villa.Price && <div style={{ color: '#8b949e', fontSize: '12px', marginBottom: '10px' }}>💰 {(Number(villa.Price) / 1000000).toFixed(1)}M EGP</div>}
+                          {villa.VillaModel && <div style={{ color: 'var(--text-muted)', fontSize: '12px', marginBottom: '4px' }}>🏡 {modelMap[String(villa.VillaModel)] || villa.VillaModel}</div>}
+                          {villa.Price && <div style={{ color: 'var(--text-muted)', fontSize: '12px', marginBottom: '10px' }}>💰 {(Number(villa.Price) / 1000000).toFixed(1)}M EGP</div>}
                           <button
-                            onClick={() => targetRole === 'broker' ? toggleSelection(villa.arcgisId) : handleAssign(villa)}
+                            onClick={() => toggleSelection(villa.arcgisId)}
                             disabled={assigning === villa.arcgisId || assigning === 'all'}
-                            style={{ width: '100%', padding: '7px', backgroundColor: assigning === villa.arcgisId ? '#21262d' : (targetRole === 'broker' && selectedUnits.has(villa.arcgisId) ? '#2ea043' : '#1f6feb'), color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
+                            style={{ width: '100%', padding: '7px', backgroundColor: assigning === villa.arcgisId ? 'var(--bg-tertiary)' : (selectedUnits.has(villa.arcgisId) ? 'var(--accent-green)' : 'var(--accent-blue-bg)'), color: 'var(--text-primary)', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
                           >
-                            {assigning === villa.arcgisId ? 'Assigning...' : (targetRole === 'broker' && selectedUnits.has(villa.arcgisId) ? '✓ Selected' : (targetRole === 'broker' ? 'Select' : '+ Assign'))}
+                            {assigning === villa.arcgisId ? 'Assigning...' : (selectedUnits.has(villa.arcgisId) ? '✓ Selected' : 'Select')}
                           </button>
                         </div>
                       );
@@ -294,7 +294,7 @@ const PropertyAssignCatalog = ({ userId, targetRole, pendingRoleData, roleAlread
               )}
 
               {units.length === 0 && villas.length === 0 && !loading && (
-                <div style={{ textAlign: 'center', color: '#8b949e', paddingTop: '60px' }}>
+                <div style={{ textAlign: 'center', color: 'var(--text-muted)', paddingTop: '60px' }}>
                   No available properties found for assignment.
                 </div>
               )}

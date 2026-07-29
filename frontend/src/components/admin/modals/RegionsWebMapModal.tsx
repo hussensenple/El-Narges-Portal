@@ -149,26 +149,26 @@ const RegionsWebMapModal: React.FC<RegionsWebMapModalProps> = ({ regionsStats, o
 
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1200, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-      <div style={{ backgroundColor: '#0d1117', borderRadius: '14px', width: '96vw', maxWidth: '1350px', height: '88vh', border: '1px solid #30363d', color: '#fff', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: '16px 24px', borderBottom: '1px solid #30363d', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+      <div style={{ backgroundColor: 'var(--bg-primary)', borderRadius: '14px', width: '96vw', maxWidth: '1350px', height: '88vh', border: '1px solid var(--border-color)', color: 'var(--text-primary)', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
           <div>
-            <h2 style={{ margin: 0, color: '#58a6ff', fontSize: '18px' }}>🗺️ Client Distribution Map</h2>
+            <h2 style={{ margin: 0, color: 'var(--accent-blue)', fontSize: '18px' }}>🗺️ Client Distribution Map</h2>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#8b949e', fontSize: '26px', cursor: 'pointer' }}>×</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '26px', cursor: 'pointer' }}>×</button>
         </div>
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
           <div ref={mapDiv} style={{ flex: 2, minWidth: 0, height: '100%', position: 'relative' }} />
-          <div style={{ width: '300px', flexShrink: 0, borderLeft: '1px solid #30363d', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', overflowY: 'auto' }}>
-            <h4 style={{ margin: 0, color: '#fff', fontSize: '14px', borderBottom: '1px solid #30363d', paddingBottom: '8px' }}>📊 Clients by Region</h4>
+          <div style={{ width: '300px', flexShrink: 0, borderLeft: '1px solid var(--border-color)', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', overflowY: 'auto' }}>
+            <h4 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '14px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>📊 Clients by Region</h4>
             {regionsStats.length > 0 ? (
               <>
                 <div style={{ height: '220px' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#30363d" horizontal={false} />
-                      <XAxis type="number" stroke="#8b949e" tick={{ fontSize: 10 }} allowDecimals={false} />
-                      <YAxis type="category" dataKey="governorate" stroke="#8b949e" tick={{ fontSize: 10 }} width={85} />
-                      <Tooltip contentStyle={{ backgroundColor: '#0d1117', border: '1px solid #30363d', color: '#fff', fontSize: '12px' }} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" horizontal={false} />
+                      <XAxis type="number" stroke="var(--text-muted)" tick={{ fontSize: 10 }} allowDecimals={false} />
+                      <YAxis type="category" dataKey="governorate" stroke="var(--text-muted)" tick={{ fontSize: 10 }} width={85} />
+                      <Tooltip contentStyle={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '12px' }} />
                       <Bar dataKey="count" name="Clients" radius={[0, 4, 4, 0]}>
                         {chartData.map((entry, index) => (
                           <Cell key={index} fill={colorStr(entry.count, maxCount)} />
@@ -178,7 +178,7 @@ const RegionsWebMapModal: React.FC<RegionsWebMapModalProps> = ({ regionsStats, o
                   </ResponsiveContainer>
                 </div>
                 <div>
-                  <div style={{ fontSize: '11px', color: '#8b949e', marginBottom: '6px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Color Legend</div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Color Legend</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px' }}>
                     {[
                       { label: '0 Clients', color: 'rgba(48, 54, 61, 0.4)' },
@@ -188,26 +188,26 @@ const RegionsWebMapModal: React.FC<RegionsWebMapModalProps> = ({ regionsStats, o
                       { label: '76 - 100%', color: 'rgba(255, 51, 51, 1)' }
                     ].map((bucket, i) => (
                       <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ width: '16px', height: '16px', backgroundColor: bucket.color, borderRadius: '4px', border: '1px solid #30363d' }} />
-                        <span style={{ color: '#8b949e', fontSize: '11px' }}>{bucket.label} of Max ({maxCount})</span>
+                        <div style={{ width: '16px', height: '16px', backgroundColor: bucket.color, borderRadius: '4px', border: '1px solid var(--border-color)' }} />
+                        <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>{bucket.label} of Max ({maxCount})</span>
                       </div>
                     ))}
                   </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 }}>
                   {chartData.map((r) => (
-                    <div key={r.governorate} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#161b22', padding: '5px 10px', borderRadius: '6px', border: '1px solid #30363d' }}>
+                    <div key={r.governorate} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-secondary)', padding: '5px 10px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <div style={{ width: '10px', height: '10px', borderRadius: '2px', backgroundColor: colorStr(r.count, maxCount), flexShrink: 0 }} />
-                        <span style={{ color: '#e6edf3', fontSize: '12px' }}>{r.governorate}</span>
+                        <span style={{ color: 'var(--text-primary)', fontSize: '12px' }}>{r.governorate}</span>
                       </div>
-                      <span style={{ color: '#58a6ff', fontWeight: 'bold', fontSize: '12px' }}>{r.count}</span>
+                      <span style={{ color: 'var(--accent-blue)', fontWeight: 'bold', fontSize: '12px' }}>{r.count}</span>
                     </div>
                   ))}
                 </div>
               </>
             ) : (
-              <div style={{ color: '#8b949e', textAlign: 'center', padding: '20px 0', fontSize: '13px' }}>No regional data available yet.</div>
+              <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px 0', fontSize: '13px' }}>No regional data available yet.</div>
             )}
           </div>
         </div>

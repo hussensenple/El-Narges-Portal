@@ -180,11 +180,11 @@ const AdminDashboardTab = () => {
   const COLORS = ['#8957e5', '#3fb950'];
 
   if (loading) {
-    return <div style={{ padding: '40px', textAlign: 'center', color: '#8b949e' }}>Loading Analytics...</div>;
+    return <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>Loading Analytics...</div>;
   }
 
   if (!stats) {
-    return <div style={{ padding: '40px', textAlign: 'center', color: '#f85149' }}>Failed to load data.</div>;
+    return <div style={{ padding: '40px', textAlign: 'center', color: 'var(--accent-red)' }}>Failed to load data.</div>;
   }
 
   return (
@@ -197,9 +197,9 @@ const AdminDashboardTab = () => {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '15px', overflow: 'hidden' }}>
 
           {/* Top Selling Regions (Scroll down list) */}
-          <div style={{ flex: 1, backgroundColor: '#21262d', padding: '15px', borderRadius: '16px', border: '1px solid #30363d', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #30363d', paddingBottom: '8px', marginBottom: '10px' }}>
-              <h4 style={{ margin: 0, color: '#fff', fontSize: '14px' }}>📍 Top Selling Regions</h4>
+          <div style={{ flex: 1, backgroundColor: 'var(--bg-tertiary)', padding: '15px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px', marginBottom: '10px' }}>
+              <h4 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '14px' }}>📍 Top Selling Regions</h4>
               <div style={{ display: 'flex', gap: '6px' }}>
                 <button
                   title="Open Regions Map"
@@ -213,31 +213,31 @@ const AdminDashboardTab = () => {
                 <div
                   key={region.governorate}
                   onClick={() => setSelectedRegion(region)}
-                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#161b22', padding: '10px', borderRadius: '8px', border: '1px solid #30363d', cursor: 'pointer', transition: 'background 0.2s' }}
-                  onMouseEnter={e => e.currentTarget.style.backgroundColor = '#1f242c'}
-                  onMouseLeave={e => e.currentTarget.style.backgroundColor = '#161b22'}
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-secondary)', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', cursor: 'pointer', transition: 'background 0.2s' }}
+                  onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--bg-hover)'}
+                  onMouseLeave={e => e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'}
                 >
                   <div>
-                    <span style={{ color: '#e6edf3', fontWeight: 'bold', fontSize: '13px', display: 'block' }}>{region.governorate}</span>
-                    <span style={{ color: '#8b949e', fontSize: '10px' }}>Rank #{idx + 1}</span>
+                    <span style={{ color: 'var(--text-primary)', fontWeight: 'bold', fontSize: '13px', display: 'block' }}>{region.governorate}</span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>Rank #{idx + 1}</span>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <span style={{ display: 'block', color: '#58a6ff', fontWeight: 'bold', fontSize: '13px' }}>{region.count} Clients</span>
-                    <span style={{ color: '#8b949e', fontSize: '10px' }}>
+                    <span style={{ display: 'block', color: 'var(--accent-blue)', fontWeight: 'bold', fontSize: '13px' }}>{region.count} Clients</span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>
                       {regionsStats.length > 0 ? `${Math.round((region.count / regionsStats.reduce((a: number, r: any) => a + r.count, 0)) * 100)}% share` : ''}
                     </span>
                   </div>
                 </div>
               )) : (
-                <div style={{ color: '#8b949e', textAlign: 'center', padding: '20px 0', fontSize: '12px' }}>No regional data yet. Data will appear once users register with a governorate and submit requests.</div>
+                <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px 0', fontSize: '12px' }}>No regional data yet. Data will appear once users register with a governorate and submit requests.</div>
               )}
             </div>
           </div>
 
           {/* Top Owners (Scroll down list) */}
-          <div style={{ flex: 1, backgroundColor: '#21262d', padding: '15px', borderRadius: '16px', border: '1px solid #30363d', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #30363d', paddingBottom: '8px', marginBottom: '10px' }}>
-              <h4 style={{ margin: 0, color: '#fff', fontSize: '14px' }}>
+          <div style={{ flex: 1, backgroundColor: 'var(--bg-tertiary)', padding: '15px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px', marginBottom: '10px' }}>
+              <h4 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '14px' }}>
                 👑 Top Owners
               </h4>
               <button
@@ -254,49 +254,49 @@ const AdminDashboardTab = () => {
                   <div
                     key={owner._id}
                     onClick={() => setSelectedOwner(owner)}
-                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#161b22', padding: '10px', borderRadius: '8px', border: '1px solid #30363d', cursor: 'pointer', transition: 'background-color 0.2s' }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1f242c'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#161b22'}
+                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-secondary)', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', cursor: 'pointer', transition: 'background-color 0.2s' }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-hover)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'}
                   >
                     <div>
-                      <span style={{ color: '#e6edf3', fontWeight: 'bold', fontSize: '13px', display: 'block' }}>{owner.name}</span>
-                      <span style={{ color: '#8b949e', fontSize: '10px' }}>{owner.phone}</span>
+                      <span style={{ color: 'var(--text-primary)', fontWeight: 'bold', fontSize: '13px', display: 'block' }}>{owner.name}</span>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>{owner.phone}</span>
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <span style={{ display: 'block', color: '#ffc658', fontWeight: 'bold', fontSize: '13px' }}>
                         {owner.totalPrice !== undefined && owner.totalPrice > 0 ? (owner.totalPrice / 1000000).toFixed(2) + ' M EGP' : '—'}
                       </span>
-                      <span style={{ color: '#8b949e', fontSize: '10px' }}>{owner.ownedUnits?.length || 0} units</span>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>{owner.ownedUnits?.length || 0} units</span>
                     </div>
                   </div>
                 ))
               ) : (
-                <div style={{ color: '#8b949e', textAlign: 'center', padding: '10px', fontSize: '13px' }}>No owners found.</div>
+                <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '10px', fontSize: '13px' }}>No owners found.</div>
               )}
             </div>
           </div>
 
           {/* Recent Sales List */}
-          <div style={{ flex: 1, backgroundColor: '#21262d', padding: '15px', borderRadius: '16px', border: '1px solid #30363d', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
-            <h4 style={{ marginTop: 0, marginBottom: '10px', color: '#fff', textAlign: 'left', borderBottom: '1px solid #30363d', paddingBottom: '8px', fontSize: '14px' }}>
+          <div style={{ flex: 1, backgroundColor: 'var(--bg-tertiary)', padding: '15px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
+            <h4 style={{ marginTop: 0, marginBottom: '10px', color: 'var(--text-primary)', textAlign: 'left', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px', fontSize: '14px' }}>
               🛒 Recent Sales
             </h4>
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {stats.recentSales && stats.recentSales.length > 0 ? (
                 stats.recentSales.map((sale: any) => (
-                  <div key={sale._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#161b22', padding: '10px', borderRadius: '6px', border: '1px solid #30363d' }}>
+                  <div key={sale._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-secondary)', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                      <span style={{ color: '#e6edf3', fontWeight: 'bold', fontSize: '13px' }}>{sale.customerName}</span>
-                      <span style={{ color: '#8b949e', fontSize: '11px' }}>{sale.type} #{sale.unitId}</span>
+                      <span style={{ color: 'var(--text-primary)', fontWeight: 'bold', fontSize: '13px' }}>{sale.customerName}</span>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>{sale.type} #{sale.unitId}</span>
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <span style={{ display: 'block', color: '#3fb950', fontWeight: 'bold', fontSize: '13px' }}>{sale.price}</span>
-                      <span style={{ color: '#8b949e', fontSize: '10px' }}>{new Date(sale.date).toLocaleDateString()}</span>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>{new Date(sale.date).toLocaleDateString()}</span>
                     </div>
                   </div>
                 ))
               ) : (
-                <div style={{ color: '#8b949e', textAlign: 'center', padding: '10px', fontSize: '13px' }}>No recent sales.</div>
+                <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '10px', fontSize: '13px' }}>No recent sales.</div>
               )}
             </div>
           </div>
@@ -308,26 +308,26 @@ const AdminDashboardTab = () => {
 
           {/* Indicators row aligned directly with the map frame */}
           <div style={{ display: 'flex', gap: '10px' }}>
-            <div style={{ flex: 1, backgroundColor: '#21262d', padding: '10px 15px', borderRadius: '16px', border: '1px solid #30363d', textAlign: 'center' }}>
-              <h4 style={{ margin: '0 0 5px 0', color: '#8b949e', fontSize: '12px' }}>Total Available Units</h4>
+            <div style={{ flex: 1, backgroundColor: 'var(--bg-tertiary)', padding: '10px 15px', borderRadius: '16px', border: '1px solid var(--border-color)', textAlign: 'center' }}>
+              <h4 style={{ margin: '0 0 5px 0', color: 'var(--text-muted)', fontSize: '12px' }}>Total Available Units</h4>
               <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#3fb950' }}>{stats.indicators.totalAvailableUnits}</div>
             </div>
-            <div style={{ flex: 1, backgroundColor: '#21262d', padding: '10px 15px', borderRadius: '16px', border: '1px solid #30363d', textAlign: 'center' }}>
-              <h4 style={{ margin: '0 0 5px 0', color: '#8b949e', fontSize: '12px' }}>Total Reserved Units</h4>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#d29922' }}>{stats.indicators.totalReservedUnits}</div>
+            <div style={{ flex: 1, backgroundColor: 'var(--bg-tertiary)', padding: '10px 15px', borderRadius: '16px', border: '1px solid var(--border-color)', textAlign: 'center' }}>
+              <h4 style={{ margin: '0 0 5px 0', color: 'var(--text-muted)', fontSize: '12px' }}>Total Reserved Units</h4>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--accent-gold)' }}>{stats.indicators.totalReservedUnits}</div>
             </div>
-            <div style={{ flex: 1, backgroundColor: '#21262d', padding: '10px 15px', borderRadius: '16px', border: '1px solid #30363d', textAlign: 'center' }}>
-              <h4 style={{ margin: '0 0 5px 0', color: '#8b949e', fontSize: '12px' }}>Total Sold Units</h4>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#da3633' }}>{stats.indicators.totalSoldUnits}</div>
+            <div style={{ flex: 1, backgroundColor: 'var(--bg-tertiary)', padding: '10px 15px', borderRadius: '16px', border: '1px solid var(--border-color)', textAlign: 'center' }}>
+              <h4 style={{ margin: '0 0 5px 0', color: 'var(--text-muted)', fontSize: '12px' }}>Total Sold Units</h4>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--accent-red-bg)' }}>{stats.indicators.totalSoldUnits}</div>
             </div>
-            <div style={{ flex: 1, backgroundColor: '#21262d', padding: '10px 15px', borderRadius: '16px', border: '1px solid #30363d', textAlign: 'center' }}>
-              <h4 style={{ margin: '0 0 5px 0', color: '#8b949e', fontSize: '12px' }}>Total Revenue <span style={{ fontSize: '10px', fontWeight: 'normal', textTransform: 'none' }}>(M EGY)</span></h4>
+            <div style={{ flex: 1, backgroundColor: 'var(--bg-tertiary)', padding: '10px 15px', borderRadius: '16px', border: '1px solid var(--border-color)', textAlign: 'center' }}>
+              <h4 style={{ margin: '0 0 5px 0', color: 'var(--text-muted)', fontSize: '12px' }}>Total Revenue <span style={{ fontSize: '10px', fontWeight: 'normal', textTransform: 'none' }}>(M EGY)</span></h4>
               <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffc658' }}>{Number(stats.indicators.totalRevenue).toFixed(2)}</div>
             </div>
           </div>
 
           {/* 3D Map Container */}
-          <div style={{ flex: 1, backgroundColor: '#21262d', borderRadius: '16px', border: '1px solid #30363d', overflow: 'hidden', position: 'relative' }}>
+          <div style={{ flex: 1, backgroundColor: 'var(--bg-tertiary)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden', position: 'relative' }}>
             <MapViewer
               onViewReady={handleViewReady}
               isLayersOpen={false}
@@ -343,8 +343,8 @@ const AdminDashboardTab = () => {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '15px', overflow: 'hidden' }}>
 
           {/* Pie Chart: Sold Units Ratio */}
-          <div style={{ flex: 1.2, backgroundColor: '#21262d', padding: '15px', borderRadius: '16px', border: '1px solid #30363d', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-            <h4 style={{ marginTop: 0, marginBottom: '10px', color: '#fff', textAlign: 'center', fontSize: '14px' }}>Sold Units Ratio</h4>
+          <div style={{ flex: 1.2, backgroundColor: 'var(--bg-tertiary)', padding: '15px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+            <h4 style={{ marginTop: 0, marginBottom: '10px', color: 'var(--text-primary)', textAlign: 'center', fontSize: '14px' }}>Sold Units Ratio</h4>
             <div style={{ flex: 1 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -358,14 +358,14 @@ const AdminDashboardTab = () => {
                     outerRadius="55%"
                     paddingAngle={5}
                     dataKey="value"
-                    labelLine={{ stroke: '#8b949e', strokeWidth: 1 }}
+                    labelLine={{ stroke: 'var(--text-muted)', strokeWidth: 1 }}
                     label={renderCustomizedLabel}
                   >
                     {stats.pieChartData.map((_entry: any, index: number) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <PieTooltip contentStyle={{ backgroundColor: '#0d1117', border: '1px solid #30363d', color: '#fff', fontSize: '12px' }} />
+                  <PieTooltip contentStyle={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '12px' }} />
                   <PieLegend verticalAlign="bottom" height={24} wrapperStyle={{ fontSize: '12px' }} />
                 </PieChart>
               </ResponsiveContainer>
@@ -373,27 +373,27 @@ const AdminDashboardTab = () => {
           </div>
 
           {/* Bar Chart: Property Status */}
-          <div style={{ flex: 1.2, backgroundColor: '#21262d', padding: '15px', borderRadius: '16px', border: '1px solid #30363d', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-            <h4 style={{ marginTop: 0, marginBottom: '10px', color: '#fff', textAlign: 'center', fontSize: '14px' }}>Property Status</h4>
+          <div style={{ flex: 1.2, backgroundColor: 'var(--bg-tertiary)', padding: '15px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+            <h4 style={{ marginTop: 0, marginBottom: '10px', color: 'var(--text-primary)', textAlign: 'center', fontSize: '14px' }}>Property Status</h4>
             <div style={{ flex: 1 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={stats.barChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#30363d" />
-                  <XAxis dataKey="name" stroke="#8b949e" tick={{ fontSize: 12 }} />
-                  <YAxis stroke="#8b949e" allowDecimals={false} tick={{ fontSize: 12 }} domain={[0, 300]} allowDataOverflow={true} />
-                  <BarTooltip contentStyle={{ backgroundColor: '#0d1117', border: '1px solid #30363d', color: '#fff' }} cursor={{ fill: '#30363d' }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
+                  <XAxis dataKey="name" stroke="var(--text-muted)" tick={{ fontSize: 12 }} />
+                  <YAxis stroke="var(--text-muted)" allowDecimals={false} tick={{ fontSize: 12 }} domain={[0, 300]} allowDataOverflow={true} />
+                  <BarTooltip contentStyle={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} cursor={{ fill: 'var(--border-color)' }} />
                   <BarLegend wrapperStyle={{ fontSize: '12px' }} />
                   <Bar dataKey="Available" fill="#3fb950" />
-                  <Bar dataKey="Sold" fill="#da3633" />
-                  <Bar dataKey="Reserved" fill="#d29922" />
+                  <Bar dataKey="Sold" fill="var(--accent-red-bg)" />
+                  <Bar dataKey="Reserved" fill="var(--accent-gold)" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
 
           {/* Top Brokers Leaderboard */}
-          <div style={{ flex: 1, backgroundColor: '#21262d', padding: '15px', borderRadius: '16px', border: '1px solid #30363d', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-            <h4 style={{ marginTop: 0, marginBottom: '10px', color: '#fff', textAlign: 'left', borderBottom: '1px solid #30363d', paddingBottom: '8px', fontSize: '14px' }}>
+          <div style={{ flex: 1, backgroundColor: 'var(--bg-tertiary)', padding: '15px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+            <h4 style={{ marginTop: 0, marginBottom: '10px', color: 'var(--text-primary)', textAlign: 'left', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px', fontSize: '14px' }}>
               🏆 Top Brokers
             </h4>
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -402,23 +402,23 @@ const AdminDashboardTab = () => {
                   <div
                     key={broker._id}
                     onClick={() => setSelectedBroker(broker)}
-                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#161b22', padding: '10px 12px', borderRadius: '12px', border: '1px solid #30363d', cursor: 'pointer', transition: 'background-color 0.2s' }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1f242c'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#161b22'}
+                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-secondary)', padding: '10px 12px', borderRadius: '12px', border: '1px solid var(--border-color)', cursor: 'pointer', transition: 'background-color 0.2s' }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-hover)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'}
                   >
                     {/* Left: rank circle + name */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <div style={{
-                        backgroundColor: index === 0 ? '#d29922' : index === 1 ? '#8b949e' : index === 2 ? '#b06500' : '#30363d',
-                        color: '#fff', width: '28px', height: '28px', borderRadius: '50%',
+                        backgroundColor: index === 0 ? 'var(--accent-gold)' : index === 1 ? 'var(--text-muted)' : index === 2 ? '#b06500' : 'var(--border-color)',
+                        color: 'var(--text-primary)', width: '28px', height: '28px', borderRadius: '50%',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: '12px', fontWeight: 'bold', flexShrink: 0
                       }}>
                         {index + 1}
                       </div>
                       <div>
-                        <span style={{ color: '#e6edf3', fontWeight: 'bold', display: 'block', fontSize: '13px' }}>{broker.name}</span>
-                        <span style={{ color: '#8b949e', fontSize: '10px' }}>Req: {broker.totalRequests}</span>
+                        <span style={{ color: 'var(--text-primary)', fontWeight: 'bold', display: 'block', fontSize: '13px' }}>{broker.name}</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>Req: {broker.totalRequests}</span>
                       </div>
                     </div>
 
@@ -426,21 +426,21 @@ const AdminDashboardTab = () => {
                     <div style={{ display: 'flex', gap: '14px', textAlign: 'center' }}>
                       <div>
                         <span style={{ display: 'block', color: '#3fb950', fontWeight: 'bold', fontSize: '15px', lineHeight: 1.1 }}>{broker.sold}</span>
-                        <span style={{ color: '#8b949e', fontSize: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Sold</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Sold</span>
                       </div>
                       <div>
-                        <span style={{ display: 'block', color: '#d29922', fontWeight: 'bold', fontSize: '15px', lineHeight: 1.1 }}>{broker.raisedToAdmin}</span>
-                        <span style={{ color: '#8b949e', fontSize: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Raised</span>
+                        <span style={{ display: 'block', color: 'var(--accent-gold)', fontWeight: 'bold', fontSize: '15px', lineHeight: 1.1 }}>{broker.raisedToAdmin}</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Raised</span>
                       </div>
                       <div>
-                        <span style={{ display: 'block', color: '#f85149', fontWeight: 'bold', fontSize: '15px', lineHeight: 1.1 }}>{broker.declined}</span>
-                        <span style={{ color: '#8b949e', fontSize: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Declined</span>
+                        <span style={{ display: 'block', color: 'var(--accent-red)', fontWeight: 'bold', fontSize: '15px', lineHeight: 1.1 }}>{broker.declined}</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Declined</span>
                       </div>
                     </div>
                   </div>
                 ))
               ) : (
-                <div style={{ color: '#8b949e', textAlign: 'center', padding: '10px', fontSize: '13px' }}>No brokers found.</div>
+                <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '10px', fontSize: '13px' }}>No brokers found.</div>
               )}
             </div>
           </div>

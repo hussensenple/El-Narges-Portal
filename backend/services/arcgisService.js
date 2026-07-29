@@ -76,7 +76,7 @@ async function updateArcGISStatus(arcgisObjectId, newStatus, ownerName, ownerPho
       };
       if (ownerName !== undefined) attributes.Owner_Name = ownerName === null ? "" : ownerName;
       if (ownerPhone !== undefined) attributes.Owner_Phone = ownerPhone === null ? "" : ownerPhone;
-      if (ownerGmail !== undefined) attributes.Owner_Gmail = ownerGmail === null ? "" : ownerGmail;
+      if (ownerGmail !== undefined) attributes.Gmail = ownerGmail === null ? "" : ownerGmail;
 
       const updatesPayload = [{ attributes }];
 
@@ -176,6 +176,72 @@ async function updateArcGISPrice(arcgisObjectId, newPrice, sourceLayer) {
   }
 }
 
+async function bulkUpdateArcGISPrices(arcgisObjectIds, newPrice, sourceLayer) {
+  const layerUrls = {
+    "Units": "https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WFL1/FeatureServer/37",
+    "Buildings_Global": "https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WFL1/FeatureServer/1",
+    "Villas_Global": "https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WSL3/FeatureServer/8" 
+  };
+
+  const cleanSourceLayer = String(sourceLayer).trim();
+  const featureLayerUrl = layerUrls[cleanSourceLayer];
+  
+  if (!featureLayerUrl) {
+    console.error(`❌ الطبقة غير معروفة: '${cleanSourceLayer}'`);
+    return false;
+  }
+
+  if (!arcgisObjectIds || arcgisObjectIds.length === 0) return true;
+
+  try {
+    const isUnits = cleanSourceLayer === "Units";
+    const endpoint = isUnits ? "updateFeatures" : "applyEdits";
+    
+    // Process in batches of 100 to avoid ArcGIS payload limits
+    const batchSize = 100;
+    for (let i = 0; i < arcgisObjectIds.length; i += batchSize) {
+      const batchIds = arcgisObjectIds.slice(i, i + batchSize);
+      
+      const payloadFeatures = batchIds.map(id => {
+        const isGuid = String(id).includes('-');
+        return {
+          attributes: {
+            [isUnits ? "OBJECTID" : (isGuid ? "GlobalID" : "OBJECTID")]: isUnits ? Number(id) : (isGuid ? String(id) : Number(id)),
+            Price: Number(newPrice)
+          }
+        };
+      });
+
+      const formData = new URLSearchParams();
+      formData.append('f', 'json');
+      
+      if (isUnits) {
+        formData.append('features', JSON.stringify(payloadFeatures));
+      } else {
+        formData.append('updates', JSON.stringify(payloadFeatures));
+        // Check if any id in this batch is a guid
+        if (batchIds.some(id => String(id).includes('-'))) {
+          formData.append('useGlobalIds', 'true');
+        }
+      }
+
+      const response = await axios.post(`${featureLayerUrl}/${endpoint}`, formData.toString(), {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      });
+
+      if (response.data.error) {
+        console.error("❌ ArcGIS Bulk Update Error:", response.data.error);
+        return false;
+      }
+    }
+
+    return true;
+  } catch (error) {
+    console.error("❌ Bulk Request Crashed:", error.message);
+    return false;
+  }
+}
+
 async function checkAndUpdateBuildingCompleteness(buildingFK, changedUnitId = null, changedUnitNewStatus = null) {
   if (!buildingFK) return;
 
@@ -238,6 +304,7 @@ async function checkAndUpdateBuildingCompleteness(buildingFK, changedUnitId = nu
 
 module.exports = {
   updateArcGISStatus,
-  checkAndUpdateBuildingCompleteness,
-  updateArcGISPrice
+  updateArcGISPrice,
+  bulkUpdateArcGISPrices,
+  checkAndUpdateBuildingCompleteness
 };

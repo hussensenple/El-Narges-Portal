@@ -103,11 +103,11 @@ const BrokerMapPopup = ({ buildingId, villaData, onClose }: BrokerMapPopupProps)
 
   const statusLabel = (s: any) => {
     const v = String(s).toLowerCase();
-    if (v === '1' || v === 'available') return { label: 'Available', color: '#2ea043' };
-    if (v === '2' || v === 'interested') return { label: 'Interested', color: '#d29922' };
+    if (v === '1' || v === 'available') return { label: 'Available', color: 'var(--accent-green)' };
+    if (v === '2' || v === 'interested') return { label: 'Interested', color: 'var(--accent-gold)' };
     if (v === '3' || v === 'reserved') return { label: 'Reserved', color: '#8957e5' };
-    if (v === '4' || v === 'sold') return { label: 'Sold', color: '#f85149' };
-    return { label: 'Other', color: '#8b949e' };
+    if (v === '4' || v === 'sold') return { label: 'Sold', color: 'var(--accent-red)' };
+    return { label: 'Other', color: 'var(--text-muted)' };
   };
 
   const title = villaData ? 'Broker Villa Details' : 'Broker Apartment Details';
@@ -122,14 +122,14 @@ const BrokerMapPopup = ({ buildingId, villaData, onClose }: BrokerMapPopupProps)
         maxHeight: '80vh',
         background: 'rgba(22,27,34,0.92)',
         backdropFilter: 'blur(12px)',
-        border: '1px solid #30363d',
+        border: '1px solid var(--border-color)',
         borderRadius: '14px',
         boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
         zIndex: 100,
         display: 'flex',
         flexDirection: 'column',
         animation: 'slideInRight 0.25s ease-out',
-        color: '#c9d1d9',
+        color: 'var(--text-secondary)',
         fontFamily: "'Inter', sans-serif",
         overflow: 'hidden'
       }}>
@@ -144,7 +144,7 @@ const BrokerMapPopup = ({ buildingId, villaData, onClose }: BrokerMapPopupProps)
         <div style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           padding: '14px 18px',
-          borderBottom: '1px solid #21262d',
+          borderBottom: '1px solid var(--bg-tertiary)',
           background: 'rgba(33,38,45,0.7)',
           borderTopLeftRadius: '14px',
           borderTopRightRadius: '14px',
@@ -154,7 +154,7 @@ const BrokerMapPopup = ({ buildingId, villaData, onClose }: BrokerMapPopupProps)
           <button
             onClick={onClose}
             style={{
-              background: '#da3633', border: 'none', color: '#fff', cursor: 'pointer',
+              background: 'var(--accent-red-bg)', border: 'none', color: 'var(--text-primary)', cursor: 'pointer',
               fontSize: '0.85rem', width: '26px', height: '26px', borderRadius: '50%',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               transition: '0.2s', boxShadow: '0 2px 6px rgba(0,0,0,0.4)', flexShrink: 0
@@ -168,9 +168,9 @@ const BrokerMapPopup = ({ buildingId, villaData, onClose }: BrokerMapPopupProps)
         {/* ── Content ── */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '30px', color: '#8b949e' }}>Loading your property details...</div>
+            <div style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>Loading your property details...</div>
           ) : units.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '30px', color: '#8b949e' }}>
+            <div style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>
               You do not manage any units at this location.
             </div>
           ) : (
@@ -182,21 +182,21 @@ const BrokerMapPopup = ({ buildingId, villaData, onClose }: BrokerMapPopupProps)
                   key={unit._id} 
                   style={{ 
                     position: 'relative',
-                    backgroundColor: '#0d1117', 
-                    border: `1px solid ${unitRequests.length > 0 ? '#f85149' : '#30363d'}`, 
+                    backgroundColor: 'var(--bg-primary)', 
+                    border: `1px solid ${unitRequests.length > 0 ? 'var(--accent-red)' : 'var(--border-color)'}`, 
                     borderRadius: '10px', 
                     padding: '16px',
                     boxShadow: unitRequests.length > 0 ? '0 0 15px rgba(248, 81, 73, 0.15)' : 'none'
                   }}
                 >
                   {unitRequests.length > 0 && (
-                    <div style={{ position: 'absolute', top: '-10px', right: '-10px', backgroundColor: '#f85149', color: '#fff', borderRadius: '20px', padding: '4px 10px', fontSize: '12px', fontWeight: 'bold', boxShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>
+                    <div style={{ position: 'absolute', top: '-10px', right: '-10px', backgroundColor: 'var(--accent-red)', color: 'var(--text-primary)', borderRadius: '20px', padding: '4px 10px', fontSize: '12px', fontWeight: 'bold', boxShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>
                       {unitRequests.length} Request{unitRequests.length > 1 ? 's' : ''}
                     </div>
                   )}
                   
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-                    <span style={{ fontWeight: 'bold', color: '#fff', fontSize: '15px' }}>
+                    <span style={{ fontWeight: 'bold', color: 'var(--text-primary)', fontSize: '15px' }}>
                       {villaData ? 'Villa' : 'Apartment'} #{unit.objectId || unit.arcgisId}
                     </span>
                   </div>
@@ -206,8 +206,8 @@ const BrokerMapPopup = ({ buildingId, villaData, onClose }: BrokerMapPopupProps)
                     style={{
                       width: '100%',
                       padding: '10px',
-                      backgroundColor: unitRequests.length > 0 ? '#da3633' : '#238636',
-                      color: '#fff',
+                      backgroundColor: unitRequests.length > 0 ? 'var(--accent-red-bg)' : 'var(--accent-green-bg)',
+                      color: 'var(--text-primary)',
                       border: 'none',
                       borderRadius: '6px',
                       cursor: 'pointer',

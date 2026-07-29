@@ -9,19 +9,19 @@ const RolesWidget = () => {
   const [activeRole, setActiveRole] = useState<'user' | 'owner' | 'broker' | 'engineer' | 'admin'>('user');
 
   return (
-    <div style={{ backgroundColor: '#161b22', padding: '20px', borderRadius: '12px', border: '1px solid #30363d', marginBottom: '20px' }}>
+    <div style={{ backgroundColor: 'var(--bg-secondary)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)', marginBottom: '20px' }}>
       
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '1px solid #30363d', paddingBottom: '10px' }}>
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
         {['user', 'owner', 'broker', 'engineer', 'admin'].map(role => (
           <button
             key={role}
             onClick={() => setActiveRole(role as any)}
             style={{
               padding: '10px 16px',
-              backgroundColor: activeRole === role ? '#21262d' : 'transparent',
-              color: activeRole === role ? '#58a6ff' : '#8b949e',
-              border: activeRole === role ? '1px solid #30363d' : '1px solid transparent',
+              backgroundColor: activeRole === role ? 'var(--bg-tertiary)' : 'transparent',
+              color: activeRole === role ? 'var(--accent-blue)' : 'var(--text-muted)',
+              border: activeRole === role ? '1px solid var(--border-color)' : '1px solid transparent',
               borderRadius: '8px',
               cursor: 'pointer',
               fontWeight: 'bold',

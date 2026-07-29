@@ -86,25 +86,25 @@ const WeatherWidget = ({ view, onClose }: WeatherWidgetProps) => {
   // 🚀 دالة لاختيار الأيقونة المناسبة بناءً على حالة الطقس
   const renderWeatherIcon = (condition: string, size: number) => {
     const cond = condition.toLowerCase();
-    if (cond.includes('rain') || cond.includes('drizzle') || cond.includes('thunderstorm')) return <Icons.Rain size={size} color="#fff" />;
-    if (cond.includes('cloud')) return <Icons.Cloud size={size} color="#fff" />;
-    if (cond.includes('fog') || cond.includes('mist') || cond.includes('haze')) return <Icons.Fog size={size} color="#fff" />;
-    return <Icons.Sun size={size} color="#fff" />;
+    if (cond.includes('rain') || cond.includes('drizzle') || cond.includes('thunderstorm')) return <Icons.Rain size={size} color="var(--text-primary)" />;
+    if (cond.includes('cloud')) return <Icons.Cloud size={size} color="var(--text-primary)" />;
+    if (cond.includes('fog') || cond.includes('mist') || cond.includes('haze')) return <Icons.Fog size={size} color="var(--text-primary)" />;
+    return <Icons.Sun size={size} color="var(--text-primary)" />;
   };
 
-  const btnStyle: React.CSSProperties = { width: '100%', padding: '14px', backgroundColor: '#1f6feb', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 600, cursor: 'pointer', marginBottom: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' };
-  const secBtnStyle: React.CSSProperties = { flex: '1 1 calc(50% - 8px)', padding: '12px', backgroundColor: '#21262d', color: '#c9d1d9', border: '1px solid #30363d', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' };
+  const btnStyle: React.CSSProperties = { width: '100%', padding: '14px', backgroundColor: 'var(--accent-blue-bg)', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 600, cursor: 'pointer', marginBottom: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' };
+  const secBtnStyle: React.CSSProperties = { flex: '1 1 calc(50% - 8px)', padding: '12px', backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' };
 
   return (
-    <div style={{ position: 'absolute', top: `-54px`, left: `-408px`, width: '320px', backgroundColor: '#0d1117', borderRadius: '14px', boxShadow: '0 20px 50px rgba(0,0,0,0.7)', display: 'flex', flexDirection: 'column', color: '#c9d1d9', fontFamily: 'sans-serif', zIndex: 1000, overflow: 'hidden' }}>
+    <div style={{ position: 'absolute', top: `-54px`, left: `-408px`, width: '320px', backgroundColor: 'var(--bg-primary)', borderRadius: '14px', boxShadow: '0 20px 50px rgba(0,0,0,0.7)', display: 'flex', flexDirection: 'column', color: 'var(--text-secondary)', fontFamily: 'sans-serif', zIndex: 1000, overflow: 'hidden' }}>
       
-      <div onMouseDown={handleMouseDown} style={{ padding: '16px 20px', backgroundColor: '#161b22', borderBottom: '1px solid #30363d', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: isDragging ? 'grabbing' : 'grab' }}>
+      <div onMouseDown={handleMouseDown} style={{ padding: '16px 20px', backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: isDragging ? 'grabbing' : 'grab' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {/* 👈 غيرنا الاسم هنا لـ Weather */}
-          <div style={{color: '#58a6ff'}}><Icons.Cloud size={18} color="#58a6ff" /></div>
-          <h5 style={{ margin: 0, color: '#fff', fontSize: '16px', fontWeight: 'bold', userSelect: 'none' }}>Weather</h5>
+          <div style={{color: 'var(--accent-blue)'}}><Icons.Cloud size={18} color="var(--accent-blue)" /></div>
+          <h5 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '16px', fontWeight: 'bold', userSelect: 'none' }}>Weather</h5>
         </div>
-        <button onMouseDown={(e) => e.stopPropagation()} onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#8b949e', fontSize: '20px', cursor: 'pointer' }}>✖</button>
+        <button onMouseDown={(e) => e.stopPropagation()} onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '20px', cursor: 'pointer' }}>✖</button>
       </div>
 
       <div style={{ padding: '20px' }}>
@@ -112,24 +112,24 @@ const WeatherWidget = ({ view, onClose }: WeatherWidgetProps) => {
           <span style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '11px', backgroundColor: view ? 'rgba(40, 167, 69, 0.15)' : 'rgba(220, 53, 69, 0.15)', color: view ? '#2ecc71' : '#e74c3c', fontWeight: 'bold' }}>{view ? '🟢 Live Map Linked' : '🔴 Map Disconnected'}</span>
         </div>
 
-        <div style={{ backgroundColor: '#161b22', borderRadius: '14px', padding: '16px', border: '1px solid #30363d', marginBottom: '16px', minHeight: '110px', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column' }}>
+        <div style={{ backgroundColor: 'var(--bg-secondary)', borderRadius: '14px', padding: '16px', border: '1px solid var(--border-color)', marginBottom: '16px', minHeight: '110px', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column' }}>
           {weatherData ? (
             <div style={{ textAlign: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
                 {/* 🚀 السحر هنا: بنرسم الأيقونة النظيفة بتاعتنا بحجم كبير */}
                 {renderWeatherIcon(weatherData.mainCondition, 45)}
-                <div style={{ fontSize: '40px', fontWeight: 'bold', color: '#fff' }}>{weatherData.temp}<span style={{fontSize: '20px', color: '#8b949e'}}>°C</span></div>
+                <div style={{ fontSize: '40px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{weatherData.temp}<span style={{fontSize: '20px', color: 'var(--text-muted)'}}>°C</span></div>
               </div>
-              <div style={{ fontSize: '13px', color: '#c9d1d9', backgroundColor: '#21262d', padding: '4px 12px', borderRadius: '15px', border: '1px solid #30363d', marginTop: '10px', display: 'inline-block' }}>{weatherData.description}</div>
+              <div style={{ fontSize: '13px', color: 'var(--text-secondary)', backgroundColor: 'var(--bg-tertiary)', padding: '4px 12px', borderRadius: '15px', border: '1px solid var(--border-color)', marginTop: '10px', display: 'inline-block' }}>{weatherData.description}</div>
             </div>
-          ) : <div style={{ color: '#8b949e' }}><Icons.Satellite size={18} /> Awaiting sync...</div>}
+          ) : <div style={{ color: 'var(--text-muted)' }}><Icons.Satellite size={18} /> Awaiting sync...</div>}
         </div>
 
-        <button onClick={fetchLiveWeather} disabled={isLoading || !view} style={btnStyle}><Icons.Satellite size={18} color="#fff" /> {isLoading ? 'Fetching Data...' : 'Sync Live Weather'}</button>
-        <button onClick={() => setIsRealTimeSun(!isRealTimeSun)} style={{...btnStyle, backgroundColor: isRealTimeSun ? '#fff3cd' : '#21262d', color: isRealTimeSun ? '#856404' : '#c9d1d9', border: isRealTimeSun ? '1px solid #ffeeba' : '1px solid #30363d'}}><Icons.Sun size={18} color={isRealTimeSun ? "#856404" : "#c9d1d9"} /> {isRealTimeSun ? 'Live Time & Shadows: Active' : 'Enable Live Time & Shadows'}</button>
+        <button onClick={fetchLiveWeather} disabled={isLoading || !view} style={btnStyle}><Icons.Satellite size={18} color="var(--text-primary)" /> {isLoading ? 'Fetching Data...' : 'Sync Live Weather'}</button>
+        <button onClick={() => setIsRealTimeSun(!isRealTimeSun)} style={{...btnStyle, backgroundColor: isRealTimeSun ? 'var(--text-primary)3cd' : 'var(--bg-tertiary)', color: isRealTimeSun ? '#856404' : 'var(--text-secondary)', border: isRealTimeSun ? '1px solid #ffeeba' : '1px solid var(--border-color)'}}><Icons.Sun size={18} color={isRealTimeSun ? "#856404" : "var(--text-secondary)"} /> {isRealTimeSun ? 'Live Time & Shadows: Active' : 'Enable Live Time & Shadows'}</button>
 
-        <div style={{ marginTop: '20px', borderTop: '1px solid #30363d', paddingTop: '16px' }}>
-          <div style={{ fontSize: '11px', color: '#8b949e', fontWeight: 'bold', marginBottom: '10px' }}>MANUAL OVERRIDE</div>
+        <div style={{ marginTop: '20px', borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 'bold', marginBottom: '10px' }}>MANUAL OVERRIDE</div>
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             <button onClick={() => manualWeatherOverride('sunny')} style={secBtnStyle}><Icons.Sun size={16} /> Sunny</button>
             <button onClick={() => manualWeatherOverride('cloudy')} style={secBtnStyle}><Icons.Cloud size={16} /> Cloudy</button>

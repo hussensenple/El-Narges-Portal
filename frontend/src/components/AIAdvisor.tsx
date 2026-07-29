@@ -647,18 +647,18 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
       <div id="tour-ai-advisor" style={{ position: 'absolute', bottom: '30px', right: '30px', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
         
         {isOpen && (
-          <div style={{ width: '350px', height: '450px', backgroundColor: '#161b22', border: '1px solid #30363d', borderRadius: '12px', display: 'flex', flexDirection: 'column', color: '#c9d1d9', overflow: 'hidden', marginBottom: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+          <div style={{ width: '350px', height: '450px', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', display: 'flex', flexDirection: 'column', color: 'var(--text-secondary)', overflow: 'hidden', marginBottom: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
             
-            <div style={{ padding: '12px 16px', backgroundColor: '#21262d', fontWeight: 'bold', borderBottom: '1px solid #30363d', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ padding: '12px 16px', backgroundColor: 'var(--bg-tertiary)', fontWeight: 'bold', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span>🤖 GeoTwin AI Advisor</span> 
-              <button onClick={() => setIsOpen(false)} style={{ background: 'transparent', border: 'none', color: '#8b949e', fontSize: '20px', cursor: 'pointer' }}>✖</button>
+              <button onClick={() => setIsOpen(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '20px', cursor: 'pointer' }}>✖</button>
             </div>
             
             {isFilterActive && (
-              <div style={{ padding: '8px', backgroundColor: '#1f2428', borderBottom: '1px solid #30363d', display: 'flex', justifyContent: 'center' }}>
+              <div style={{ padding: '8px', backgroundColor: '#1f2428', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'center' }}>
                 <button 
                   onClick={handleResetFilter}
-                  style={{ backgroundColor: '#d29922', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer', fontWeight: 'bold', width: '100%', transition: 'background-color 0.2s' }}
+                  style={{ backgroundColor: 'var(--accent-gold)', color: 'var(--text-primary)', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer', fontWeight: 'bold', width: '100%', transition: 'background-color 0.2s' }}
                 >
                   🔄 Reset Filtering
                 </button>
@@ -667,7 +667,7 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
 
             <div style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px', padding: '0 4px' }}>
-                <span style={{ fontSize: '12px', color: '#8b949e' }}>Suggested Questions (أسئلة مقترحة):</span>
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Suggested Questions (أسئلة مقترحة):</span>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                   {[
                     "We are a family of 5, what do you recommend? (نحن أسرة من 5 أفراد، بماذا تنصحني؟)",
@@ -679,9 +679,9 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
                       key={idx}
                       onClick={() => handleSend(q.split(' (')[0])}
                       style={{
-                        backgroundColor: '#21262d',
-                        color: '#58a6ff',
-                        border: '1px solid #30363d',
+                        backgroundColor: 'var(--bg-tertiary)',
+                        color: 'var(--accent-blue)',
+                        border: '1px solid var(--border-color)',
                         borderRadius: '16px',
                         padding: '6px 12px',
                         fontSize: '13px',
@@ -696,15 +696,15 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
                 </div>
               </div>
               {messages.map((m, i) => (
-                <div key={i} style={{ alignSelf: m.sender === 'user' ? 'flex-end' : 'flex-start', backgroundColor: m.sender === 'user' ? '#1f6feb' : '#30363d', padding: '10px 14px', borderRadius: '12px', borderBottomRightRadius: m.sender === 'user' ? '2px' : '12px', borderBottomLeftRadius: m.sender === 'ai' ? '2px' : '12px', maxWidth: '85%', fontSize: '14px', lineHeight: '1.5', direction: 'ltr', whiteSpace: 'pre-wrap' }}>
+                <div key={i} style={{ alignSelf: m.sender === 'user' ? 'flex-end' : 'flex-start', backgroundColor: m.sender === 'user' ? 'var(--accent-blue-bg)' : 'var(--border-color)', padding: '10px 14px', borderRadius: '12px', borderBottomRightRadius: m.sender === 'user' ? '2px' : '12px', borderBottomLeftRadius: m.sender === 'ai' ? '2px' : '12px', maxWidth: '85%', fontSize: '14px', lineHeight: '1.5', direction: 'ltr', whiteSpace: 'pre-wrap' }}>
                   {m.text}
                   
                   {m.action === 'BOOK_UNIT' && m.actionUnitId && (
                     <button 
                       onClick={() => handleConfirmBooking(m.actionUnitId as number)}
                       style={{ 
-                        display: 'block', marginTop: '10px', backgroundColor: '#238636', 
-                        color: '#fff', border: 'none', padding: '8px 12px', 
+                        display: 'block', marginTop: '10px', backgroundColor: 'var(--accent-green-bg)', 
+                        color: 'var(--text-primary)', border: 'none', padding: '8px 12px', 
                         borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', width: '100%',
                         transition: 'background-color 0.2s'
                       }}
@@ -714,18 +714,18 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
                   )}
                 </div>
               ))}
-              {isLoading && <div style={{ fontSize: '13px', color: '#8b949e', alignSelf: 'flex-start' }}>Thinking...</div>}
+              {isLoading && <div style={{ fontSize: '13px', color: 'var(--text-muted)', alignSelf: 'flex-start' }}>Thinking...</div>}
             </div>
             
-            <div style={{ padding: '12px', borderTop: '1px solid #30363d', display: 'flex', gap: '8px', backgroundColor: '#0d1117' }}>
+            <div style={{ padding: '12px', borderTop: '1px solid var(--border-color)', display: 'flex', gap: '8px', backgroundColor: 'var(--bg-primary)' }}>
               <input 
                 value={input} 
                 onChange={e => setInput(e.target.value)}
                 onKeyPress={e => e.key === 'Enter' && handleSend()}
-                style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #30363d', backgroundColor: '#010409', color: '#fff', direction: 'ltr' }}
+                style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', direction: 'ltr' }}
                 placeholder="Search for an apartment, ask about prices..." 
               />
-              <button onClick={() => handleSend()} style={{ padding: '10px 16px', backgroundColor: '#238636', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>Send</button>
+              <button onClick={() => handleSend()} style={{ padding: '10px 16px', backgroundColor: 'var(--accent-green-bg)', color: 'var(--text-primary)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>Send</button>
             </div>
           </div>
         )}
@@ -735,7 +735,7 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
             onClick={() => setIsOpen(true)}
             style={{
               width: '60px', height: '60px', borderRadius: '30px',
-              backgroundColor: '#1f6feb', color: '#fff', border: 'none',
+              backgroundColor: 'var(--accent-blue-bg)', color: 'var(--text-primary)', border: 'none',
               fontSize: '28px', cursor: 'pointer', boxShadow: '0 6px 16px rgba(0,0,0,0.4)',
               display: 'flex', justifyContent: 'center', alignItems: 'center',
               transition: 'transform 0.2s'

@@ -76,8 +76,8 @@ const ChatbotWidget = () => {
         <div style={{ 
           width: '350px', 
           height: '500px', 
-          backgroundColor: '#0d1117', 
-          border: '1px solid #30363d', 
+          backgroundColor: 'var(--bg-primary)', 
+          border: '1px solid var(--border-color)', 
           borderRadius: '12px', 
           display: 'flex', 
           flexDirection: 'column', 
@@ -86,11 +86,11 @@ const ChatbotWidget = () => {
           overflow: 'hidden'
         }}>
           {/* Header */}
-          <div style={{ padding: '15px', backgroundColor: '#161b22', borderBottom: '1px solid #30363d', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: '#fff', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ padding: '15px', backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ color: 'var(--text-primary)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '10px' }}>
               🤖 AI Support
             </span>
-            <button onClick={() => setIsOpen(false)} style={{ background: 'transparent', border: 'none', color: '#8b949e', fontSize: '20px', cursor: 'pointer' }}>✖</button>
+            <button onClick={() => setIsOpen(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '20px', cursor: 'pointer' }}>✖</button>
           </div>
 
           {/* Chat History */}
@@ -98,7 +98,7 @@ const ChatbotWidget = () => {
             
             {/* Suggested Questions at top */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
-              <span style={{ fontSize: '12px', color: '#8b949e' }}>Suggested Questions:</span>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Suggested Questions:</span>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                 {suggestedQuestions.map((q, idx) => (
                   <button
@@ -106,8 +106,8 @@ const ChatbotWidget = () => {
                     onClick={() => handleSuggestedClick(q.split(' (')[0])}
                     style={{
                       background: 'transparent',
-                      border: '1px solid #30363d',
-                      color: '#58a6ff',
+                      border: '1px solid var(--border-color)',
+                      color: 'var(--accent-blue)',
                       padding: '6px 10px',
                       borderRadius: '16px',
                       fontSize: '13px',
@@ -116,7 +116,7 @@ const ChatbotWidget = () => {
                       transition: 'background 0.2s',
                       width: 'fit-content'
                     }}
-                    onMouseOver={e => e.currentTarget.style.backgroundColor = '#1f6feb20'}
+                    onMouseOver={e => e.currentTarget.style.backgroundColor = 'var(--accent-blue-bg)20'}
                     onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
                     {q}
@@ -127,8 +127,8 @@ const ChatbotWidget = () => {
             {messages.map((msg, idx) => (
               <div key={idx} style={{ 
                 alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start',
-                backgroundColor: msg.sender === 'user' ? '#1f6feb' : '#21262d',
-                color: '#fff',
+                backgroundColor: msg.sender === 'user' ? 'var(--accent-blue-bg)' : 'var(--bg-tertiary)',
+                color: 'var(--text-primary)',
                 padding: '10px 14px',
                 borderRadius: '12px',
                 borderBottomRightRadius: msg.sender === 'user' ? '2px' : '12px',
@@ -147,8 +147,8 @@ const ChatbotWidget = () => {
             {isLoading && (
               <div style={{ 
                 alignSelf: 'flex-start',
-                backgroundColor: '#21262d',
-                color: '#8b949e',
+                backgroundColor: 'var(--bg-tertiary)',
+                color: 'var(--text-muted)',
                 padding: '10px 14px',
                 borderRadius: '12px',
                 borderBottomLeftRadius: '2px',
@@ -160,16 +160,16 @@ const ChatbotWidget = () => {
           </div>
 
           {/* Input Area */}
-          <form onSubmit={handleSend} style={{ display: 'flex', padding: '10px', borderTop: '1px solid #30363d', backgroundColor: '#161b22' }}>
+          <form onSubmit={handleSend} style={{ display: 'flex', padding: '10px', borderTop: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
             <input 
               type="text" 
               value={input} 
               onChange={e => setInput(e.target.value)} 
               placeholder="Type your message..." 
               disabled={isLoading}
-              style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #30363d', backgroundColor: '#010409', color: '#fff', opacity: isLoading ? 0.6 : 1 }}
+              style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', opacity: isLoading ? 0.6 : 1 }}
             />
-            <button type="submit" disabled={isLoading} style={{ marginLeft: '10px', padding: '10px 15px', backgroundColor: '#1f6feb', color: '#fff', border: 'none', borderRadius: '8px', cursor: isLoading ? 'not-allowed' : 'pointer', fontWeight: 'bold', opacity: isLoading ? 0.6 : 1 }}>
+            <button type="submit" disabled={isLoading} style={{ marginLeft: '10px', padding: '10px 15px', backgroundColor: 'var(--accent-blue-bg)', color: 'var(--text-primary)', border: 'none', borderRadius: '8px', cursor: isLoading ? 'not-allowed' : 'pointer', fontWeight: 'bold', opacity: isLoading ? 0.6 : 1 }}>
               {isLoading ? '...' : 'Send'}
             </button>
           </form>
@@ -181,8 +181,8 @@ const ChatbotWidget = () => {
         <button 
           onClick={() => setIsOpen(true)}
           style={{
-            width: '60px', height: '60px', borderRadius: '50%', backgroundColor: '#1f6feb', 
-            color: '#fff', border: 'none', display: 'flex', justifyContent: 'center', alignItems: 'center',
+            width: '60px', height: '60px', borderRadius: '50%', backgroundColor: 'var(--accent-blue-bg)', 
+            color: 'var(--text-primary)', border: 'none', display: 'flex', justifyContent: 'center', alignItems: 'center',
             fontSize: '28px', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,0,0,0.5)',
             marginLeft: 'auto'
           }}

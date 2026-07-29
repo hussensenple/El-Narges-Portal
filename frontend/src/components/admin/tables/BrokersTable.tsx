@@ -58,47 +58,47 @@ const BrokersTable = () => {
           placeholder="🔍 Search by ID, Name, Email..." 
           value={searchId}
           onChange={(e) => setSearchId(e.target.value)}
-          style={{ padding: '8px', borderRadius: '4px', border: '1px solid #30363d', backgroundColor: '#0d1117', color: '#fff', width: '250px' }}
+          style={{ padding: '8px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', width: '250px' }}
         />
       </div>
 
       <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
         <thead>
-          <tr style={{ backgroundColor: '#21262d', textAlign: 'left' }}>
-            <th style={{ padding: '12px', borderBottom: '1px solid #30363d' }}>Broker ID</th>
-            <th style={{ padding: '12px', borderBottom: '1px solid #30363d' }}>Username</th>
-            <th style={{ padding: '12px', borderBottom: '1px solid #30363d' }}>Phone / Email</th>
-            <th style={{ padding: '12px', borderBottom: '1px solid #30363d' }}>Role</th>
-            <th style={{ padding: '12px', borderBottom: '1px solid #30363d' }}>Actions</th>
+          <tr style={{ backgroundColor: 'var(--bg-tertiary)', textAlign: 'left' }}>
+            <th style={{ padding: '12px', borderBottom: '1px solid var(--border-color)' }}>Broker ID</th>
+            <th style={{ padding: '12px', borderBottom: '1px solid var(--border-color)' }}>Username</th>
+            <th style={{ padding: '12px', borderBottom: '1px solid var(--border-color)' }}>Phone / Email</th>
+            <th style={{ padding: '12px', borderBottom: '1px solid var(--border-color)' }}>Role</th>
+            <th style={{ padding: '12px', borderBottom: '1px solid var(--border-color)' }}>Actions</th>
           </tr>
         </thead>
         <tbody>
           {loading ? (
-            <tr><td colSpan={5} style={{ padding: '20px', textAlign: 'center', color: '#8b949e' }}>Loading...</td></tr>
+            <tr><td colSpan={5} style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>Loading...</td></tr>
           ) : filteredUsers.length === 0 ? (
-            <tr><td colSpan={5} style={{ padding: '20px', textAlign: 'center', color: '#8b949e' }}>No brokers found.</td></tr>
+            <tr><td colSpan={5} style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>No brokers found.</td></tr>
           ) : (
             filteredUsers.map(user => (
-              <tr key={user._id} style={{ borderBottom: '1px solid #30363d' }}>
+              <tr key={user._id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                 <td style={{ padding: '12px', fontWeight: 'bold', color: '#8957e5' }}>{user.profile?.manualId || user._id.toString().substring(0, 8)}</td>
                 <td style={{ padding: '12px' }}>{user.name}</td>
-                <td style={{ padding: '12px', color: '#8b949e' }}>
+                <td style={{ padding: '12px', color: 'var(--text-muted)' }}>
                   <div>{user.phone}</div>
                   <div style={{ fontSize: '11px' }}>{user.email}</div>
                 </td>
                 <td style={{ padding: '12px' }}><span style={{ backgroundColor: '#8957e533', color: '#8957e5', padding: '4px 8px', borderRadius: '12px', fontSize: '12px' }}>Broker</span></td>
                 <td style={{ padding: '12px', display: 'flex', gap: '8px' }}>
-                  <button onClick={() => setEditingUser(user)} style={{ backgroundColor: '#21262d', color: '#fff', border: '1px solid #30363d', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>✏️ Edit</button>
-                  <button onClick={() => setPerformanceBroker(user)} style={{ backgroundColor: '#238636', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>📊 Performance</button>
+                  <button onClick={() => setEditingUser(user)} style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>✏️ Edit</button>
+                  <button onClick={() => setPerformanceBroker(user)} style={{ backgroundColor: 'var(--accent-green-bg)', color: 'var(--text-primary)', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>📊 Performance</button>
                   <button 
                     onClick={() => setSelectedUser(user)}
-                    style={{ backgroundColor: '#da3633', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}
+                    style={{ backgroundColor: 'var(--accent-red-bg)', color: 'var(--text-primary)', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}
                   >
                     🔄 Revoke
                   </button>
                   <button 
                     onClick={() => handleDelete(user._id, user.name)}
-                    style={{ backgroundColor: 'transparent', color: '#f85149', border: '1px solid #f85149', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}
+                    style={{ backgroundColor: 'transparent', color: 'var(--accent-red)', border: '1px solid var(--accent-red)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}
                   >
                     🗑️ Delete
                   </button>

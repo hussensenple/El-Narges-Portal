@@ -245,7 +245,7 @@ const UtilityNetworkModal: React.FC<UtilityNetworkModalProps> = ({ complaintCoor
           const clickGraphic = new Graphic({
             geometry: pt,
             symbol: new SimpleMarkerSymbol({ 
-              color: '#da3633', 
+              color: 'var(--accent-red-bg)', 
               size: '18px',
               outline: { color: 'white', width: 3 } 
             })
@@ -515,10 +515,10 @@ const UtilityNetworkModal: React.FC<UtilityNetworkModalProps> = ({ complaintCoor
       <div style={{ position: 'absolute', bottom: '40px', left: '50%', transform: 'translateX(-50%)', width: '800px', maxWidth: '90vw', display: 'flex', flexDirection: 'column', gap: '10px', zIndex: 10 }}>
         
         {/* Toolbar */}
-        <div style={{ display: 'flex', gap: '15px', padding: '15px 20px', backgroundColor: 'rgba(22, 27, 34, 0.9)', backdropFilter: 'blur(10px)', borderRadius: '12px', border: '1px solid #30363d' }}>
+        <div style={{ display: 'flex', gap: '15px', padding: '15px 20px', backgroundColor: 'rgba(22, 27, 34, 0.9)', backdropFilter: 'blur(10px)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
           <div style={{ flex: 1 }}>
-            <h4 style={{ margin: '0 0 5px 0', color: '#8b949e' }}>Instructions:</h4>
-            <p style={{ margin: 0, fontSize: '13px', color: '#c9d1d9' }}>
+            <h4 style={{ margin: '0 0 5px 0', color: 'var(--text-muted)' }}>Instructions:</h4>
+            <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)' }}>
               Click on the map near a pipe to snap to the breakage location. Then run the trace to find isolating valves.
             </p>
           </div>
@@ -533,7 +533,7 @@ const UtilityNetworkModal: React.FC<UtilityNetworkModalProps> = ({ complaintCoor
                     isSelectingRef.current = newState;
                   }} 
                   disabled={isTracing}
-                  style={{ padding: '10px 20px', height: '40px', backgroundColor: isSelectingPoint ? '#ffcc00' : '#444c56', color: isSelectingPoint ? '#000' : '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                  style={{ padding: '10px 20px', height: '40px', backgroundColor: isSelectingPoint ? '#ffcc00' : '#444c56', color: isSelectingPoint ? '#000' : 'var(--text-primary)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
                 >
                   {isSelectingPoint ? 'Click on Map...' : 'Add Starting Point'}
                 </button>
@@ -543,7 +543,7 @@ const UtilityNetworkModal: React.FC<UtilityNetworkModalProps> = ({ complaintCoor
                 <button 
                   onClick={handleTrace} 
                   disabled={!snappedPipeId || isTracing}
-                  style={{ padding: '10px 20px', height: '40px', backgroundColor: snappedPipeId ? '#1f6feb' : '#30363d', color: '#fff', border: 'none', borderRadius: '6px', cursor: snappedPipeId ? 'pointer' : 'not-allowed', fontWeight: 'bold' }}
+                  style={{ padding: '10px 20px', height: '40px', backgroundColor: snappedPipeId ? 'var(--accent-blue-bg)' : 'var(--border-color)', color: 'var(--text-primary)', border: 'none', borderRadius: '6px', cursor: snappedPipeId ? 'pointer' : 'not-allowed', fontWeight: 'bold' }}
                 >
                   {isTracing ? 'Tracing...' : 'Run Isolation Trace'}
                 </button>
@@ -552,7 +552,7 @@ const UtilityNetworkModal: React.FC<UtilityNetworkModalProps> = ({ complaintCoor
               {traceResults && (
                 <button 
                   onClick={() => setShowNotifyModal(true)} 
-                  style={{ padding: '10px 20px', height: '40px', backgroundColor: '#da3633', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                  style={{ padding: '10px 20px', height: '40px', backgroundColor: 'var(--accent-red-bg)', color: 'var(--text-primary)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
                 >
                   Confirm & Notify Owners
                 </button>
@@ -560,7 +560,7 @@ const UtilityNetworkModal: React.FC<UtilityNetworkModalProps> = ({ complaintCoor
             </div>
 
             <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-              <label style={{ color: '#fff', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: 0 }}>
+              <label style={{ color: 'var(--text-primary)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: 0 }}>
                 <input 
                   type="checkbox" 
                   checked={includeIsolated} 
@@ -574,7 +574,7 @@ const UtilityNetworkModal: React.FC<UtilityNetworkModalProps> = ({ complaintCoor
               {traceResults && (
                 <button 
                   onClick={handleReset} 
-                  style={{ padding: '10px 20px', height: '40px', backgroundColor: '#444c56', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                  style={{ padding: '10px 20px', height: '40px', backgroundColor: '#444c56', color: 'var(--text-primary)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
                 >
                   Reset
                 </button>
@@ -585,7 +585,7 @@ const UtilityNetworkModal: React.FC<UtilityNetworkModalProps> = ({ complaintCoor
 
         {/* Results Bar */}
         {traceResults && (
-            <div style={{ display: 'flex', gap: '20px', padding: '15px 20px', backgroundColor: 'rgba(22, 27, 34, 0.9)', backdropFilter: 'blur(10px)', borderRadius: '12px', border: '1px solid #30363d', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: '20px', padding: '15px 20px', backgroundColor: 'rgba(22, 27, 34, 0.9)', backdropFilter: 'blur(10px)', borderRadius: '12px', border: '1px solid var(--border-color)', justifyContent: 'center' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#00ffff', fontWeight: 'bold' }}>
                 <div style={{ width: '24px', height: '4px', backgroundColor: '#00ffff', borderRadius: '2px' }} />
                 Isolated Pipes: {traceResults.pipes.length}
@@ -612,16 +612,16 @@ const UtilityNetworkModal: React.FC<UtilityNetworkModalProps> = ({ complaintCoor
                   Service Valves: {traceResults.serviceValves.length}
                 </span>
               )}
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#8b949e', fontWeight: 'bold' }}>
-                <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: '2px solid #8b949e', backgroundColor: 'rgba(100,100,100,0.4)' }} />
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontWeight: 'bold' }}>
+                <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: '2px solid var(--text-muted)', backgroundColor: 'rgba(100,100,100,0.4)' }} />
                 Already Closed: {traceResults.alreadyClosedValves.length}
               </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#c9d1d9', fontWeight: 'bold' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', fontWeight: 'bold' }}>
                 <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: '2px solid rgb(148,0,211)', backgroundColor: 'rgba(148,0,211,0.4)' }} />
                 Affected Meters: {traceResults.meters.length}
               </span>
               <span 
-                style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#c9d1d9', fontWeight: 'bold', cursor: 'pointer', padding: '4px 8px', borderRadius: '6px', transition: 'background-color 0.2s' }}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', fontWeight: 'bold', cursor: 'pointer', padding: '4px 8px', borderRadius: '6px', transition: 'background-color 0.2s' }}
                 onClick={() => setShowUnitsModal(true)}
                 onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'}
                 onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
@@ -634,23 +634,23 @@ const UtilityNetworkModal: React.FC<UtilityNetworkModalProps> = ({ complaintCoor
         
         {/* Valves List Modal */}
         {valvesModalOpen && valveDetails.length > 0 && (
-          <div style={{ position: 'absolute', bottom: '80px', left: '40px', backgroundColor: '#161b22', borderRadius: '8px', border: '1px solid #30363d', width: '320px', maxHeight: '400px', display: 'flex', flexDirection: 'column', boxShadow: '0 8px 24px rgba(0,0,0,0.5)', zIndex: 1000, overflow: 'hidden', pointerEvents: 'auto' }}>
-            <div style={{ padding: '12px 16px', borderBottom: '1px solid #30363d', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#21262d' }}>
-              <h3 style={{ margin: 0, fontSize: '14px', color: '#c9d1d9' }}>Valves Status</h3>
-              <button onClick={() => setValvesModalOpen(false)} style={{ background: 'none', border: 'none', color: '#8b949e', cursor: 'pointer', fontSize: '16px' }}>×</button>
+          <div style={{ position: 'absolute', bottom: '80px', left: '40px', backgroundColor: 'var(--bg-secondary)', borderRadius: '8px', border: '1px solid var(--border-color)', width: '320px', maxHeight: '400px', display: 'flex', flexDirection: 'column', boxShadow: '0 8px 24px rgba(0,0,0,0.5)', zIndex: 1000, overflow: 'hidden', pointerEvents: 'auto' }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-tertiary)' }}>
+              <h3 style={{ margin: 0, fontSize: '14px', color: 'var(--text-secondary)' }}>Valves Status</h3>
+              <button onClick={() => setValvesModalOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '16px' }}>×</button>
             </div>
             <div style={{ overflowY: 'auto', padding: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {valveDetails.map(v => (
-                <div key={v.OBJECTID} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', backgroundColor: '#0d1117', borderRadius: '6px', border: '1px solid #30363d' }}>
+                <div key={v.OBJECTID} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', backgroundColor: 'var(--bg-primary)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ color: '#c9d1d9', fontSize: '13px', fontWeight: 'bold' }}>ID: {v.OBJECTID}</span>
-                    <span style={{ color: '#8b949e', fontSize: '11px', marginTop: '2px' }}>{v.ASSETTYPE === 0 ? 'System Valve' : v.ASSETTYPE === 9 ? 'Service Valve' : 'Valve'}</span>
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '13px', fontWeight: 'bold' }}>ID: {v.OBJECTID}</span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '2px' }}>{v.ASSETTYPE === 0 ? 'System Valve' : v.ASSETTYPE === 9 ? 'Service Valve' : 'Valve'}</span>
                   </div>
                   <div 
                     onClick={() => handleToggleValveStatus(v.OBJECTID, v.Status)}
-                    style={{ width: '40px', height: '20px', borderRadius: '10px', backgroundColor: (v.Status === 1 || v.Status == null) ? '#3fb950' : '#da3633', display: 'flex', alignItems: 'center', padding: '0 2px', cursor: 'pointer', justifyContent: (v.Status === 1 || v.Status == null) ? 'flex-end' : 'flex-start', transition: 'all 0.3s' }}
+                    style={{ width: '40px', height: '20px', borderRadius: '10px', backgroundColor: (v.Status === 1 || v.Status == null) ? '#3fb950' : 'var(--accent-red-bg)', display: 'flex', alignItems: 'center', padding: '0 2px', cursor: 'pointer', justifyContent: (v.Status === 1 || v.Status == null) ? 'flex-end' : 'flex-start', transition: 'all 0.3s' }}
                   >
-                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#fff' }} />
+                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: 'var(--text-primary)' }} />
                   </div>
                 </div>
               ))}
@@ -662,30 +662,30 @@ const UtilityNetworkModal: React.FC<UtilityNetworkModalProps> = ({ complaintCoor
 
         {/* Units List Modal */}
         {showUnitsModal && traceResults && traceResults.affectedUnits && (
-          <div style={{ position: 'absolute', bottom: '80px', right: '40px', backgroundColor: '#161b22', borderRadius: '8px', border: '1px solid #30363d', width: '320px', maxHeight: '400px', display: 'flex', flexDirection: 'column', boxShadow: '0 8px 24px rgba(0,0,0,0.5)', zIndex: 1000, overflow: 'hidden', pointerEvents: 'auto' }}>
-            <div style={{ padding: '12px 16px', borderBottom: '1px solid #30363d', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#21262d' }}>
-              <h3 style={{ margin: 0, fontSize: '14px', color: '#c9d1d9' }}>Affected Units ({traceResults.affectedUnits.length})</h3>
-              <button onClick={() => setShowUnitsModal(false)} style={{ background: 'none', border: 'none', color: '#8b949e', cursor: 'pointer', fontSize: '16px' }}>×</button>
+          <div style={{ position: 'absolute', bottom: '80px', right: '40px', backgroundColor: 'var(--bg-secondary)', borderRadius: '8px', border: '1px solid var(--border-color)', width: '320px', maxHeight: '400px', display: 'flex', flexDirection: 'column', boxShadow: '0 8px 24px rgba(0,0,0,0.5)', zIndex: 1000, overflow: 'hidden', pointerEvents: 'auto' }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-tertiary)' }}>
+              <h3 style={{ margin: 0, fontSize: '14px', color: 'var(--text-secondary)' }}>Affected Units ({traceResults.affectedUnits.length})</h3>
+              <button onClick={() => setShowUnitsModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '16px' }}>×</button>
             </div>
             <div style={{ overflowY: 'auto', padding: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {traceResults.affectedUnits.map(u => {
                 const isSold = u.status === '4' || u.status === 'sold' || u.status === '3' || u.status === 'reserved';
                 return (
-                  <div key={u.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', backgroundColor: '#0d1117', borderRadius: '6px', border: '1px solid #30363d' }}>
+                  <div key={u.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', backgroundColor: 'var(--bg-primary)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ color: '#c9d1d9', fontSize: '13px', fontWeight: 'bold' }}>{u.name}</span>
+                      <span style={{ color: 'var(--text-secondary)', fontSize: '13px', fontWeight: 'bold' }}>{u.name}</span>
                       {u.ownerEmail && (
-                        <span style={{ color: '#8b949e', fontSize: '11px', marginTop: '2px' }}>{u.ownerEmail}</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '2px' }}>{u.ownerEmail}</span>
                       )}
                     </div>
-                    <span style={{ fontSize: '11px', padding: '4px 8px', borderRadius: '12px', backgroundColor: isSold ? 'rgba(218,54,51,0.15)' : 'rgba(35,134,54,0.15)', color: isSold ? '#ff7b72' : '#3fb950', border: `1px solid ${isSold ? '#da3633' : '#238636'}`, fontWeight: 'bold' }}>
+                    <span style={{ fontSize: '11px', padding: '4px 8px', borderRadius: '12px', backgroundColor: isSold ? 'rgba(218,54,51,0.15)' : 'rgba(35,134,54,0.15)', color: isSold ? '#ff7b72' : '#3fb950', border: `1px solid ${isSold ? 'var(--accent-red-bg)' : 'var(--accent-green-bg)'}`, fontWeight: 'bold' }}>
                       {isSold ? 'Sold / Reserved' : 'Available'}
                     </span>
                   </div>
                 );
               })}
               {traceResults.affectedUnits.length === 0 && (
-                <div style={{ textAlign: 'center', color: '#8b949e', padding: '20px 0', fontSize: '13px' }}>No units found for these meters.</div>
+                <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px 0', fontSize: '13px' }}>No units found for these meters.</div>
               )}
             </div>
           </div>
@@ -695,38 +695,38 @@ const UtilityNetworkModal: React.FC<UtilityNetworkModalProps> = ({ complaintCoor
 
       {/* Notify Form Modal */}
       {showNotifyModal && (
-        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', backgroundColor: '#161b22', borderRadius: '8px', border: '1px solid #30363d', width: '380px', display: 'flex', flexDirection: 'column', boxShadow: '0 8px 24px rgba(0,0,0,0.8)', zIndex: 2000, pointerEvents: 'auto' }}>
-          <div style={{ padding: '12px 16px', borderBottom: '1px solid #30363d', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#21262d', borderTopLeftRadius: '8px', borderTopRightRadius: '8px' }}>
-            <h3 style={{ margin: 0, fontSize: '14px', color: '#c9d1d9' }}>Send Outage Notification</h3>
-            <button onClick={() => setShowNotifyModal(false)} style={{ background: 'none', border: 'none', color: '#8b949e', cursor: 'pointer', fontSize: '16px' }}>×</button>
+        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', backgroundColor: 'var(--bg-secondary)', borderRadius: '8px', border: '1px solid var(--border-color)', width: '380px', display: 'flex', flexDirection: 'column', boxShadow: '0 8px 24px rgba(0,0,0,0.8)', zIndex: 2000, pointerEvents: 'auto' }}>
+          <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-tertiary)', borderTopLeftRadius: '8px', borderTopRightRadius: '8px' }}>
+            <h3 style={{ margin: 0, fontSize: '14px', color: 'var(--text-secondary)' }}>Send Outage Notification</h3>
+            <button onClick={() => setShowNotifyModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '16px' }}>×</button>
           </div>
           <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-              <label style={{ color: '#8b949e', fontSize: '13px' }}>Date</label>
+              <label style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Date</label>
               <input 
                 type="date" 
                 value={notifyDate} 
                 onChange={e => setNotifyDate(e.target.value)}
-                style={{ padding: '8px', borderRadius: '6px', border: '1px solid #30363d', backgroundColor: '#0d1117', color: '#c9d1d9' }}
+                style={{ padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-secondary)' }}
               />
             </div>
             <div style={{ display: 'flex', gap: '10px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 }}>
-                <label style={{ color: '#8b949e', fontSize: '13px' }}>From Time</label>
+                <label style={{ color: 'var(--text-muted)', fontSize: '13px' }}>From Time</label>
                 <input 
                   type="time" 
                   value={notifyFromTime} 
                   onChange={e => setNotifyFromTime(e.target.value)}
-                  style={{ padding: '8px', borderRadius: '6px', border: '1px solid #30363d', backgroundColor: '#0d1117', color: '#c9d1d9' }}
+                  style={{ padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-secondary)' }}
                 />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 }}>
-                <label style={{ color: '#8b949e', fontSize: '13px' }}>To Time</label>
+                <label style={{ color: 'var(--text-muted)', fontSize: '13px' }}>To Time</label>
                 <input 
                   type="time" 
                   value={notifyToTime} 
                   onChange={e => setNotifyToTime(e.target.value)}
-                  style={{ padding: '8px', borderRadius: '6px', border: '1px solid #30363d', backgroundColor: '#0d1117', color: '#c9d1d9' }}
+                  style={{ padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-secondary)' }}
                 />
               </div>
             </div>
@@ -734,14 +734,14 @@ const UtilityNetworkModal: React.FC<UtilityNetworkModalProps> = ({ complaintCoor
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
               <button 
                 onClick={() => setShowNotifyModal(false)}
-                style={{ padding: '8px 16px', backgroundColor: 'transparent', color: '#8b949e', border: '1px solid #30363d', borderRadius: '6px', cursor: 'pointer' }}
+                style={{ padding: '8px 16px', backgroundColor: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border-color)', borderRadius: '6px', cursor: 'pointer' }}
               >
                 Cancel
               </button>
               <button 
                 onClick={handleNotify}
                 disabled={isNotifying}
-                style={{ padding: '8px 16px', backgroundColor: '#da3633', color: '#fff', border: 'none', borderRadius: '6px', cursor: isNotifying ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}
+                style={{ padding: '8px 16px', backgroundColor: 'var(--accent-red-bg)', color: 'var(--text-primary)', border: 'none', borderRadius: '6px', cursor: isNotifying ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}
               >
                 {isNotifying ? 'Sending...' : 'Send Notification'}
               </button>
@@ -752,25 +752,25 @@ const UtilityNetworkModal: React.FC<UtilityNetworkModalProps> = ({ complaintCoor
 
       {/* Map Click Valve Popup */}
       {selectedMapValve && selectedMapValve.screenX !== undefined && (
-        <div style={{ position: 'absolute', top: selectedMapValve.screenY - 15, left: selectedMapValve.screenX, transform: 'translate(-50%, -100%)', backgroundColor: '#161b22', borderRadius: '8px', border: '1px solid #30363d', width: '220px', display: 'flex', flexDirection: 'column', boxShadow: '0 8px 24px rgba(0,0,0,0.5)', zIndex: 1000, pointerEvents: 'auto' }}>
-          <div style={{ padding: '8px 12px', borderBottom: '1px solid #30363d', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#21262d', borderTopLeftRadius: '8px', borderTopRightRadius: '8px' }}>
-            <h3 style={{ margin: 0, fontSize: '13px', color: '#c9d1d9' }}>Selected Valve</h3>
-            <button onClick={() => setSelectedMapValve(null)} style={{ background: 'none', border: 'none', color: '#8b949e', cursor: 'pointer', fontSize: '14px' }}>×</button>
+        <div style={{ position: 'absolute', top: selectedMapValve.screenY - 15, left: selectedMapValve.screenX, transform: 'translate(-50%, -100%)', backgroundColor: 'var(--bg-secondary)', borderRadius: '8px', border: '1px solid var(--border-color)', width: '220px', display: 'flex', flexDirection: 'column', boxShadow: '0 8px 24px rgba(0,0,0,0.5)', zIndex: 1000, pointerEvents: 'auto' }}>
+          <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-tertiary)', borderTopLeftRadius: '8px', borderTopRightRadius: '8px' }}>
+            <h3 style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)' }}>Selected Valve</h3>
+            <button onClick={() => setSelectedMapValve(null)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '14px' }}>×</button>
           </div>
           <div style={{ padding: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottomLeftRadius: '8px', borderBottomRightRadius: '8px' }}>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ color: '#c9d1d9', fontSize: '13px', fontWeight: 'bold' }}>ID: {selectedMapValve.OBJECTID}</span>
-              <span style={{ color: '#8b949e', fontSize: '11px', marginTop: '2px' }}>{selectedMapValve.ASSETTYPE === 0 ? 'System Valve' : selectedMapValve.ASSETTYPE === 9 ? 'Service Valve' : 'Valve'}</span>
+              <span style={{ color: 'var(--text-secondary)', fontSize: '13px', fontWeight: 'bold' }}>ID: {selectedMapValve.OBJECTID}</span>
+              <span style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '2px' }}>{selectedMapValve.ASSETTYPE === 0 ? 'System Valve' : selectedMapValve.ASSETTYPE === 9 ? 'Service Valve' : 'Valve'}</span>
             </div>
             <div 
               onClick={() => handleToggleValveStatus(selectedMapValve.OBJECTID, selectedMapValve.Status)}
-              style={{ width: '40px', height: '20px', borderRadius: '10px', backgroundColor: (selectedMapValve.Status === 1 || selectedMapValve.Status == null) ? '#3fb950' : '#da3633', display: 'flex', alignItems: 'center', padding: '0 2px', cursor: 'pointer', justifyContent: (selectedMapValve.Status === 1 || selectedMapValve.Status == null) ? 'flex-end' : 'flex-start', transition: 'all 0.3s' }}
+              style={{ width: '40px', height: '20px', borderRadius: '10px', backgroundColor: (selectedMapValve.Status === 1 || selectedMapValve.Status == null) ? '#3fb950' : 'var(--accent-red-bg)', display: 'flex', alignItems: 'center', padding: '0 2px', cursor: 'pointer', justifyContent: (selectedMapValve.Status === 1 || selectedMapValve.Status == null) ? 'flex-end' : 'flex-start', transition: 'all 0.3s' }}
             >
-              <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#fff' }} />
+              <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: 'var(--text-primary)' }} />
             </div>
           </div>
           {/* Tooltip arrow */}
-          <div style={{ position: 'absolute', bottom: '-6px', left: '50%', transform: 'translateX(-50%) rotate(45deg)', width: '10px', height: '10px', backgroundColor: '#161b22', borderBottom: '1px solid #30363d', borderRight: '1px solid #30363d' }}></div>
+          <div style={{ position: 'absolute', bottom: '-6px', left: '50%', transform: 'translateX(-50%) rotate(45deg)', width: '10px', height: '10px', backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', borderRight: '1px solid var(--border-color)' }}></div>
         </div>
       )}
 

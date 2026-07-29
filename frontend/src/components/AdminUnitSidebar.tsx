@@ -108,23 +108,23 @@ const AdminUnitSidebar = ({ buildingId, villaData, onClose }: AdminUnitSidebarPr
 
   const renderComplaint = (c: any) => {
     return (
-      <div key={c._id} style={{ backgroundColor: c.priority === 'High' ? '#2c1214' : '#161b22', border: `1px solid ${c.priority === 'High' ? '#f85149' : '#30363d'}`, borderRadius: '6px', padding: '10px', marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div key={c._id} style={{ backgroundColor: c.priority === 'High' ? '#2c1214' : 'var(--bg-secondary)', border: `1px solid ${c.priority === 'High' ? 'var(--accent-red)' : 'var(--border-color)'}`, borderRadius: '6px', padding: '10px', marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <strong style={{ color: '#58a6ff', fontSize: '14px' }}>{c.problemName || c.title}</strong>
-          <span style={{ fontSize: '11px', color: '#8b949e' }}>{new Date(c.createdAt).toLocaleDateString()}</span>
+          <strong style={{ color: 'var(--accent-blue)', fontSize: '14px' }}>{c.problemName || c.title}</strong>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{new Date(c.createdAt).toLocaleDateString()}</span>
         </div>
-        <p style={{ margin: 0, color: '#c9d1d9', fontSize: '13px' }}>{c.description}</p>
+        <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '13px' }}>{c.description}</p>
         <div style={{ display: 'flex', gap: '8px' }}>
           <select 
             value={c.status}
             onChange={(e) => handleUpdateStatus(c._id, e.target.value)}
-            style={{ flex: 1, padding: '4px', borderRadius: '4px', backgroundColor: '#0d1117', color: '#fff', border: '1px solid #30363d', fontSize: '12px' }}
+            style={{ flex: 1, padding: '4px', borderRadius: '4px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', fontSize: '12px' }}
           >
             <option value="Pending">Pending</option>
             <option value="In Progress">In Progress</option>
             <option value="Solved">Solved</option>
           </select>
-          <button onClick={() => setActiveComplaint(c)} style={{ padding: '4px 8px', backgroundColor: '#1f6feb', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Chat</button>
+          <button onClick={() => setActiveComplaint(c)} style={{ padding: '4px 8px', backgroundColor: 'var(--accent-blue-bg)', color: 'var(--text-primary)', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Chat</button>
         </div>
       </div>
     );
@@ -138,9 +138,9 @@ const AdminUnitSidebar = ({ buildingId, villaData, onClose }: AdminUnitSidebarPr
         right: '26px', 
         bottom: '26px',
         width: '380px', 
-        backgroundColor: '#0d1117', 
+        backgroundColor: 'var(--bg-primary)', 
         borderRadius: '16px',
-        border: '1px solid #30363d', 
+        border: '1px solid var(--border-color)', 
         display: 'flex', 
         flexDirection: 'column', 
         zIndex: 9999, 
@@ -148,16 +148,16 @@ const AdminUnitSidebar = ({ buildingId, villaData, onClose }: AdminUnitSidebarPr
         overflow: 'hidden'
       }}>
         
-        <div style={{ padding: '20px', borderBottom: '1px solid #30363d', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#010409' }}>
-          <h2 style={{ margin: 0, color: '#e6edf3', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ padding: '20px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-primary)' }}>
+          <h2 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             {panelTitle}
           </h2>
-          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#8b949e', cursor: 'pointer', fontSize: '20px' }}>✕</button>
+          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '20px' }}>✕</button>
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {loading ? (
-            <div style={{ color: '#8b949e', textAlign: 'center' }}>Loading unit data...</div>
+            <div style={{ color: 'var(--text-muted)', textAlign: 'center' }}>Loading unit data...</div>
           ) : (
             units.map((unit, idx) => {
               const hasMongoOwner = !!unit.owner;
@@ -177,28 +177,28 @@ const AdminUnitSidebar = ({ buildingId, villaData, onClose }: AdminUnitSidebarPr
               const designUrl = unit.BuildingModel ? getBuildingDesignUrl(unit.BuildingModel) : getVillaDesignUrl(unit);
 
               return (
-                <div key={idx} style={{ border: '1px solid #30363d', borderRadius: '8px', padding: '15px', backgroundColor: '#161b22' }}>
+                <div key={idx} style={{ border: '1px solid var(--border-color)', borderRadius: '8px', padding: '15px', backgroundColor: 'var(--bg-secondary)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                    <h3 style={{ margin: 0, color: '#fff', fontSize: '16px' }}>Unit {unit.OBJECTID}</h3>
+                    <h3 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '16px' }}>Unit {unit.OBJECTID}</h3>
                     <span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold', backgroundColor: isOccupied ? '#8957e533' : '#3fb95033', color: isOccupied ? '#d2a8ff' : '#3fb950' }}>
                       {isOccupied ? 'Occupied' : 'Free'}
                     </span>
                   </div>
                   
-                  <div style={{ fontSize: '13px', color: '#8b949e', marginBottom: '10px' }}>
+                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '10px' }}>
                     <strong>ID:</strong> {unit.GlobalID || unit.globalid || arcgisId}
                   </div>
 
                   {isOccupied && (
-                    <div style={{ backgroundColor: '#0d1117', padding: '10px', borderRadius: '6px', border: '1px solid #30363d', marginBottom: '10px' }}>
-                      <div style={{ color: '#c9d1d9', fontSize: '14px', marginBottom: '4px' }}>
+                    <div style={{ backgroundColor: 'var(--bg-primary)', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)', marginBottom: '10px' }}>
+                      <div style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '4px' }}>
                         👤 <strong>{hasMongoOwner ? unit.owner.name : (unit.OwnerName || 'Unknown Owner')}</strong>
                       </div>
-                      <div style={{ color: '#8b949e', fontSize: '12px' }}>
+                      <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>
                         {hasMongoOwner ? unit.owner.email : (unit.OwnerEmail || 'No Email')}
                       </div>
                       {(hasMongoOwner ? unit.owner.phone : unit.OwnerPhone) && (
-                        <div style={{ color: '#8b949e', fontSize: '12px' }}>
+                        <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>
                           {hasMongoOwner ? unit.owner.phone : unit.OwnerPhone}
                         </div>
                       )}
@@ -207,19 +207,19 @@ const AdminUnitSidebar = ({ buildingId, villaData, onClose }: AdminUnitSidebarPr
 
                   <button 
                     onClick={() => setDesignImage(designUrl || '/A.png')}
-                    style={{ width: '100%', padding: '8px', backgroundColor: '#21262d', color: '#58a6ff', border: '1px solid #30363d', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', marginTop: '5px' }}
+                    style={{ width: '100%', padding: '8px', backgroundColor: 'var(--bg-tertiary)', color: 'var(--accent-blue)', border: '1px solid var(--border-color)', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', marginTop: '5px' }}
                   >
                     📐 Explore Plan
                   </button>
 
                   {unitComplaints.length > 0 && (
                     <div style={{ marginTop: '15px' }}>
-                      <h4 style={{ margin: '0 0 10px 0', color: '#e6edf3', fontSize: '14px', borderBottom: '1px solid #30363d', paddingBottom: '5px' }}>Complaints ({unitComplaints.length})</h4>
+                      <h4 style={{ margin: '0 0 10px 0', color: 'var(--text-primary)', fontSize: '14px', borderBottom: '1px solid var(--border-color)', paddingBottom: '5px' }}>Complaints ({unitComplaints.length})</h4>
                       {unitComplaints.map(renderComplaint)}
                     </div>
                   )}
                   {unitComplaints.length === 0 && (
-                    <div style={{ marginTop: '15px', color: '#8b949e', fontSize: '12px', textAlign: 'center' }}>No complaints filed for this unit.</div>
+                    <div style={{ marginTop: '15px', color: 'var(--text-muted)', fontSize: '12px', textAlign: 'center' }}>No complaints filed for this unit.</div>
                   )}
                 </div>
               );
@@ -231,7 +231,7 @@ const AdminUnitSidebar = ({ buildingId, villaData, onClose }: AdminUnitSidebarPr
       {designImage && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 10000, display: 'flex', justifyContent: 'center', alignItems: 'center' }} onClick={() => setDesignImage(null)}>
           <img src={designImage} alt="Unit Plan" style={{ maxWidth: '90%', maxHeight: '90%', borderRadius: '8px', boxShadow: '0 10px 30px rgba(0,0,0,0.8)' }} />
-          <button style={{ position: 'absolute', top: '20px', right: '30px', background: 'transparent', border: 'none', color: '#fff', fontSize: '30px', cursor: 'pointer' }} onClick={() => setDesignImage(null)}>✕</button>
+          <button style={{ position: 'absolute', top: '20px', right: '30px', background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: '30px', cursor: 'pointer' }} onClick={() => setDesignImage(null)}>✕</button>
         </div>
       )}
 

@@ -70,8 +70,8 @@ const ShowAllIssuesButton = ({ view }: ShowAllIssuesButtonProps) => {
               symbolLayers: [{
                 type: "icon", 
                 resource: { primitive: "circle" },
-                material: { color: "#da3633" },
-                outline: { color: "#ffffff", size: 2 },
+                material: { color: "var(--accent-red-bg)" },
+                outline: { color: "var(--text-primary)", size: 2 },
                 size: "20px"
               }]
             };
@@ -156,8 +156,8 @@ const ShowAllIssuesButton = ({ view }: ShowAllIssuesButtonProps) => {
       onClick={handleToggleAllIssues}
       className={`map-icon-btn ${isShowingAll ? 'active' : 'inactive'}`}
       style={{ 
-        color: isShowingAll ? '#fff' : '#f85149', 
-        borderColor: '#f85149',
+        color: isShowingAll ? 'var(--text-primary)' : 'var(--accent-red)', 
+        borderColor: 'var(--accent-red)',
         fontSize: '20px'
       }}
       disabled={isLoading}

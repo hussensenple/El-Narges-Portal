@@ -1,6 +1,7 @@
 import { useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
+import LogoIcon from './LogoIcon';
 
 interface AuthModalProps {
   isOpen?: boolean;
@@ -113,19 +114,20 @@ const AuthModal = ({ onClose, onSuccess }: AuthModalProps) => {
   };
 
   const getBorderStyle = (isValid: boolean | null) => {
-    if (isValid === null) return '1px solid #30363d';
-    return isValid ? '1px solid #2ea043' : '1px solid #f85149';
+    if (isValid === null) return '1px solid var(--border-color)';
+    return isValid ? '1px solid var(--accent-green)' : '1px solid var(--accent-red)';
   };
 
   const isFormValid = isLogin ? true : (validity.name && validity.email && validity.phone && validity.password);
 
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 3000 }}>
-      <div style={{ backgroundColor: '#161b22', padding: '30px', borderRadius: '12px', border: '1px solid #30363d', width: '350px', color: '#c9d1d9', fontFamily: 'sans-serif' }}>
+      <div style={{ backgroundColor: 'var(--bg-secondary)', padding: '30px', borderRadius: '12px', border: '1px solid var(--border-color)', width: '350px', color: 'var(--text-secondary)', fontFamily: 'sans-serif' }}>
         
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{ margin: 0, color: '#fff' }}>{isLogin ? '🔐 Login' : '📝 Register'}</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#8b949e', fontSize: '20px', cursor: 'pointer' }}>✖</button>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '25px', position: 'relative' }}>
+          <button onClick={onClose} style={{ position: 'absolute', top: -10, right: -10, background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '22px', cursor: 'pointer' }}>✖</button>
+          <LogoIcon width={65} height={65} style={{ filter: 'drop-shadow(0px 8px 16px rgba(0,0,0,0.4))', marginBottom: '15px' }} />
+          <h2 style={{ margin: 0, color: 'var(--text-primary)' }}>{isLogin ? '🔐 Login' : '📝 Register'}</h2>
         </div>
 
         {error && <div style={{ backgroundColor: '#ff818233', color: '#ff7b72', padding: '10px', borderRadius: '6px', marginBottom: '15px', fontSize: '13px', border: '1px solid #ff7b7255' }}>{error}</div>}
@@ -134,22 +136,22 @@ const AuthModal = ({ onClose, onSuccess }: AuthModalProps) => {
           {!isLogin && (
             <>
               <div>
-                <input type="text" placeholder="Full Name" value={name} onChange={e => handleValidation('name', e.target.value)} required style={{ width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '6px', backgroundColor: '#0d1117', color: '#fff', border: getBorderStyle(validity.name), outline: 'none' }} />
+                <input type="text" placeholder="Full Name" value={name} onChange={e => handleValidation('name', e.target.value)} required style={{ width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '6px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', border: getBorderStyle(validity.name), outline: 'none' }} />
                 {validity.name === false && <span style={{ color: '#ff7b72', fontSize: '11px', display: 'block', marginTop: '4px' }}>Only letters and spaces (3-50 chars).</span>}
               </div>
 
               <div>
-                <input type="email" placeholder="Email (@gmail.com)" value={email} onChange={e => handleValidation('email', e.target.value)} required style={{ width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '6px', backgroundColor: '#0d1117', color: '#fff', border: getBorderStyle(validity.email), outline: 'none' }} />
+                <input type="email" placeholder="Email (@gmail.com)" value={email} onChange={e => handleValidation('email', e.target.value)} required style={{ width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '6px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', border: getBorderStyle(validity.email), outline: 'none' }} />
                 {validity.email === false && <span style={{ color: '#ff7b72', fontSize: '11px', display: 'block', marginTop: '4px' }}>Must be a valid @gmail.com address.</span>}
               </div>
               <div style={{ display: 'flex', gap: '10px' }}>
-                <select value={countryStatus} onChange={(e) => setCountryStatus(e.target.value)} style={{ flex: 1, padding: '12px', borderRadius: '6px', backgroundColor: '#0d1117', color: '#fff', border: '1px solid #30363d', outline: 'none' }}>
+                <select value={countryStatus} onChange={(e) => setCountryStatus(e.target.value)} style={{ flex: 1, padding: '12px', borderRadius: '6px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', outline: 'none' }}>
                   <option value="Egypt">Inside Egypt</option>
                   <option value="Outside Egypt">Outside Egypt</option>
                 </select>
 
                 {countryStatus === 'Egypt' && (
-                  <select value={governorate} onChange={(e) => setGovernorate(e.target.value)} required style={{ flex: 1, padding: '12px', borderRadius: '6px', backgroundColor: '#0d1117', color: '#fff', border: '1px solid #30363d', outline: 'none' }}>
+                  <select value={governorate} onChange={(e) => setGovernorate(e.target.value)} required style={{ flex: 1, padding: '12px', borderRadius: '6px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', outline: 'none' }}>
                     {governoratesList.map(gov => (
                       <option key={gov} value={gov}>{gov}</option>
                     ))}
@@ -160,23 +162,23 @@ const AuthModal = ({ onClose, onSuccess }: AuthModalProps) => {
           )}
 
           <div>
-            <input type="tel" placeholder="Phone Number (e.g., 010...)" value={phone} onChange={e => handleValidation('phone', e.target.value)} required style={{ width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '6px', backgroundColor: '#0d1117', color: '#fff', border: !isLogin ? getBorderStyle(validity.phone) : '1px solid #30363d', outline: 'none' }} />
+            <input type="tel" placeholder="Phone Number (e.g., 010...)" value={phone} onChange={e => handleValidation('phone', e.target.value)} required style={{ width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '6px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', border: !isLogin ? getBorderStyle(validity.phone) : '1px solid var(--border-color)', outline: 'none' }} />
             {!isLogin && validity.phone === false && <span style={{ color: '#ff7b72', fontSize: '11px', display: 'block', marginTop: '4px' }}>Must be a valid 11-digit mobile number.</span>}
           </div>
           
           <div>
-            <input type="password" placeholder="Password" value={password} onChange={e => handleValidation('password', e.target.value)} required style={{ width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '6px', backgroundColor: '#0d1117', color: '#fff', border: !isLogin ? getBorderStyle(validity.password) : '1px solid #30363d', outline: 'none' }} />
+            <input type="password" placeholder="Password" value={password} onChange={e => handleValidation('password', e.target.value)} required style={{ width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '6px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', border: !isLogin ? getBorderStyle(validity.password) : '1px solid var(--border-color)', outline: 'none' }} />
             {!isLogin && validity.password === false && <span style={{ color: '#ff7b72', fontSize: '11px', display: 'block', marginTop: '4px' }}>Min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special (@$!%*?&).</span>}
           </div>
 
-          <button type="submit" disabled={isLoading || !isFormValid} style={{ padding: '12px', backgroundColor: isFormValid ? '#1f6feb' : '#444c56', color: isFormValid ? '#fff' : '#8b949e', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: (isLoading || !isFormValid) ? 'not-allowed' : 'pointer', marginTop: '10px', transition: '0.3s' }}>
+          <button type="submit" disabled={isLoading || !isFormValid} style={{ padding: '12px', backgroundColor: isFormValid ? 'var(--accent-blue-bg)' : '#444c56', color: isFormValid ? 'var(--text-primary)' : 'var(--text-muted)', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: (isLoading || !isFormValid) ? 'not-allowed' : 'pointer', marginTop: '10px', transition: '0.3s' }}>
             {isLoading ? 'Loading...' : (isLogin ? 'Login' : 'Create Account')}
           </button>
         </form>
 
-        <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '13px', color: '#8b949e' }}>
+        <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '13px', color: 'var(--text-muted)' }}>
           {isLogin ? "Don't have an account? " : "Already have an account? "}
-          <span onClick={() => { setIsLogin(!isLogin); setError(''); setValidity({name: null, email: null, phone: null, password: null}); }} style={{ color: '#58a6ff', cursor: 'pointer', fontWeight: 'bold' }}>
+          <span onClick={() => { setIsLogin(!isLogin); setError(''); setValidity({name: null, email: null, phone: null, password: null}); }} style={{ color: 'var(--accent-blue)', cursor: 'pointer', fontWeight: 'bold' }}>
             {isLogin ? 'Register here' : 'Login here'}
           </span>
         </div>

@@ -127,29 +127,29 @@ const OwnerPropertiesModal: React.FC<OwnerPropertiesModalProps> = ({ owner, view
 
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1300, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-      <div style={{ backgroundColor: '#0d1117', padding: '24px', borderRadius: '12px', width: '600px', maxWidth: '90vw', border: '1px solid #30363d', color: '#fff', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ backgroundColor: 'var(--bg-primary)', padding: '24px', borderRadius: '12px', width: '600px', maxWidth: '90vw', border: '1px solid var(--border-color)', color: 'var(--text-primary)', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
         
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #30363d', paddingBottom: '12px', marginBottom: '16px' }}>
-          <h3 style={{ margin: 0, color: '#58a6ff', fontSize: '1.25rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', marginBottom: '16px' }}>
+          <h3 style={{ margin: 0, color: 'var(--accent-blue)', fontSize: '1.25rem' }}>
             🏠 Properties Owned by {owner.name}
           </h3>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#8b949e', fontSize: '24px', cursor: 'pointer' }}>&times;</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '24px', cursor: 'pointer' }}>&times;</button>
         </div>
 
         {/* Content */}
-        <div style={{ flex: 1, overflowY: 'auto', backgroundColor: '#010409', borderRadius: '8px', border: '1px solid #30363d' }}>
+        <div style={{ flex: 1, overflowY: 'auto', backgroundColor: 'var(--bg-primary)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
           {units.length === 0 ? (
-            <div style={{ padding: '24px', textAlign: 'center', color: '#8b949e' }}>No properties owned by this user.</div>
+            <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)' }}>No properties owned by this user.</div>
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
               <thead>
-                <tr style={{ backgroundColor: '#161b22', borderBottom: '2px solid #30363d' }}>
-                  <th style={{ padding: '12px', color: '#fff' }}>#</th>
-                  <th style={{ padding: '12px', color: '#fff' }}>Unit Type</th>
-                  <th style={{ padding: '12px', color: '#fff' }}>Identifier</th>
-                  <th style={{ padding: '12px', color: '#fff' }}>Status</th>
-                  <th style={{ padding: '12px', color: '#fff' }}>Actions</th>
+                <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '2px solid var(--border-color)' }}>
+                  <th style={{ padding: '12px', color: 'var(--text-primary)' }}>#</th>
+                  <th style={{ padding: '12px', color: 'var(--text-primary)' }}>Unit Type</th>
+                  <th style={{ padding: '12px', color: 'var(--text-primary)' }}>Identifier</th>
+                  <th style={{ padding: '12px', color: 'var(--text-primary)' }}>Status</th>
+                  <th style={{ padding: '12px', color: 'var(--text-primary)' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -157,19 +157,19 @@ const OwnerPropertiesModal: React.FC<OwnerPropertiesModalProps> = ({ owner, view
                   const displayType = unit.sourceLayer === 'Villas_Global' || unit.unitName === 'فيلا' || unit.unitName === 'Villa' ? 'Villa' : 'Apartment';
                   const displayId = unit.objectId || unit.globalId || unit.arcgisId || 'N/A';
                   return (
-                    <tr key={unit._id} style={{ borderBottom: '1px solid #30363d', backgroundColor: index % 2 === 0 ? '#0d1117' : '#161b22' }}>
-                      <td style={{ padding: '12px', color: '#8b949e' }}>{index + 1}</td>
-                      <td style={{ padding: '12px', color: '#58a6ff', fontWeight: 'bold' }}>{displayType}</td>
-                      <td style={{ padding: '12px', color: '#c9d1d9', fontFamily: 'monospace' }}>{displayId}</td>
+                    <tr key={unit._id} style={{ borderBottom: '1px solid var(--border-color)', backgroundColor: index % 2 === 0 ? 'var(--bg-primary)' : 'var(--bg-secondary)' }}>
+                      <td style={{ padding: '12px', color: 'var(--text-muted)' }}>{index + 1}</td>
+                      <td style={{ padding: '12px', color: 'var(--accent-blue)', fontWeight: 'bold' }}>{displayType}</td>
+                      <td style={{ padding: '12px', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>{displayId}</td>
                       <td style={{ padding: '12px' }}>
-                        <span style={{ backgroundColor: '#2ea04322', color: '#2ea043', padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', border: '1px solid #2ea04355' }}>
+                        <span style={{ backgroundColor: 'var(--accent-green)22', color: 'var(--accent-green)', padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', border: '1px solid var(--accent-green)55' }}>
                           ✅ Owned
                         </span>
                       </td>
                       <td style={{ padding: '12px' }}>
                         <button
                           onClick={() => handleViewMyUnit(unit)}
-                          style={{ padding: '4px 8px', backgroundColor: '#1f6feb', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }}
+                          style={{ padding: '4px 8px', backgroundColor: 'var(--accent-blue-bg)', color: 'var(--text-primary)', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }}
                         >
                           👁️ View Unit
                         </button>

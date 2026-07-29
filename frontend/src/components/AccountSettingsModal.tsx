@@ -121,34 +121,34 @@ const AccountSettingsModal = ({ onClose }: AccountSettingsModalProps) => {
 
   const inputStyle = {
     width: '100%', padding: '10px 12px', marginBottom: '16px',
-    backgroundColor: '#0d1117', border: '1px solid #30363d',
-    color: '#c9d1d9', borderRadius: '6px', outline: 'none'
+    backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)',
+    color: 'var(--text-secondary)', borderRadius: '6px', outline: 'none'
   };
 
   const labelStyle = {
-    display: 'block', marginBottom: '6px', color: '#8b949e', fontSize: '13px', fontWeight: 'bold'
+    display: 'block', marginBottom: '6px', color: 'var(--text-muted)', fontSize: '13px', fontWeight: 'bold'
   };
 
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999 }}>
-      <div style={{ background: '#161b22', border: '1px solid #30363d', borderRadius: '14px', width: '90%', maxWidth: '450px', overflow: 'hidden', boxShadow: '0 12px 32px rgba(0,0,0,0.8)' }}>
+      <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '14px', width: '90%', maxWidth: '450px', overflow: 'hidden', boxShadow: '0 12px 32px rgba(0,0,0,0.8)' }}>
         
         {/* Header */}
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid #21262d', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ margin: 0, color: '#e6edf3', fontSize: '1.2rem' }}>Account Settings</h2>
-          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#8b949e', cursor: 'pointer', fontSize: '1.2rem' }}>✖</button>
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--bg-tertiary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.2rem' }}>Account Settings</h2>
+          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.2rem' }}>✖</button>
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', borderBottom: '1px solid #21262d' }}>
+        <div style={{ display: 'flex', borderBottom: '1px solid var(--bg-tertiary)' }}>
           <button 
             onClick={() => { setActiveTab('profile'); setMessage({ text: '', type: '' }); }} 
-            style={{ flex: 1, padding: '12px', background: activeTab === 'profile' ? '#1f6feb' : 'transparent', color: activeTab === 'profile' ? '#fff' : '#8b949e', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
+            style={{ flex: 1, padding: '12px', background: activeTab === 'profile' ? 'var(--accent-blue-bg)' : 'transparent', color: activeTab === 'profile' ? 'var(--text-primary)' : 'var(--text-muted)', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
             Profile
           </button>
           <button 
             onClick={() => { setActiveTab('security'); setMessage({ text: '', type: '' }); }} 
-            style={{ flex: 1, padding: '12px', background: activeTab === 'security' ? '#1f6feb' : 'transparent', color: activeTab === 'security' ? '#fff' : '#8b949e', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
+            style={{ flex: 1, padding: '12px', background: activeTab === 'security' ? 'var(--accent-blue-bg)' : 'transparent', color: activeTab === 'security' ? 'var(--text-primary)' : 'var(--text-muted)', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
             Security
           </button>
         </div>
@@ -156,7 +156,7 @@ const AccountSettingsModal = ({ onClose }: AccountSettingsModalProps) => {
         {/* Content */}
         <div style={{ padding: '24px 20px' }}>
           {message.text && (
-            <div style={{ padding: '12px', borderRadius: '6px', marginBottom: '20px', backgroundColor: message.type === 'error' ? 'rgba(248, 81, 73, 0.1)' : 'rgba(46, 160, 67, 0.1)', border: `1px solid ${message.type === 'error' ? '#f85149' : '#2ea043'}`, color: message.type === 'error' ? '#ff7b72' : '#56d364', fontSize: '14px', textAlign: 'center' }}>
+            <div style={{ padding: '12px', borderRadius: '6px', marginBottom: '20px', backgroundColor: message.type === 'error' ? 'rgba(248, 81, 73, 0.1)' : 'rgba(46, 160, 67, 0.1)', border: `1px solid ${message.type === 'error' ? 'var(--accent-red)' : 'var(--accent-green)'}`, color: message.type === 'error' ? '#ff7b72' : '#56d364', fontSize: '14px', textAlign: 'center' }}>
               {message.text}
             </div>
           )}
@@ -166,29 +166,29 @@ const AccountSettingsModal = ({ onClose }: AccountSettingsModalProps) => {
               <div style={{ display: 'flex', gap: '10px' }}>
                 <div style={{ flex: 1 }}>
                   <label style={labelStyle}>Full Name</label>
-                  <input style={{...inputStyle, border: validity.name === false ? '1px solid #f85149' : validity.name ? '1px solid #2ea043' : inputStyle.border}} type="text" value={name} onChange={e => handleValidation('name', e.target.value)} required />
+                  <input style={{...inputStyle, border: validity.name === false ? '1px solid var(--accent-red)' : validity.name ? '1px solid var(--accent-green)' : inputStyle.border}} type="text" value={name} onChange={e => handleValidation('name', e.target.value)} required />
                   {validity.name === false && <span style={{ color: '#ff7b72', fontSize: '11px', display: 'block', marginTop: '-12px', marginBottom: '10px' }}>Only letters and spaces (3-50 chars).</span>}
                 </div>
                 <div style={{ flex: 1 }}>
                   <label style={labelStyle}>Primary Phone</label>
-                  <input style={{...inputStyle, border: validity.phone === false ? '1px solid #f85149' : validity.phone ? '1px solid #2ea043' : inputStyle.border}} type="text" value={phone} onChange={e => handleValidation('phone', e.target.value)} required />
+                  <input style={{...inputStyle, border: validity.phone === false ? '1px solid var(--accent-red)' : validity.phone ? '1px solid var(--accent-green)' : inputStyle.border}} type="text" value={phone} onChange={e => handleValidation('phone', e.target.value)} required />
                   {validity.phone === false && <span style={{ color: '#ff7b72', fontSize: '11px', display: 'block', marginTop: '-12px', marginBottom: '10px' }}>Must be a valid 11-digit mobile number.</span>}
                 </div>
               </div>
               
               <label style={labelStyle}>Primary Email (Login)</label>
-              <input style={{...inputStyle, border: validity.email === false ? '1px solid #f85149' : validity.email ? '1px solid #2ea043' : inputStyle.border}} type="email" value={email} onChange={e => handleValidation('email', e.target.value)} required />
+              <input style={{...inputStyle, border: validity.email === false ? '1px solid var(--accent-red)' : validity.email ? '1px solid var(--accent-green)' : inputStyle.border}} type="email" value={email} onChange={e => handleValidation('email', e.target.value)} required />
               {validity.email === false && <span style={{ color: '#ff7b72', fontSize: '11px', display: 'block', marginTop: '-12px', marginBottom: '10px' }}>Must be a valid @gmail.com address.</span>}
               
               <label style={labelStyle}>Secondary Email (Optional)</label>
-              <input style={{...inputStyle, border: validity.secondaryEmail === false ? '1px solid #f85149' : validity.secondaryEmail ? '1px solid #2ea043' : inputStyle.border}} type="email" value={secondaryEmail} onChange={e => handleValidation('secondaryEmail', e.target.value)} placeholder="Backup contact email" />
+              <input style={{...inputStyle, border: validity.secondaryEmail === false ? '1px solid var(--accent-red)' : validity.secondaryEmail ? '1px solid var(--accent-green)' : inputStyle.border}} type="email" value={secondaryEmail} onChange={e => handleValidation('secondaryEmail', e.target.value)} placeholder="Backup contact email" />
               {validity.secondaryEmail === false && <span style={{ color: '#ff7b72', fontSize: '11px', display: 'block', marginTop: '-12px', marginBottom: '10px' }}>Must be a valid email address.</span>}
               
               <label style={labelStyle}>Secondary Phone (Optional)</label>
-              <input style={{...inputStyle, border: validity.secondaryPhone === false ? '1px solid #f85149' : validity.secondaryPhone ? '1px solid #2ea043' : inputStyle.border}} type="text" value={secondaryPhone} onChange={e => handleValidation('secondaryPhone', e.target.value)} placeholder="Backup contact number" />
+              <input style={{...inputStyle, border: validity.secondaryPhone === false ? '1px solid var(--accent-red)' : validity.secondaryPhone ? '1px solid var(--accent-green)' : inputStyle.border}} type="text" value={secondaryPhone} onChange={e => handleValidation('secondaryPhone', e.target.value)} placeholder="Backup contact number" />
               {validity.secondaryPhone === false && <span style={{ color: '#ff7b72', fontSize: '11px', display: 'block', marginTop: '-12px', marginBottom: '10px' }}>Must be a valid 11-digit mobile number.</span>}
               
-              <button type="submit" disabled={loading || validity.name === false || validity.email === false || validity.phone === false || validity.secondaryEmail === false || validity.secondaryPhone === false} style={{ width: '100%', padding: '12px', backgroundColor: (loading || validity.name === false || validity.email === false || validity.phone === false || validity.secondaryEmail === false || validity.secondaryPhone === false) ? '#444c56' : '#238636', color: (loading || validity.name === false || validity.email === false || validity.phone === false || validity.secondaryEmail === false || validity.secondaryPhone === false) ? '#8b949e' : '#fff', border: 'none', borderRadius: '6px', cursor: (loading || validity.name === false || validity.email === false || validity.phone === false || validity.secondaryEmail === false || validity.secondaryPhone === false) ? 'not-allowed' : 'pointer', fontWeight: 'bold', fontSize: '15px' }}>
+              <button type="submit" disabled={loading || validity.name === false || validity.email === false || validity.phone === false || validity.secondaryEmail === false || validity.secondaryPhone === false} style={{ width: '100%', padding: '12px', backgroundColor: (loading || validity.name === false || validity.email === false || validity.phone === false || validity.secondaryEmail === false || validity.secondaryPhone === false) ? '#444c56' : 'var(--accent-green-bg)', color: (loading || validity.name === false || validity.email === false || validity.phone === false || validity.secondaryEmail === false || validity.secondaryPhone === false) ? 'var(--text-muted)' : 'var(--text-primary)', border: 'none', borderRadius: '6px', cursor: (loading || validity.name === false || validity.email === false || validity.phone === false || validity.secondaryEmail === false || validity.secondaryPhone === false) ? 'not-allowed' : 'pointer', fontWeight: 'bold', fontSize: '15px' }}>
                 {loading ? 'Saving...' : 'Save Profile Changes'}
               </button>
             </form>
@@ -198,13 +198,13 @@ const AccountSettingsModal = ({ onClose }: AccountSettingsModalProps) => {
               <input style={inputStyle} type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} required />
               
               <label style={labelStyle}>New Password</label>
-              <input style={{...inputStyle, border: validity.newPassword === false ? '1px solid #f85149' : validity.newPassword ? '1px solid #2ea043' : inputStyle.border}} type="password" value={newPassword} onChange={e => handleValidation('newPassword', e.target.value)} required />
+              <input style={{...inputStyle, border: validity.newPassword === false ? '1px solid var(--accent-red)' : validity.newPassword ? '1px solid var(--accent-green)' : inputStyle.border}} type="password" value={newPassword} onChange={e => handleValidation('newPassword', e.target.value)} required />
               {validity.newPassword === false && <span style={{ color: '#ff7b72', fontSize: '11px', display: 'block', marginTop: '-12px', marginBottom: '10px' }}>Min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special (@$!%*?&).</span>}
               
               <label style={labelStyle}>Confirm New Password</label>
               <input style={inputStyle} type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required />
               
-              <button type="submit" disabled={loading || validity.newPassword === false} style={{ width: '100%', padding: '12px', backgroundColor: (loading || validity.newPassword === false) ? '#444c56' : '#238636', color: (loading || validity.newPassword === false) ? '#8b949e' : '#fff', border: 'none', borderRadius: '6px', cursor: (loading || validity.newPassword === false) ? 'not-allowed' : 'pointer', fontWeight: 'bold', fontSize: '15px' }}>
+              <button type="submit" disabled={loading || validity.newPassword === false} style={{ width: '100%', padding: '12px', backgroundColor: (loading || validity.newPassword === false) ? '#444c56' : 'var(--accent-green-bg)', color: (loading || validity.newPassword === false) ? 'var(--text-muted)' : 'var(--text-primary)', border: 'none', borderRadius: '6px', cursor: (loading || validity.newPassword === false) ? 'not-allowed' : 'pointer', fontWeight: 'bold', fontSize: '15px' }}>
                 {loading ? 'Updating...' : 'Change Password'}
               </button>
             </form>

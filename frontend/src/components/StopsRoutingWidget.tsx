@@ -296,15 +296,15 @@ const StopsRoutingWidget = ({ view }: StopsRoutingWidgetProps) => {
 
   return (
     <div className="widget-multi-stop-routing" style={{
-      backgroundColor: '#0d1117',
+      backgroundColor: 'var(--bg-primary)',
       height: 'auto',
       maxHeight: 'calc(100vh - 160px)',
       overflowY: 'auto',
       overflowX: 'hidden',
       fontFamily: "'Inter', 'Segoe UI', Roboto, sans-serif",
-      color: '#c9d1d9',
+      color: 'var(--text-secondary)',
       borderRadius: '12px',
-      border: '1px solid #30363d',
+      border: '1px solid var(--border-color)',
       width: '340px',
       padding: '20px',
       boxSizing: 'border-box',
@@ -314,20 +314,20 @@ const StopsRoutingWidget = ({ view }: StopsRoutingWidgetProps) => {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         @keyframes pulse-anim { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(0.98); } 100% { opacity: 1; transform: scale(1); } }
-        .is-selecting { animation: pulse-anim 1.5s infinite ease-in-out; border-color: #da3633 !important; background-color: rgba(218, 54, 51, 0.1) !important; color: #ff7b72 !important; }
+        .is-selecting { animation: pulse-anim 1.5s infinite ease-in-out; border-color: var(--accent-red-bg) !important; background-color: rgba(218, 54, 51, 0.1) !important; color: #ff7b72 !important; }
         .action-btn { transition: all 0.2s ease; }
-        .action-btn:hover:not(:disabled):not(.is-selecting) { background-color: #2ea043 !important; color: #ffffff !important; transform: translateY(-1px); }
-        .action-btn.trucking:hover:not(:disabled):not(.is-selecting) { background-color: #d68910 !important; color: #ffffff !important; }
+        .action-btn:hover:not(:disabled):not(.is-selecting) { background-color: var(--accent-green) !important; color: var(--text-primary) !important; transform: translateY(-1px); }
+        .action-btn.trucking:hover:not(:disabled):not(.is-selecting) { background-color: #d68910 !important; color: var(--text-primary) !important; }
         .clear-btn:hover { background-color: rgba(218, 54, 51, 0.15) !important; color: #ff7b72 !important; border-color: #ff7b72 !important; }
-        .modern-select { background-color: #21262d; color: #c9d1d9; border: 1px solid #30363d; outline: none; transition: all 0.2s; }
-        .modern-select:focus { border-color: #58a6ff; }
-        .modern-select option { background-color: #161b22; color: #c9d1d9; }
+        .modern-select { background-color: var(--bg-tertiary); color: var(--text-secondary); border: 1px solid var(--border-color); outline: none; transition: all 0.2s; }
+        .modern-select:focus { border-color: var(--accent-blue); }
+        .modern-select option { background-color: var(--bg-secondary); color: var(--text-secondary); }
       `}</style>
 
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', paddingBottom: '12px', borderBottom: '1px solid #30363d' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', paddingBottom: '12px', borderBottom: '1px solid var(--border-color)' }}>
         <div style={{ color: getThemeColor(), transition: 'color 0.3s' }}><Icons.MapRoute /></div>
-        <h5 style={{ fontWeight: 800, color: '#ffffff', margin: 0, fontSize: '16px', letterSpacing: '-0.3px' }}>Fleet & Stops Routing</h5>
+        <h5 style={{ fontWeight: 800, color: 'var(--text-primary)', margin: 0, fontSize: '16px', letterSpacing: '-0.3px' }}>Fleet & Stops Routing</h5>
       </div>
 
       {/* زر تحديد النقاط */}
@@ -337,9 +337,9 @@ const StopsRoutingWidget = ({ view }: StopsRoutingWidgetProps) => {
         disabled={!view}
         style={{
           width: '100%', padding: '12px',
-          backgroundColor: !view ? '#21262d' : (isActive ? 'transparent' : '#161b22'),
-          color: !view ? '#8b949e' : (isActive ? '#ff7b72' : '#58a6ff'),
-          border: isActive ? '1px solid #da3633' : '1px solid #30363d',
+          backgroundColor: !view ? 'var(--bg-tertiary)' : (isActive ? 'transparent' : 'var(--bg-secondary)'),
+          color: !view ? 'var(--text-muted)' : (isActive ? '#ff7b72' : 'var(--accent-blue)'),
+          border: isActive ? '1px solid var(--accent-red-bg)' : '1px solid var(--border-color)',
           borderRadius: '8px', fontWeight: 600, fontSize: '14px',
           cursor: !view ? 'not-allowed' : 'pointer',
           display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px',
@@ -355,7 +355,7 @@ const StopsRoutingWidget = ({ view }: StopsRoutingWidgetProps) => {
       {/* الفلاتر (Dropdowns) */}
       <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
         <div style={{ flex: 1 }}>
-          <label style={{ fontSize: '11px', fontWeight: 600, color: '#8b949e', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+          <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
             {travelMode === 'Trucking' ? <Icons.Truck /> : <Icons.Car />} Travel Mode:
           </label>
           <select
@@ -369,7 +369,7 @@ const StopsRoutingWidget = ({ view }: StopsRoutingWidgetProps) => {
           </select>
         </div>
         <div style={{ flex: 1 }}>
-          <label style={{ fontSize: '11px', fontWeight: 600, color: '#8b949e', display: 'block', marginBottom: '6px' }}>Routing Strategy:</label>
+          <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Routing Strategy:</label>
           <select
             value={routingMode}
             onChange={(e) => setRoutingMode(e.target.value)}
@@ -391,8 +391,8 @@ const StopsRoutingWidget = ({ view }: StopsRoutingWidgetProps) => {
           className={`action-btn ${travelMode === "Trucking" ? 'trucking' : ''}`}
           style={{
             flex: 2, padding: '12px',
-            backgroundColor: stops.length < 2 ? '#21262d' : (travelMode === "Trucking" ? '#f39c12' : '#2ecc71'),
-            color: stops.length < 2 ? '#8b949e' : 'white',
+            backgroundColor: stops.length < 2 ? 'var(--bg-tertiary)' : (travelMode === "Trucking" ? '#f39c12' : '#2ecc71'),
+            color: stops.length < 2 ? 'var(--text-muted)' : 'white',
             border: 'none', borderRadius: '8px', fontWeight: 600, fontSize: '13px',
             cursor: stops.length < 2 ? 'not-allowed' : 'pointer',
             display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', fontFamily: 'inherit'
@@ -406,8 +406,8 @@ const StopsRoutingWidget = ({ view }: StopsRoutingWidgetProps) => {
           className="clear-btn"
           onClick={clearRoute}
           style={{
-            flex: 1, padding: '12px', backgroundColor: '#21262d', color: '#c9d1d9',
-            border: '1px solid #30363d', borderRadius: '8px', fontWeight: 600, fontSize: '13px',
+            flex: 1, padding: '12px', backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-secondary)',
+            border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 600, fontSize: '13px',
             cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', fontFamily: 'inherit', transition: 'all 0.2s ease'
           }}
         >
@@ -416,22 +416,22 @@ const StopsRoutingWidget = ({ view }: StopsRoutingWidgetProps) => {
       </div>
 
       {/* لوحة المعلومات (Summary Panel) */}
-      <div style={{ padding: '16px', backgroundColor: '#161b22', borderRadius: '10px', border: '1px solid #30363d', marginBottom: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+      <div style={{ padding: '16px', backgroundColor: 'var(--bg-secondary)', borderRadius: '10px', border: '1px solid var(--border-color)', marginBottom: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '13px', fontWeight: 600, color: '#8b949e' }}>Total Stops:</span>
+          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)' }}>Total Stops:</span>
           <span style={{ color: getThemeColor(), fontSize: '16px', fontWeight: 800, transition: 'color 0.3s' }}>{stops.length}</span>
         </div>
         {routeResult && (
-          <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #30363d', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '13px', color: '#8b949e', fontWeight: 600 }}>Total Route:</span>
-            <span style={{ fontSize: '15px', color: '#ffffff', fontWeight: 800, direction: 'ltr' }}>{routeResult}</span>
+          <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 600 }}>Total Route:</span>
+            <span style={{ fontSize: '15px', color: 'var(--text-primary)', fontWeight: 800, direction: 'ltr' }}>{routeResult}</span>
           </div>
         )}
       </div>
 
       {/* قائمة الاتجاهات (Directions List) */}
       {directions.length > 0 && (
-        <div style={{ border: '1px solid #30363d', borderRadius: '10px', backgroundColor: '#0d1117', overflow: 'hidden' }}>
+        <div style={{ border: '1px solid var(--border-color)', borderRadius: '10px', backgroundColor: 'var(--bg-primary)', overflow: 'hidden' }}>
           {directions.map((dir, idx) => {
             const maneuver = dir.attributes.maneuverType || "";
             const text = dir.attributes.text;
@@ -461,19 +461,19 @@ const StopsRoutingWidget = ({ view }: StopsRoutingWidgetProps) => {
                 onMouseLeave={handleMouseLeave}
                 style={{
                   display: 'flex', alignItems: 'center', padding: '12px 16px',
-                  borderBottom: idx === directions.length - 1 ? 'none' : '1px solid #30363d',
-                  backgroundColor: idx % 2 === 0 ? '#161b22' : '#0d1117',
+                  borderBottom: idx === directions.length - 1 ? 'none' : '1px solid var(--border-color)',
+                  backgroundColor: idx % 2 === 0 ? 'var(--bg-secondary)' : 'var(--bg-primary)',
                   cursor: 'pointer', transition: 'background-color 0.2s'
                 }}
-                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#21262d')}
-                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = idx % 2 === 0 ? '#161b22' : '#0d1117')}
+                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)')}
+                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = idx % 2 === 0 ? 'var(--bg-secondary)' : 'var(--bg-primary)')}
               >
-                <div style={{ width: '30px', textAlign: 'center', marginRight: '16px', color: '#58a6ff' }}>
+                <div style={{ width: '30px', textAlign: 'center', marginRight: '16px', color: 'var(--accent-blue)' }}>
                   <IconComponent />
                 </div>
                 <div style={{ flex: 1, direction: 'ltr', textAlign: 'left' }}>
-                  <div style={{ fontSize: '13px', color: '#ffffff', fontWeight: 600, marginBottom: '4px' }}>{text}</div>
-                  <div style={{ fontSize: '11px', color: '#8b949e', fontWeight: 500 }}>{length} m | {timeStr}</div>
+                  <div style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: 600, marginBottom: '4px' }}>{text}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 500 }}>{length} m | {timeStr}</div>
                 </div>
               </div>
             );

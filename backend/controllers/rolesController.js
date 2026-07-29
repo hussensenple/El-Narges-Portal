@@ -223,6 +223,7 @@ exports.getAdminCatalog = async (req, res) => {
 
     const UNITS_URL = 'https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WFL1/FeatureServer/37';
     const VILLAS_URL = 'https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WSL3/FeatureServer/8';
+    const BUILDINGS_URL = 'https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WFL1/FeatureServer/1';
 
     // For 'owner': only ArcGIS Status=Available (1)
     // For 'broker': ArcGIS Status=Available (1) OR Interested (2)
@@ -231,13 +232,15 @@ exports.getAdminCatalog = async (req, res) => {
     if (mode === 'owner') statusWhere = `Status = '1' OR Status = 'Available'`;
     if (mode === 'broker') statusWhere = `Status = '1' OR Status = '2' OR Status = 'Available' OR Status = 'Interested'`;
 
-    const [unitsRes, villasRes] = await Promise.all([
+    const [unitsRes, villasRes, buildingsRes] = await Promise.all([
       axios.get(`${UNITS_URL}/query`, { params: { where: statusWhere, outFields: '*', f: 'json' } }),
       axios.get(`${VILLAS_URL}/query`, { params: { where: statusWhere, outFields: '*', f: 'json' } }),
+      axios.get(`${BUILDINGS_URL}/query`, { params: { where: '1=1', outFields: 'GlobalID,BuildingModel', f: 'json' } }),
     ]);
 
     let units = (unitsRes.data.features || []).map(f => ({ ...f.attributes, sourceLayer: 'Units', arcgisId: String(f.attributes.OBJECTID) }));
     let villas = (villasRes.data.features || []).map(f => ({ ...f.attributes, sourceLayer: 'Villas_Global', arcgisId: f.attributes.GlobalID || String(f.attributes.OBJECTID) }));
+    let buildings = (buildingsRes.data.features || []).map(f => ({ ...f.attributes, sourceLayer: 'Buildings_Global', arcgisId: f.attributes.GlobalID || String(f.attributes.OBJECTID) }));
 
     // ✅ Always filter out properties already owned (ownerId set in MongoDB) IF mode is owner or broker.
     // For 'all' mode, we don't filter them out, but we SHOULD mark them as Sold (4) if MongoDB says they have an owner, ensuring perfect sync.
@@ -261,7 +264,7 @@ exports.getAdminCatalog = async (req, res) => {
       villas = villas.filter(v => !assignedIds.has(v.arcgisId));
     }
 
-    res.status(200).json({ units, villas });
+    res.status(200).json({ units, villas, buildings });
   } catch (error) {
     console.error('Admin catalog error:', error);
     res.status(500).json({ error: 'Failed to fetch catalog' });

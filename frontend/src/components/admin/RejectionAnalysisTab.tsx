@@ -19,16 +19,16 @@ interface RejectionRecord {
 
 const REASON_COLORS: Record<string, string> = {
   'Served By Another Client': '#8957e5',
-  'Management Decision':      '#1f6feb',
-  'Downpayment Delay':        '#d29922',
-  'Client Unresponsive':      '#f85149',
+  'Management Decision':      'var(--accent-blue-bg)',
+  'Downpayment Delay':        'var(--accent-gold)',
+  'Client Unresponsive':      'var(--accent-red)',
   'Changed mind':             '#3fb950',
   'Spam or fake info':        '#e3b341',
-  'Duplicate Request':        '#58a6ff',
+  'Duplicate Request':        'var(--accent-blue)',
   'Insufficient Budget':      '#bc8cff',
   'Rejected payment plan':    '#ff7b72',
 };
-const DEFAULT_COLOR = '#8b949e';
+const DEFAULT_COLOR = 'var(--text-muted)';
 
 const RejectionAnalysisTab = () => {
   const [allRejections, setAllRejections] = useState<RejectionRecord[]>([]);
@@ -93,10 +93,10 @@ const RejectionAnalysisTab = () => {
       const total = allRejections.length;
       const count = payload[0].value;
       return (
-        <div style={{ backgroundColor: '#161b22', padding: '10px 14px', border: '1px solid #30363d', borderRadius: '8px' }}>
-          <p style={{ margin: '0 0 4px', color: '#e6edf3', fontWeight: 'bold', fontSize: '13px' }}>{label}</p>
-          <p style={{ margin: '0 0 2px', color: '#f85149' }}>Count: <strong>{count}</strong></p>
-          <p style={{ margin: 0, color: '#8b949e', fontSize: '12px' }}>{total > 0 ? ((count / total) * 100).toFixed(1) : 0}% of total</p>
+        <div style={{ backgroundColor: 'var(--bg-secondary)', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px' }}>
+          <p style={{ margin: '0 0 4px', color: 'var(--text-primary)', fontWeight: 'bold', fontSize: '13px' }}>{label}</p>
+          <p style={{ margin: '0 0 2px', color: 'var(--accent-red)' }}>Count: <strong>{count}</strong></p>
+          <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '12px' }}>{total > 0 ? ((count / total) * 100).toFixed(1) : 0}% of total</p>
         </div>
       );
     }
@@ -104,7 +104,7 @@ const RejectionAnalysisTab = () => {
   };
 
   if (loading) {
-    return <div style={{ padding: '40px', textAlign: 'center', color: '#8b949e' }}>Loading Rejection Analysis...</div>;
+    return <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>Loading Rejection Analysis...</div>;
   }
 
   return (
@@ -116,8 +116,8 @@ const RejectionAnalysisTab = () => {
         {/* Header + Filters */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, gap: '10px', flexWrap: 'wrap' }}>
           <div>
-            <h3 style={{ margin: 0, color: '#f85149' }}>📋 Rejected Requests</h3>
-            <span style={{ color: '#8b949e', fontSize: '13px' }}>
+            <h3 style={{ margin: 0, color: 'var(--accent-red)' }}>📋 Rejected Requests</h3>
+            <span style={{ color: 'var(--text-muted)', fontSize: '13px' }}>
               {filteredList.length} record{filteredList.length !== 1 ? 's' : ''}
             </span>
           </div>
@@ -130,8 +130,8 @@ const RejectionAnalysisTab = () => {
                 setFilterReason('__all__'); // Reset reason filter when source changes
               }}
               style={{
-                padding: '8px 12px', backgroundColor: '#21262d', color: '#e6edf3',
-                border: '1px solid #30363d', borderRadius: '8px', cursor: 'pointer', fontSize: '13px'
+                padding: '8px 12px', backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)',
+                border: '1px solid var(--border-color)', borderRadius: '8px', cursor: 'pointer', fontSize: '13px'
               }}
             >
               <option value="__all__">All Sources</option>
@@ -143,8 +143,8 @@ const RejectionAnalysisTab = () => {
               value={filterReason}
               onChange={e => setFilterReason(e.target.value)}
               style={{
-                padding: '8px 12px', backgroundColor: '#21262d', color: '#e6edf3',
-                border: '1px solid #30363d', borderRadius: '8px', cursor: 'pointer', fontSize: '13px'
+                padding: '8px 12px', backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)',
+                border: '1px solid var(--border-color)', borderRadius: '8px', cursor: 'pointer', fontSize: '13px'
               }}
             >
               <option value="__all__">All Reasons ({allRejections.length})</option>
@@ -158,20 +158,20 @@ const RejectionAnalysisTab = () => {
         {/* Card List */}
         <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', paddingRight: '4px' }}>
           {filteredList.length === 0 ? (
-            <div style={{ textAlign: 'center', color: '#8b949e', padding: '40px', backgroundColor: '#161b22', borderRadius: '12px', border: '1px solid #30363d' }}>
+            <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '40px', backgroundColor: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
               No rejections found for the selected criteria.
             </div>
           ) : (
             filteredList.map(record => {
               const isAdmin = record.status === 'Rejected';
-              const borderColor = isAdmin ? '#f85149' : '#d29922';
+              const borderColor = isAdmin ? 'var(--accent-red)' : 'var(--accent-gold)';
               const reasonColor = REASON_COLORS[record.rejectionReason || ''] || DEFAULT_COLOR;
 
               return (
                 <div
                   key={record._id}
                   style={{
-                    backgroundColor: '#161b22', border: `1px solid ${borderColor}33`,
+                    backgroundColor: 'var(--bg-secondary)', border: `1px solid ${borderColor}33`,
                     borderLeft: `4px solid ${borderColor}`, borderRadius: '10px',
                     padding: '14px 16px', flexShrink: 0
                   }}
@@ -179,11 +179,11 @@ const RejectionAnalysisTab = () => {
                   {/* Top Row */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
                     <div>
-                      <span style={{ color: '#e6edf3', fontWeight: 'bold', fontSize: '15px' }}>{record.customerName}</span>
+                      <span style={{ color: 'var(--text-primary)', fontWeight: 'bold', fontSize: '15px' }}>{record.customerName}</span>
                       <span
                         style={{
                           marginLeft: '10px', fontSize: '11px', fontWeight: 'bold',
-                          backgroundColor: isAdmin ? '#f8514922' : '#d2992222',
+                          backgroundColor: isAdmin ? 'var(--accent-red)22' : 'var(--accent-gold)22',
                           color: borderColor, padding: '2px 8px', borderRadius: '20px',
                           border: `1px solid ${borderColor}55`
                         }}
@@ -192,15 +192,15 @@ const RejectionAnalysisTab = () => {
                       </span>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <span style={{ display: 'block', color: '#8b949e', fontSize: '12px', marginBottom: '4px' }}>
+                      <span style={{ display: 'block', color: 'var(--text-muted)', fontSize: '12px', marginBottom: '4px' }}>
                         🕐 {new Date(record.updatedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </span>
-                      <span style={{ color: '#58a6ff', fontSize: '16px', fontWeight: 'bold' }}>Unit #{record.objectId || record.unitId}</span>
+                      <span style={{ color: 'var(--accent-blue)', fontSize: '16px', fontWeight: 'bold' }}>Unit #{record.objectId || record.unitId}</span>
                     </div>
                   </div>
 
                   {/* Contact Info */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '10px', fontSize: '12px', color: '#c9d1d9' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '10px', fontSize: '12px', color: 'var(--text-secondary)' }}>
                     <span>📞 {record.customerPhone}</span>
                     <span>✉️ {record.customerGmail}</span>
                   </div>
@@ -217,7 +217,7 @@ const RejectionAnalysisTab = () => {
                       </span>
                     )}
                     {record.rejectionNotes && (
-                      <span style={{ color: '#8b949e', fontSize: '12px', fontStyle: 'italic' }}>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '12px', fontStyle: 'italic' }}>
                         "{record.rejectionNotes}"
                       </span>
                     )}
@@ -233,22 +233,22 @@ const RejectionAnalysisTab = () => {
       </div>
 
       {/* ─── RIGHT PANEL: Bar Chart ─── */}
-      <div style={{ flex: 2, backgroundColor: '#161b22', borderRadius: '12px', border: '1px solid #30363d', padding: '20px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <h3 style={{ margin: '0 0 16px', color: '#e6edf3' }}>📊 Rejection Reasons</h3>
+      <div style={{ flex: 2, backgroundColor: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)', padding: '20px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <h3 style={{ margin: '0 0 16px', color: 'var(--text-primary)' }}>📊 Rejection Reasons</h3>
         <div style={{ flex: 1, minHeight: 0 }}>
           {chartData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 80 }} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#30363d" horizontal={false} />
-                <XAxis type="number" stroke="#8b949e" tick={{ fontSize: 12, fill: '#8b949e' }} allowDecimals={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" horizontal={false} />
+                <XAxis type="number" stroke="var(--text-muted)" tick={{ fontSize: 12, fill: 'var(--text-muted)' }} allowDecimals={false} />
                 <YAxis
                   type="category"
                   dataKey="reason"
-                  stroke="#8b949e"
-                  tick={{ fontSize: 11, fill: '#c9d1d9' }}
+                  stroke="var(--text-muted)"
+                  tick={{ fontSize: 11, fill: 'var(--text-secondary)' }}
                   width={160}
                 />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: '#21262d' }} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--bg-tertiary)' }} />
                 <Bar dataKey="count" radius={[0, 4, 4, 0]}>
                   {chartData.map((entry) => (
                     <Cell
@@ -260,7 +260,7 @@ const RejectionAnalysisTab = () => {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: '#8b949e' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: 'var(--text-muted)' }}>
               No rejection data available yet.
             </div>
           )}
@@ -268,24 +268,24 @@ const RejectionAnalysisTab = () => {
 
         {/* Summary Footer */}
         {allRejections.length > 0 && (
-          <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid #30363d', display: 'flex', justifyContent: 'space-around', flexShrink: 0 }}>
+          <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-around', flexShrink: 0 }}>
             <div style={{ textAlign: 'center' }}>
-              <span style={{ display: 'block', color: '#f85149', fontWeight: 'bold', fontSize: '18px' }}>
+              <span style={{ display: 'block', color: 'var(--accent-red)', fontWeight: 'bold', fontSize: '18px' }}>
                 {allRejections.filter(r => r.status === 'Rejected').length}
               </span>
-              <span style={{ color: '#8b949e', fontSize: '11px' }}>Admin Rejected</span>
+              <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>Admin Rejected</span>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <span style={{ display: 'block', color: '#d29922', fontWeight: 'bold', fontSize: '18px' }}>
+              <span style={{ display: 'block', color: 'var(--accent-gold)', fontWeight: 'bold', fontSize: '18px' }}>
                 {allRejections.filter(r => r.status === 'Declined').length}
               </span>
-              <span style={{ color: '#8b949e', fontSize: '11px' }}>Broker Declined</span>
+              <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>Broker Declined</span>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <span style={{ display: 'block', color: '#e6edf3', fontWeight: 'bold', fontSize: '18px' }}>
+              <span style={{ display: 'block', color: 'var(--text-primary)', fontWeight: 'bold', fontSize: '18px' }}>
                 {allRejections.length}
               </span>
-              <span style={{ color: '#8b949e', fontSize: '11px' }}>Total</span>
+              <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>Total</span>
             </div>
           </div>
         )}

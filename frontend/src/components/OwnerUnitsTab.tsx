@@ -318,7 +318,7 @@ const OwnerUnitsTab = ({ onClose, view }: OwnerUnitsTabProps) => {
           zIndex: 9999999,
           justifyContent: 'center',
           alignItems: 'center',
-          color: '#c9d1d9',
+          color: 'var(--text-secondary)',
           fontFamily: 'sans-serif',
           pointerEvents: 'auto'
         }}
@@ -326,13 +326,13 @@ const OwnerUnitsTab = ({ onClose, view }: OwnerUnitsTabProps) => {
         <div
           onClick={(e) => e.stopPropagation()}
           style={{
-            backgroundColor: '#0d1117',
+            backgroundColor: 'var(--bg-primary)',
             width: '75vw',
             maxWidth: '1000px',
             height: '75vh',
             maxHeight: '700px',
             borderRadius: '12px',
-            border: '1px solid #30363d',
+            border: '1px solid var(--border-color)',
             display: 'flex',
             flexDirection: 'column',
             padding: '24px',
@@ -341,8 +341,8 @@ const OwnerUnitsTab = ({ onClose, view }: OwnerUnitsTabProps) => {
           }}
         >
           {/* Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #30363d', paddingBottom: '16px', marginBottom: '20px', flexShrink: 0 }}>
-            <h2 style={{ margin: 0, color: '#fff', fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px', marginBottom: '20px', flexShrink: 0 }}>
+            <h2 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
               🏠 Owner Dashboard
             </h2>
             <button
@@ -357,15 +357,15 @@ const OwnerUnitsTab = ({ onClose, view }: OwnerUnitsTabProps) => {
           </div>
 
           {/* Tabs Navigation */}
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '1px solid #30363d', paddingBottom: '10px' }}>
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
             <button
               onClick={() => setActiveTab('units')}
               style={{
                 padding: '10px 16px',
-                backgroundColor: activeTab === 'units' ? '#1f6feb' : 'transparent',
-                color: activeTab === 'units' ? '#fff' : '#8b949e',
+                backgroundColor: activeTab === 'units' ? 'var(--accent-blue-bg)' : 'transparent',
+                color: activeTab === 'units' ? 'var(--text-primary)' : 'var(--text-muted)',
                 border: '1px solid',
-                borderColor: activeTab === 'units' ? '#1f6feb' : 'transparent',
+                borderColor: activeTab === 'units' ? 'var(--accent-blue-bg)' : 'transparent',
                 borderRadius: '6px',
                 cursor: 'pointer',
                 fontWeight: 'bold',
@@ -378,10 +378,10 @@ const OwnerUnitsTab = ({ onClose, view }: OwnerUnitsTabProps) => {
               onClick={() => setActiveTab('my-requests')}
               style={{
                 padding: '10px 16px',
-                backgroundColor: activeTab === 'my-requests' ? '#1f6feb' : 'transparent',
-                color: activeTab === 'my-requests' ? '#fff' : '#8b949e',
+                backgroundColor: activeTab === 'my-requests' ? 'var(--accent-blue-bg)' : 'transparent',
+                color: activeTab === 'my-requests' ? 'var(--text-primary)' : 'var(--text-muted)',
                 border: '1px solid',
-                borderColor: activeTab === 'my-requests' ? '#1f6feb' : 'transparent',
+                borderColor: activeTab === 'my-requests' ? 'var(--accent-blue-bg)' : 'transparent',
                 borderRadius: '6px',
                 cursor: 'pointer',
                 fontWeight: 'bold',
@@ -394,10 +394,10 @@ const OwnerUnitsTab = ({ onClose, view }: OwnerUnitsTabProps) => {
               onClick={() => setActiveTab('complaints')}
               style={{
                 padding: '10px 16px',
-                backgroundColor: activeTab === 'complaints' ? '#1f6feb' : 'transparent',
-                color: activeTab === 'complaints' ? '#fff' : '#8b949e',
+                backgroundColor: activeTab === 'complaints' ? 'var(--accent-blue-bg)' : 'transparent',
+                color: activeTab === 'complaints' ? 'var(--text-primary)' : 'var(--text-muted)',
                 border: '1px solid',
-                borderColor: activeTab === 'complaints' ? '#1f6feb' : 'transparent',
+                borderColor: activeTab === 'complaints' ? 'var(--accent-blue-bg)' : 'transparent',
                 borderRadius: '6px',
                 cursor: 'pointer',
                 fontWeight: 'bold',
@@ -409,24 +409,24 @@ const OwnerUnitsTab = ({ onClose, view }: OwnerUnitsTabProps) => {
           </div>
 
           {/* Tab Content */}
-          <div style={{ flex: 1, overflowY: 'auto', backgroundColor: '#010409', borderRadius: '8px', border: '1px solid #30363d', minHeight: '150px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', backgroundColor: 'var(--bg-primary)', borderRadius: '8px', border: '1px solid var(--border-color)', minHeight: '150px' }}>
             
             {/* Units Tab */}
             {activeTab === 'units' && (
               <>
                 {isLoading ? (
-                  <div style={{ textAlign: 'center', padding: '40px', color: '#58a6ff', fontSize: '1.1rem' }}>Loading your units... ⏳</div>
+                  <div style={{ textAlign: 'center', padding: '40px', color: 'var(--accent-blue)', fontSize: '1.1rem' }}>Loading your units... ⏳</div>
                 ) : units.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '40px', color: '#8b949e', fontSize: '1.1rem' }}>You do not own any units yet.</div>
+                  <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)', fontSize: '1.1rem' }}>You do not own any units yet.</div>
                 ) : (
                   <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px' }}>
-                    <thead style={{ position: 'sticky', top: 0, backgroundColor: '#161b22', zIndex: 10 }}>
-                      <tr style={{ borderBottom: '2px solid #30363d' }}>
-                        <th style={{ padding: '16px', color: '#fff' }}>#</th>
-                        <th style={{ padding: '16px', color: '#fff' }}>Unit Type</th>
-                        <th style={{ padding: '16px', color: '#fff' }}>Map Identifier (ID)</th>
-                        <th style={{ padding: '16px', color: '#fff' }}>Status</th>
-                        <th style={{ padding: '16px', color: '#fff' }}>Actions</th>
+                    <thead style={{ position: 'sticky', top: 0, backgroundColor: 'var(--bg-secondary)', zIndex: 10 }}>
+                      <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
+                        <th style={{ padding: '16px', color: 'var(--text-primary)' }}>#</th>
+                        <th style={{ padding: '16px', color: 'var(--text-primary)' }}>Unit Type</th>
+                        <th style={{ padding: '16px', color: 'var(--text-primary)' }}>Map Identifier (ID)</th>
+                        <th style={{ padding: '16px', color: 'var(--text-primary)' }}>Status</th>
+                        <th style={{ padding: '16px', color: 'var(--text-primary)' }}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -436,29 +436,29 @@ const OwnerUnitsTab = ({ onClose, view }: OwnerUnitsTabProps) => {
                         const arcgisId = unit.globalId || unit.arcgisId || '';
 
                         return (
-                          <tr key={unit._id} style={{ borderBottom: '1px solid #30363d', backgroundColor: index % 2 === 0 ? '#0d1117' : '#161b22' }}>
-                            <td style={{ padding: '16px', color: '#8b949e' }}>{index + 1}</td>
-                            <td style={{ padding: '16px', color: '#58a6ff', fontWeight: 'bold' }}>{displayType}</td>
-                            <td style={{ padding: '16px', color: '#c9d1d9', fontFamily: 'monospace' }}>{displayId}</td>
+                          <tr key={unit._id} style={{ borderBottom: '1px solid var(--border-color)', backgroundColor: index % 2 === 0 ? 'var(--bg-primary)' : 'var(--bg-secondary)' }}>
+                            <td style={{ padding: '16px', color: 'var(--text-muted)' }}>{index + 1}</td>
+                            <td style={{ padding: '16px', color: 'var(--accent-blue)', fontWeight: 'bold' }}>{displayType}</td>
+                            <td style={{ padding: '16px', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>{displayId}</td>
                             <td style={{ padding: '16px' }}>
-                              <span style={{ backgroundColor: '#2ea04322', color: '#2ea043', padding: '6px 12px', borderRadius: '16px', fontSize: '13px', fontWeight: 'bold', border: '1px solid #2ea04355', whiteSpace: 'nowrap' }}>
+                              <span style={{ backgroundColor: 'var(--accent-green)22', color: 'var(--accent-green)', padding: '6px 12px', borderRadius: '16px', fontSize: '13px', fontWeight: 'bold', border: '1px solid var(--accent-green)55', whiteSpace: 'nowrap' }}>
                                 ✅ Owned
                               </span>
                             </td>
                             <td style={{ padding: '16px', display: 'flex', gap: '8px' }}>
                               <button
                                 onClick={() => handleComplaintClick(arcgisId)}
-                                style={{ padding: '6px 12px', backgroundColor: '#da3633', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', transition: 'background 0.2s', pointerEvents: 'auto' }}
+                                style={{ padding: '6px 12px', backgroundColor: 'var(--accent-red-bg)', color: 'var(--text-primary)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', transition: 'background 0.2s', pointerEvents: 'auto' }}
                                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#b62324'}
-                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#da3633'}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--accent-red-bg)'}
                               >
                                 🛠️ Submit Complaint
                               </button>
                               <button
                                 onClick={() => handleViewMyUnit(unit)}
-                                style={{ padding: '6px 12px', backgroundColor: '#1f6feb', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', transition: 'background 0.2s', pointerEvents: 'auto' }}
+                                style={{ padding: '6px 12px', backgroundColor: 'var(--accent-blue-bg)', color: 'var(--text-primary)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', transition: 'background 0.2s', pointerEvents: 'auto' }}
                                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#388bfd'}
-                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#1f6feb'}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--accent-blue-bg)'}
                               >
                                 👁️ View Unit
                               </button>
@@ -476,42 +476,42 @@ const OwnerUnitsTab = ({ onClose, view }: OwnerUnitsTabProps) => {
             {activeTab === 'my-requests' && (
               <>
                 {isLoadingRequests ? (
-                  <div style={{ textAlign: 'center', padding: '40px', color: '#58a6ff', fontSize: '1.1rem' }}>Loading your requests... ⏳</div>
+                  <div style={{ textAlign: 'center', padding: '40px', color: 'var(--accent-blue)', fontSize: '1.1rem' }}>Loading your requests... ⏳</div>
                 ) : bookingRequests.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '40px', color: '#8b949e', fontSize: '1.1rem' }}>You do not have any booking requests yet.</div>
+                  <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)', fontSize: '1.1rem' }}>You do not have any booking requests yet.</div>
                 ) : (
                   <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px' }}>
-                    <thead style={{ position: 'sticky', top: 0, backgroundColor: '#161b22', zIndex: 10 }}>
-                      <tr style={{ borderBottom: '2px solid #30363d' }}>
-                        <th style={{ padding: '16px', color: '#fff' }}>Date</th>
-                        <th style={{ padding: '16px', color: '#fff' }}>Customer Name</th>
-                        <th style={{ padding: '16px', color: '#fff' }}>Phone</th>
-                        <th style={{ padding: '16px', color: '#fff' }}>Unit ID</th>
-                        <th style={{ padding: '16px', color: '#fff' }}>Status</th>
-                        <th style={{ padding: '16px', color: '#fff' }}>Actions</th>
+                    <thead style={{ position: 'sticky', top: 0, backgroundColor: 'var(--bg-secondary)', zIndex: 10 }}>
+                      <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
+                        <th style={{ padding: '16px', color: 'var(--text-primary)' }}>Date</th>
+                        <th style={{ padding: '16px', color: 'var(--text-primary)' }}>Customer Name</th>
+                        <th style={{ padding: '16px', color: 'var(--text-primary)' }}>Phone</th>
+                        <th style={{ padding: '16px', color: 'var(--text-primary)' }}>Unit ID</th>
+                        <th style={{ padding: '16px', color: 'var(--text-primary)' }}>Status</th>
+                        <th style={{ padding: '16px', color: 'var(--text-primary)' }}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {bookingRequests.map((req, index) => {
                         const date = new Date(req.createdAt).toLocaleDateString('en-GB');
-                        let statusStyles = { bg: '#8b949e22', color: '#8b949e', border: '#8b949e55', text: req.status };
+                        let statusStyles = { bg: 'var(--text-muted)22', color: 'var(--text-muted)', border: 'var(--text-muted)55', text: req.status };
                         
                         if (req.status === 'Pending') {
-                          statusStyles = { bg: '#d2992222', color: '#d29922', border: '#d2992255', text: '⏳ Pending' };
+                          statusStyles = { bg: 'var(--accent-gold)22', color: 'var(--accent-gold)', border: 'var(--accent-gold)55', text: '⏳ Pending' };
                         } else if (req.status === 'Approved') {
-                          statusStyles = { bg: '#2ea04322', color: '#2ea043', border: '#2ea04355', text: '✅ Approved' };
+                          statusStyles = { bg: 'var(--accent-green)22', color: 'var(--accent-green)', border: 'var(--accent-green)55', text: '✅ Approved' };
                         } else if (req.status === 'Rejected' || req.status === 'Declined') {
-                          statusStyles = { bg: '#f8514922', color: '#f85149', border: '#f8514955', text: '❌ ' + req.status };
+                          statusStyles = { bg: 'var(--accent-red)22', color: 'var(--accent-red)', border: 'var(--accent-red)55', text: '❌ ' + req.status };
                         } else if (req.status === 'Reserved') {
                           statusStyles = { bg: '#a371f722', color: '#a371f7', border: '#a371f755', text: '🔒 Reserved' };
                         }
 
                         return (
-                          <tr key={req._id} style={{ borderBottom: '1px solid #30363d', backgroundColor: index % 2 === 0 ? '#0d1117' : '#161b22' }}>
-                            <td style={{ padding: '16px', color: '#8b949e' }}>{date}</td>
-                            <td style={{ padding: '16px', color: '#58a6ff', fontWeight: 'bold' }}>{req.customerName}</td>
-                            <td style={{ padding: '16px', color: '#c9d1d9' }}>{req.customerPhone}</td>
-                            <td style={{ padding: '16px', color: '#c9d1d9', fontFamily: 'monospace' }}>{req.unitId}</td>
+                          <tr key={req._id} style={{ borderBottom: '1px solid var(--border-color)', backgroundColor: index % 2 === 0 ? 'var(--bg-primary)' : 'var(--bg-secondary)' }}>
+                            <td style={{ padding: '16px', color: 'var(--text-muted)' }}>{date}</td>
+                            <td style={{ padding: '16px', color: 'var(--accent-blue)', fontWeight: 'bold' }}>{req.customerName}</td>
+                            <td style={{ padding: '16px', color: 'var(--text-secondary)' }}>{req.customerPhone}</td>
+                            <td style={{ padding: '16px', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>{req.unitId}</td>
                             <td style={{ padding: '16px' }}>
                               <span style={{ backgroundColor: statusStyles.bg, color: statusStyles.color, padding: '6px 12px', borderRadius: '16px', fontSize: '13px', fontWeight: 'bold', border: `1px solid ${statusStyles.border}`, whiteSpace: 'nowrap' }}>
                                 {statusStyles.text}
@@ -520,9 +520,9 @@ const OwnerUnitsTab = ({ onClose, view }: OwnerUnitsTabProps) => {
                             <td style={{ padding: '16px' }}>
                               <button
                                 onClick={() => handleViewUnit(req)}
-                                style={{ padding: '8px 16px', backgroundColor: '#1f6feb', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px', transition: 'background 0.2s', pointerEvents: 'auto' }}
+                                style={{ padding: '8px 16px', backgroundColor: 'var(--accent-blue-bg)', color: 'var(--text-primary)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px', transition: 'background 0.2s', pointerEvents: 'auto' }}
                                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#388bfd'}
-                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#1f6feb'}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--accent-blue-bg)'}
                               >
                                 👁️ View Unit
                               </button>
@@ -543,40 +543,40 @@ const OwnerUnitsTab = ({ onClose, view }: OwnerUnitsTabProps) => {
               return (
                 <>
                   {isLoadingComplaints ? (
-                    <div style={{ textAlign: 'center', padding: '40px', color: '#58a6ff', fontSize: '1.1rem' }}>Loading your complaints... ⏳</div>
+                    <div style={{ textAlign: 'center', padding: '40px', color: 'var(--accent-blue)', fontSize: '1.1rem' }}>Loading your complaints... ⏳</div>
                   ) : displayedComplaints.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '40px', color: '#8b949e', fontSize: '1.1rem' }}>
+                    <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)', fontSize: '1.1rem' }}>
                       You do not have any complaints.
                     </div>
                   ) : (
                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px' }}>
-                      <thead style={{ position: 'sticky', top: 0, backgroundColor: '#161b22', zIndex: 10 }}>
-                        <tr style={{ borderBottom: '2px solid #30363d' }}>
-                          <th style={{ padding: '16px', color: '#fff' }}>Date</th>
-                          <th style={{ padding: '16px', color: '#fff' }}>Title</th>
-                          <th style={{ padding: '16px', color: '#fff' }}>Unit ID</th>
-                          <th style={{ padding: '16px', color: '#fff' }}>Status</th>
-                          <th style={{ padding: '16px', color: '#fff' }}>Actions</th>
+                      <thead style={{ position: 'sticky', top: 0, backgroundColor: 'var(--bg-secondary)', zIndex: 10 }}>
+                        <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
+                          <th style={{ padding: '16px', color: 'var(--text-primary)' }}>Date</th>
+                          <th style={{ padding: '16px', color: 'var(--text-primary)' }}>Title</th>
+                          <th style={{ padding: '16px', color: 'var(--text-primary)' }}>Unit ID</th>
+                          <th style={{ padding: '16px', color: 'var(--text-primary)' }}>Status</th>
+                          <th style={{ padding: '16px', color: 'var(--text-primary)' }}>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         {displayedComplaints.map((complaint, index) => {
                           const date = new Date(complaint.createdAt).toLocaleDateString('en-GB');
-                          let statusStyles = { bg: '#8b949e22', color: '#8b949e', border: '#8b949e55', text: complaint.status };
+                          let statusStyles = { bg: 'var(--text-muted)22', color: 'var(--text-muted)', border: 'var(--text-muted)55', text: complaint.status };
                           
                           if (complaint.status === 'Pending') {
-                            statusStyles = { bg: '#d2992222', color: '#d29922', border: '#d2992255', text: '⏳ Pending' };
+                            statusStyles = { bg: 'var(--accent-gold)22', color: 'var(--accent-gold)', border: 'var(--accent-gold)55', text: '⏳ Pending' };
                           } else if (complaint.status === 'Resolved' || complaint.status === 'Maintenance') {
-                            statusStyles = { bg: '#2ea04322', color: '#2ea043', border: '#2ea04355', text: '✅ ' + complaint.status };
+                            statusStyles = { bg: 'var(--accent-green)22', color: 'var(--accent-green)', border: 'var(--accent-green)55', text: '✅ ' + complaint.status };
                           } else if (complaint.status === 'Dismissed') {
-                            statusStyles = { bg: '#f8514922', color: '#f85149', border: '#f8514955', text: '❌ Dismissed' };
+                            statusStyles = { bg: 'var(--accent-red)22', color: 'var(--accent-red)', border: 'var(--accent-red)55', text: '❌ Dismissed' };
                           }
 
                           return (
-                            <tr key={complaint._id} style={{ borderBottom: '1px solid #30363d', backgroundColor: index % 2 === 0 ? '#0d1117' : '#161b22' }}>
-                              <td style={{ padding: '16px', color: '#8b949e' }}>{date}</td>
-                              <td style={{ padding: '16px', color: '#58a6ff', fontWeight: 'bold' }}>{(complaint as any).problemName || complaint.title}</td>
-                              <td style={{ padding: '16px', color: '#c9d1d9', fontFamily: 'monospace' }}>{complaint.arcgisId}</td>
+                            <tr key={complaint._id} style={{ borderBottom: '1px solid var(--border-color)', backgroundColor: index % 2 === 0 ? 'var(--bg-primary)' : 'var(--bg-secondary)' }}>
+                              <td style={{ padding: '16px', color: 'var(--text-muted)' }}>{date}</td>
+                              <td style={{ padding: '16px', color: 'var(--accent-blue)', fontWeight: 'bold' }}>{(complaint as any).problemName || complaint.title}</td>
+                              <td style={{ padding: '16px', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>{complaint.arcgisId}</td>
                               <td style={{ padding: '16px' }}>
                                 <span style={{ backgroundColor: statusStyles.bg, color: statusStyles.color, padding: '6px 12px', borderRadius: '16px', fontSize: '13px', fontWeight: 'bold', border: `1px solid ${statusStyles.border}`, whiteSpace: 'nowrap' }}>
                                   {statusStyles.text}
@@ -585,7 +585,7 @@ const OwnerUnitsTab = ({ onClose, view }: OwnerUnitsTabProps) => {
                               <td style={{ padding: '16px' }}>
                                 <button
                                   onClick={() => setActiveComplaint(complaint)}
-                                  style={{ padding: '6px 12px', backgroundColor: '#1f6feb', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', transition: 'background 0.2s' }}
+                                  style={{ padding: '6px 12px', backgroundColor: 'var(--accent-blue-bg)', color: 'var(--text-primary)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', transition: 'background 0.2s' }}
                                 >
                                   💬 Chat
                                 </button>

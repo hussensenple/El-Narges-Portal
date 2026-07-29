@@ -22,11 +22,13 @@ import ShowAllIssuesButton from './components/ShowAllIssuesButton';
 import TechniciansModal from './components/TechniciansModal';
 import UtilityNetworkModal from './components/UtilityNetworkModal';
 import ChatbotWidget from './components/ChatbotWidget';
+import UNDashboardModal from './components/UNDashboardModal';
+import LogoIcon from './components/LogoIcon';
 
 
 const Icons = {
   Login: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>,
-  Logout: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f85149" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
+  Logout: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-red)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
   Layers: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>,
   Weather: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.34" y1="19.66" x2="5.76" y2="18.24"/><line x1="18.24" y1="5.76" x2="19.66" y2="4.32"/></svg>,
   GisTools: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>,
@@ -62,6 +64,7 @@ const CustomerInterface = () => {
   const [isEngineerPortalOpen, setIsEngineerPortalOpen] = useState(false);
   const [isActiveTasksOpen, setIsActiveTasksOpen] = useState(false);
   const [isTechniciansModalOpen, setIsTechniciansModalOpen] = useState(false);
+  const [isUNDashboardModalOpen, setIsUNDashboardModalOpen] = useState(false);
 
   const [unComplaintCoordinates, setUnComplaintCoordinates] = useState<{lat: number, lon: number} | null>(null);
 
@@ -105,7 +108,7 @@ const CustomerInterface = () => {
   };
 
   return (
-    <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden', backgroundColor: '#0d1117' }}>
+    <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden', backgroundColor: 'var(--bg-primary)' }}>
       
       <style>{`
         .map-icon-btn {
@@ -118,29 +121,29 @@ const CustomerInterface = () => {
           cursor: pointer;
           transition: all 0.2s ease-in-out;
           backdrop-filter: blur(10px);
-          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
         
         .map-icon-btn.inactive {
-          background-color: rgba(55, 62, 71, 0.85); 
-          color: #e6edf3;
-          border: 1px solid #444c56;
+          background-color: var(--bg-tertiary);
+          color: var(--text-secondary);
+          border: 1px solid var(--border-color);
         }
         
         .map-icon-btn.inactive:hover {
-          background-color: rgba(75, 83, 93, 0.95);
-          color: #ffffff;
+          background-color: var(--bg-hover);
+          color: var(--text-primary);
           transform: scale(1.05);
         }
         
         .map-icon-btn.active {
-          background-color: #1f6feb;
-          color: #ffffff;
-          border: 1px solid #1f6feb;
+          background-color: var(--accent-blue-bg);
+          color: var(--text-primary);
+          border: 1px solid var(--accent-blue);
         }
         
         .map-icon-btn.active:hover {
-          background-color: #388bfd;
+          background-color: var(--accent-blue);
           transform: scale(1.05);
         }
       `}</style>
@@ -224,7 +227,7 @@ const CustomerInterface = () => {
             title="My Performance Dashboard"
             onClick={() => setIsPerformanceOpen(!isPerformanceOpen)}
             className={`map-icon-btn ${isPerformanceOpen ? 'active' : 'inactive'}`}
-            style={{ color: isPerformanceOpen ? '#fff' : '#8957e5', borderColor: '#8957e5' }}
+            style={{ color: isPerformanceOpen ? 'var(--text-primary)' : '#8957e5', borderColor: '#8957e5' }}
           >
             <Icons.Performance />
           </button>
@@ -234,7 +237,7 @@ const CustomerInterface = () => {
 
         {/* Last one on the left (user's "أخر واحد") */}
         {auth?.user && (
-          <span style={{ fontSize: '13px', color: '#fff', backgroundColor: 'rgba(22,27,34,0.85)', padding: '12px 16px', borderRadius: '10px', border: '1px solid #30363d', fontFamily: 'sans-serif', backdropFilter: 'blur(10px)' }}>
+          <span style={{ fontSize: '13px', color: 'var(--text-primary)', backgroundColor: 'var(--bg-secondary)', padding: '12px 16px', borderRadius: '10px', border: '1px solid var(--border-color)', fontFamily: 'sans-serif', backdropFilter: 'blur(10px)' }}>
             Welcome, <strong style={{ color: '#4493f8' }}>{auth.user.name}</strong>
           </span>
         )}
@@ -276,8 +279,28 @@ const CustomerInterface = () => {
       </div>
 
 
-      <div style={{ position: 'absolute', top: '20px', left: '70px', zIndex: 1000, display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+      <div style={{ position: 'absolute', top: '20px', left: '70px', zIndex: 1000, display: 'flex', gap: '15px', alignItems: 'center' }}>
         
+        {/* App Logo */}
+        <div style={{ padding: '6px 12px', backgroundColor: 'var(--bg-secondary)', backdropFilter: 'blur(10px)', borderRadius: '10px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center' }}>
+          <LogoIcon width={32} height={32} showText={false} />
+        </div>
+        
+        {/* Theme Toggle Button */}
+        <button 
+          title="Toggle Theme" 
+          onClick={() => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+          }} 
+          className="map-icon-btn inactive"
+          style={{ fontSize: '18px' }}
+        >
+          🌓
+        </button>
+
         <button id="tour-map-toggle" title={mapMode === '3D' ? "Switch to 2D Map" : "Switch to 3D Map"} onClick={() => setMapMode(mapMode === '3D' ? '2D' : '3D')} className="map-icon-btn inactive">
           {mapMode === '3D' ? <Icons.Map2D /> : <Icons.Map3D />}
         </button>
@@ -286,9 +309,9 @@ const CustomerInterface = () => {
         {auth?.user?.role === 'engineer' && mapMode === 'UN' && (
           <button 
             title="Open ArcGIS Dashboard"
-            onClick={() => window.open('https://www.arcgis.com/apps/dashboards/bd9339de2519498b96a80bde6d0d0155#', '_blank')} 
+            onClick={() => setIsUNDashboardModalOpen(true)} 
             className="map-icon-btn active"
-            style={{ backgroundColor: '#238636', color: '#fff', borderColor: '#238636', width: 'auto', padding: '0 12px', fontSize: '12px', fontWeight: 'bold' }}
+            style={{ backgroundColor: 'var(--accent-green-bg)', color: 'var(--text-primary)', borderColor: 'var(--accent-green-bg)', width: 'auto', padding: '0 12px', fontSize: '12px', fontWeight: 'bold' }}
           >
             📊 Dashboard
           </button>
@@ -300,7 +323,7 @@ const CustomerInterface = () => {
             title="Utility Network"
             onClick={() => setMapMode(mapMode === 'UN' ? '3D' : 'UN')}
             className={`map-icon-btn ${mapMode === 'UN' ? 'active' : 'inactive'}`}
-            style={{ color: mapMode === 'UN' ? '#fff' : '#8957e5', borderColor: mapMode === 'UN' ? '#8957e5' : '#444c56' }}
+            style={{ color: mapMode === 'UN' ? 'var(--text-primary)' : '#8957e5', borderColor: mapMode === 'UN' ? '#8957e5' : '#444c56' }}
           >
             ⚡
           </button>
@@ -316,13 +339,13 @@ const CustomerInterface = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: 'rgba(22, 27, 34, 0.9)', backdropFilter: 'blur(10px)', padding: '10px', borderRadius: '12px', border: '1px solid #444c56', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', width: '200px' }}>
                 <button 
                   onClick={() => { setIsRoutingOpen(!isRoutingOpen); setIsStopsRoutingOpen(false); }} 
-                  style={{ padding: '10px', borderRadius: '6px', cursor: 'pointer', background: isRoutingOpen ? '#1f6feb' : 'transparent', color: isRoutingOpen ? '#fff' : '#c9d1d9', border: '1px solid #444c56', fontSize: '13px', fontWeight: 'bold', transition: 'all 0.2s ease', textAlign: 'left' }}
+                  style={{ padding: '10px', borderRadius: '6px', cursor: 'pointer', background: isRoutingOpen ? 'var(--accent-blue-bg)' : 'transparent', color: isRoutingOpen ? 'var(--text-primary)' : 'var(--text-secondary)', border: '1px solid #444c56', fontSize: '13px', fontWeight: 'bold', transition: 'all 0.2s ease', textAlign: 'left' }}
                 >
                   {isRoutingOpen ? '✖ Close Services' : '📍 Closest Services'}
                 </button>
                 <button 
                   onClick={() => { setIsStopsRoutingOpen(!isStopsRoutingOpen); setIsRoutingOpen(false); }} 
-                  style={{ padding: '10px', borderRadius: '6px', cursor: 'pointer', background: isStopsRoutingOpen ? '#1f6feb' : 'transparent', color: isStopsRoutingOpen ? '#fff' : '#c9d1d9', border: '1px solid #444c56', fontSize: '13px', fontWeight: 'bold', transition: 'all 0.2s ease', textAlign: 'left' }}
+                  style={{ padding: '10px', borderRadius: '6px', cursor: 'pointer', background: isStopsRoutingOpen ? 'var(--accent-blue-bg)' : 'transparent', color: isStopsRoutingOpen ? 'var(--text-primary)' : 'var(--text-secondary)', border: '1px solid #444c56', fontSize: '13px', fontWeight: 'bold', transition: 'all 0.2s ease', textAlign: 'left' }}
                 >
                   {isStopsRoutingOpen ? '✖ Close Routing' : '🗺️ Multi-Stop Route'}
                 </button>
@@ -418,6 +441,10 @@ const CustomerInterface = () => {
         <TechniciansModal onClose={() => setIsTechniciansModalOpen(false)} />
       )}
 
+      {isUNDashboardModalOpen && (
+        <UNDashboardModal onClose={() => setIsUNDashboardModalOpen(false)} />
+      )}
+
       <div style={{ display: mapMode === 'UN' ? 'block' : 'none', width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, zIndex: mapMode === 'UN' ? 100 : -1 }}>
         <UtilityNetworkModal 
           key={auth?.user ? auth.user.id : 'guest'}
@@ -439,7 +466,7 @@ const CustomerInterface = () => {
             title="New Complaints"
             onClick={() => setIsEngineerPortalOpen(!isEngineerPortalOpen)}
             className={`map-icon-btn ${isEngineerPortalOpen ? 'active' : 'inactive'}`}
-            style={{ color: isEngineerPortalOpen ? '#fff' : '#e34c26', borderColor: '#e34c26' }}
+            style={{ color: isEngineerPortalOpen ? 'var(--text-primary)' : '#e34c26', borderColor: '#e34c26' }}
           >
             <Icons.Requests />
           </button>
@@ -451,7 +478,7 @@ const CustomerInterface = () => {
             title="Active Tasks"
             onClick={() => setIsActiveTasksOpen(!isActiveTasksOpen)}
             className={`map-icon-btn ${isActiveTasksOpen ? 'active' : 'inactive'}`}
-            style={{ color: isActiveTasksOpen ? '#fff' : '#d29922', borderColor: '#d29922' }}
+            style={{ color: isActiveTasksOpen ? 'var(--text-primary)' : 'var(--accent-gold)', borderColor: 'var(--accent-gold)' }}
           >
             <Icons.Requests />
           </button>
@@ -463,7 +490,7 @@ const CustomerInterface = () => {
             title="Manage Technicians"
             onClick={() => setIsTechniciansModalOpen(!isTechniciansModalOpen)}
             className={`map-icon-btn ${isTechniciansModalOpen ? 'active' : 'inactive'}`}
-            style={{ color: isTechniciansModalOpen ? '#fff' : '#1f6feb', borderColor: '#1f6feb' }}
+            style={{ color: isTechniciansModalOpen ? 'var(--text-primary)' : 'var(--accent-blue-bg)', borderColor: 'var(--accent-blue-bg)' }}
           >
             <Icons.Technicians />
           </button>
@@ -488,6 +515,13 @@ const CustomerInterface = () => {
 
 
 function App() {
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    }
+  }, []);
+
   return (
     <Router>
       <Routes>

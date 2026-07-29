@@ -19,10 +19,10 @@ const TopOwnersChartModal: React.FC<TopOwnersChartModalProps> = ({ owners, onClo
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div style={{ backgroundColor: '#161b22', padding: '10px', border: '1px solid #30363d', borderRadius: '8px' }}>
-          <p style={{ margin: '0 0 5px', color: '#e6edf3', fontWeight: 'bold' }}>{label}</p>
+        <div style={{ backgroundColor: 'var(--bg-secondary)', padding: '10px', border: '1px solid var(--border-color)', borderRadius: '8px' }}>
+          <p style={{ margin: '0 0 5px', color: 'var(--text-primary)', fontWeight: 'bold' }}>{label}</p>
           <p style={{ margin: '0 0 5px', color: '#ffc658' }}>Paid: {payload[0].value} M EGP</p>
-          <p style={{ margin: 0, color: '#58a6ff' }}>Properties: {payload[0].payload.propertiesCount}</p>
+          <p style={{ margin: 0, color: 'var(--accent-blue)' }}>Properties: {payload[0].payload.propertiesCount}</p>
         </div>
       );
     }
@@ -33,16 +33,16 @@ const TopOwnersChartModal: React.FC<TopOwnersChartModalProps> = ({ owners, onClo
     <div style={{ position: 'fixed', inset: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 3000 }}>
       <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)' }} onClick={onClose} />
       
-      <div style={{ position: 'relative', width: '90%', maxWidth: '1000px', height: '80vh', backgroundColor: '#161b22', borderRadius: '12px', border: '1px solid #30363d', display: 'flex', flexDirection: 'column', zIndex: 3001, overflow: 'hidden' }}>
+      <div style={{ position: 'relative', width: '90%', maxWidth: '1000px', height: '80vh', backgroundColor: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', zIndex: 3001, overflow: 'hidden' }}>
         
         {/* Header */}
-        <div style={{ padding: '20px', borderBottom: '1px solid #30363d', backgroundColor: '#0d1117', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ padding: '20px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <h3 style={{ margin: 0, color: '#ffc658' }}>
               📊 Top 25 Owners
             </h3>
           </div>
-          <button onClick={onClose} style={{ background: 'transparent', border: '1px solid #30363d', color: '#8b949e', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>✖</button>
+          <button onClick={onClose} style={{ background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-muted)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>✖</button>
         </div>
 
         {/* Chart Area */}
@@ -52,24 +52,24 @@ const TopOwnersChartModal: React.FC<TopOwnersChartModalProps> = ({ owners, onClo
               <BarChart data={chartData} margin={{ top: 30, right: 30, left: 20, bottom: 60 }}>
                 <XAxis 
                   dataKey="name" 
-                  stroke="#8b949e" 
+                  stroke="var(--text-muted)" 
                   angle={-45} 
                   textAnchor="end" 
                   interval={0} 
-                  tick={{ fontSize: 11, fill: '#8b949e' }} 
+                  tick={{ fontSize: 11, fill: 'var(--text-muted)' }} 
                   height={80}
                 />
                 <YAxis 
-                  stroke="#8b949e" 
+                  stroke="var(--text-muted)" 
                   tickFormatter={(val) => `${val}M`}
                   tick={{ fontSize: 12 }}
                 />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: '#21262d' }} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--bg-tertiary)' }} />
                 <Bar dataKey="paid" fill="#ffc658" radius={[4, 4, 0, 0]}>
                   <LabelList 
                     dataKey="propertiesCount" 
                     position="top" 
-                    fill="#58a6ff" 
+                    fill="var(--accent-blue)" 
                     fontSize={12} 
                     fontWeight="bold"
                     formatter={(val: number) => `${val} units`}
@@ -78,7 +78,7 @@ const TopOwnersChartModal: React.FC<TopOwnersChartModalProps> = ({ owners, onClo
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: '#8b949e' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: 'var(--text-muted)' }}>
               No owner data available.
             </div>
           )}

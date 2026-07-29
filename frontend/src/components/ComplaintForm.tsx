@@ -94,9 +94,9 @@ const ComplaintForm = ({ onClose, arcgisId, view, onPickingChange }: ComplaintFo
 
   if (isPickingMap) {
     return createPortal(
-      <div style={{ position: 'fixed', top: 30, left: '50%', transform: 'translateX(-50%)', backgroundColor: '#da3633', color: '#fff', padding: '15px 30px', borderRadius: '30px', zIndex: 99999999, fontWeight: 'bold', display: 'flex', gap: '15px', alignItems: 'center', boxShadow: '0 10px 30px rgba(0,0,0,0.8)' }}>
+      <div style={{ position: 'fixed', top: 30, left: '50%', transform: 'translateX(-50%)', backgroundColor: 'var(--accent-red-bg)', color: 'var(--text-primary)', padding: '15px 30px', borderRadius: '30px', zIndex: 99999999, fontWeight: 'bold', display: 'flex', gap: '15px', alignItems: 'center', boxShadow: '0 10px 30px rgba(0,0,0,0.8)' }}>
         📍 Please click on the issue location on the map...
-        <button onClick={() => handleSetPicking(false)} style={{ background: '#fff', color: '#da3633', border: 'none', padding: '8px 15px', borderRadius: '15px', cursor: 'pointer', fontWeight: 'bold' }}>Cancel Selection</button>
+        <button onClick={() => handleSetPicking(false)} style={{ background: 'var(--text-primary)', color: 'var(--accent-red-bg)', border: 'none', padding: '8px 15px', borderRadius: '15px', cursor: 'pointer', fontWeight: 'bold' }}>Cancel Selection</button>
       </div>,
       document.body
     );
@@ -104,21 +104,21 @@ const ComplaintForm = ({ onClose, arcgisId, view, onPickingChange }: ComplaintFo
 
   return createPortal(
     <div onClick={onClose} style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 99999999, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: '#0d1117', padding: '20px', borderRadius: '16px', width: '550px', maxWidth: '90vw', maxHeight: '85vh', overflowY: 'auto', border: '1px solid #30363d', color: '#fff', boxShadow: '0 20px 50px rgba(0,0,0,0.8)' }}>
-        <h2 style={{ marginTop: 0, borderBottom: '1px solid #30363d', paddingBottom: '10px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '20px' }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: 'var(--bg-primary)', padding: '20px', borderRadius: '16px', width: '550px', maxWidth: '90vw', maxHeight: '85vh', overflowY: 'auto', border: '1px solid var(--border-color)', color: 'var(--text-primary)', boxShadow: '0 20px 50px rgba(0,0,0,0.8)' }}>
+        <h2 style={{ marginTop: 0, borderBottom: '1px solid var(--border-color)', paddingBottom: '10px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '20px' }}>
           🛠️ Submit Maintenance / Complaint Request
         </h2>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '15px' }}>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label style={{ color: '#8b949e', fontWeight: 'bold' }}>Complaint Type:</label>
+            <label style={{ color: 'var(--text-muted)', fontWeight: 'bold' }}>Complaint Type:</label>
             <select 
               value={type} 
               onChange={(e) => {
                 setType(e.target.value);
               }} 
-              style={{ padding: '10px', borderRadius: '8px', backgroundColor: '#161b22', border: '1px solid #30363d', color: '#fff', fontSize: '15px', cursor: 'pointer' }}
+              style={{ padding: '10px', borderRadius: '8px', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '15px', cursor: 'pointer' }}
             >
               <option value="internal">Internal Maintenance (Inside the unit)</option>
               <option value="external">External Issue (Street / Public Facilities)</option>
@@ -126,33 +126,33 @@ const ComplaintForm = ({ onClose, arcgisId, view, onPickingChange }: ComplaintFo
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label style={{ color: '#8b949e', fontWeight: 'bold' }}>Attach Images (Optional):</label>
+            <label style={{ color: 'var(--text-muted)', fontWeight: 'bold' }}>Attach Images (Optional):</label>
             <input 
               type="file" 
               accept="image/*" 
               multiple 
               onChange={handleImageUpload} 
-              style={{ padding: '10px', borderRadius: '8px', backgroundColor: '#161b22', border: '1px dashed #30363d', color: '#fff' }}
+              style={{ padding: '10px', borderRadius: '8px', backgroundColor: 'var(--bg-secondary)', border: '1px dashed var(--border-color)', color: 'var(--text-primary)' }}
             />
             {images.length > 0 && (
               <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '10px' }}>
                 {images.map((img, i) => (
-                  <img key={i} src={img} alt={`Preview ${i}`} style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #30363d' }} />
+                  <img key={i} src={img} alt={`Preview ${i}`} style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--border-color)' }} />
                 ))}
               </div>
             )}
           </div>
 
           {type === 'external' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: '#161b22', padding: '16px', borderRadius: '8px', border: '1px dashed #58a6ff' }}>
-              <label style={{ color: '#8b949e', fontWeight: 'bold' }}>Issue Location on Map:</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: 'var(--bg-secondary)', padding: '16px', borderRadius: '8px', border: '1px dashed var(--accent-blue)' }}>
+              <label style={{ color: 'var(--text-muted)', fontWeight: 'bold' }}>Issue Location on Map:</label>
               {coordinates ? (
-                <div style={{ color: '#2ea043', fontSize: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ color: 'var(--accent-green)', fontSize: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span>✅ Selected (Lat: {coordinates.lat.toFixed(4)}, Lon: {coordinates.lon.toFixed(4)})</span>
-                  <button type="button" onClick={() => handleSetPicking(true)} style={{ background: 'transparent', color: '#58a6ff', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontWeight: 'bold' }}>Change Location</button>
+                  <button type="button" onClick={() => handleSetPicking(true)} style={{ background: 'transparent', color: 'var(--accent-blue)', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontWeight: 'bold' }}>Change Location</button>
                 </div>
               ) : (
-                <button type="button" onClick={() => handleSetPicking(true)} style={{ padding: '12px', backgroundColor: '#1f6feb', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px', display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                <button type="button" onClick={() => handleSetPicking(true)} style={{ padding: '12px', backgroundColor: 'var(--accent-blue-bg)', color: 'var(--text-primary)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px', display: 'flex', justifyContent: 'center', gap: '8px' }}>
                   📍 Click here to select location on 3D Map
                 </button>
               )}
@@ -160,19 +160,19 @@ const ComplaintForm = ({ onClose, arcgisId, view, onPickingChange }: ComplaintFo
           )}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label style={{ color: '#8b949e', fontWeight: 'bold' }}>Issue Details:</label>
+            <label style={{ color: 'var(--text-muted)', fontWeight: 'bold' }}>Issue Details:</label>
             <textarea
               required
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Please describe the issue in detail here..."
-              style={{ padding: '10px', borderRadius: '8px', backgroundColor: '#161b22', border: '1px solid #30363d', color: '#fff', fontSize: '15px', minHeight: '80px', resize: 'vertical' }}
+              style={{ padding: '10px', borderRadius: '8px', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '15px', minHeight: '80px', resize: 'vertical' }}
             />
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '5px' }}>
-            <button type="button" onClick={onClose} style={{ padding: '10px 20px', backgroundColor: 'transparent', color: '#8b949e', border: '1px solid #30363d', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px' }}>Cancel</button>
-            <button type="submit" disabled={isSubmitting || (type === 'external' && !coordinates)} style={{ padding: '10px 20px', backgroundColor: (isSubmitting || (type === 'external' && !coordinates)) ? '#b6232455' : '#2ea043', color: '#fff', border: 'none', borderRadius: '8px', cursor: (isSubmitting || (type === 'external' && !coordinates)) ? 'not-allowed' : 'pointer', fontWeight: 'bold', fontSize: '15px' }}>
+            <button type="button" onClick={onClose} style={{ padding: '10px 20px', backgroundColor: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border-color)', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px' }}>Cancel</button>
+            <button type="submit" disabled={isSubmitting || (type === 'external' && !coordinates)} style={{ padding: '10px 20px', backgroundColor: (isSubmitting || (type === 'external' && !coordinates)) ? '#b6232455' : 'var(--accent-green)', color: 'var(--text-primary)', border: 'none', borderRadius: '8px', cursor: (isSubmitting || (type === 'external' && !coordinates)) ? 'not-allowed' : 'pointer', fontWeight: 'bold', fontSize: '15px' }}>
               {isSubmitting ? 'Submitting...' : 'Submit Complaint 🚀'}
             </button>
           </div>

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../../context/AuthContext';
+import VoiceInput from '../VoiceInput';
 
 interface AdminAIChatbotTabProps {
   onAssignUnits: (userId: string, role: string) => void;
@@ -35,56 +36,89 @@ const AdminAIChatbotTab: React.FC<AdminAIChatbotTabProps> = ({ onAssignUnits }) 
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Load history from localStorage
+  // Fetch history from DB
   useEffect(() => {
-    const saved = localStorage.getItem(CHAT_HISTORY_KEY);
-    if (saved) {
+    const fetchChats = async () => {
       try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setChatSessions(parsed);
-          setCurrentChatId(parsed[0].id);
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin/chats`, {
+          headers: { 'x-auth-token': token }
+        });
+        let loadedSessions = res.data.map((c: any) => ({ ...c, id: c._id }));
+
+        // Recover lost old chats and upload them to the backend
+        const oldSavedGeneric = localStorage.getItem('admin_ai_chat_history');
+        if (oldSavedGeneric) {
+          try {
+            const oldParsed = JSON.parse(oldSavedGeneric);
+            if (Array.isArray(oldParsed) && oldParsed.length > 0 && !oldParsed[0].id) {
+              const migratedSession = { title: 'Previous Chat (Recovered)', messages: oldParsed, isPinned: false };
+              const postRes = await axios.post(`${import.meta.env.VITE_API_URL}/api/admin/chats`, migratedSession, {
+                headers: { 'x-auth-token': token }
+              });
+              loadedSessions.push({ ...postRes.data, id: postRes.data._id });
+              localStorage.removeItem('admin_ai_chat_history');
+            }
+          } catch (e) {}
+        }
+        
+        // Also upload any v2 local chats that haven't been uploaded
+        const savedV2 = localStorage.getItem(CHAT_HISTORY_KEY);
+        if (savedV2) {
+           try {
+              const parsedV2 = JSON.parse(savedV2);
+              if (Array.isArray(parsedV2)) {
+                 for (const s of parsedV2) {
+                    if (s.title === 'New Chat' && s.messages.length <= 1) continue;
+                    // Don't duplicate if already in db (if they have similar title and updated time, etc.)
+                    // Just simple push for now, usually won't conflict if they only used it briefly.
+                    const postRes = await axios.post(`${import.meta.env.VITE_API_URL}/api/admin/chats`, {
+                       id: s.id.length === 24 ? s.id : undefined,
+                       title: s.title,
+                       messages: s.messages,
+                       isPinned: s.isPinned
+                    }, { headers: { 'x-auth-token': token }});
+                    loadedSessions.push({ ...postRes.data, id: postRes.data._id });
+                 }
+              }
+           } catch(e) {}
+           localStorage.removeItem(CHAT_HISTORY_KEY);
+        }
+        
+        if (loadedSessions.length > 0) {
+          loadedSessions.sort((a: ChatSession, b: ChatSession) => {
+            const timeA = typeof a.updatedAt === 'string' ? new Date(a.updatedAt).getTime() : a.updatedAt;
+            const timeB = typeof b.updatedAt === 'string' ? new Date(b.updatedAt).getTime() : b.updatedAt;
+            return timeB - timeA;
+          });
+          setChatSessions(loadedSessions);
+          setCurrentChatId(loadedSessions[0].id);
         } else {
           startNewChat();
         }
-      } catch (e) {
+      } catch (err) {
+        console.error(err);
         startNewChat();
       }
-    } else {
-      // Migrate old data if exists
-      const oldSaved = localStorage.getItem(`admin_ai_chat_history_${userId}`);
-      if (oldSaved) {
-        try {
-          const oldParsed = JSON.parse(oldSaved);
-          if (Array.isArray(oldParsed) && oldParsed.length > 0 && !oldParsed[0].id) {
-            const migratedSession = { id: Date.now().toString(), title: 'Previous Chat', messages: oldParsed, updatedAt: Date.now() };
-            setChatSessions([migratedSession]);
-            setCurrentChatId(migratedSession.id);
-            return;
-          }
-        } catch (e) {}
-      }
-      startNewChat();
-    }
+    };
+    fetchChats();
   }, [CHAT_HISTORY_KEY]);
 
-  const startNewChat = () => {
-    const newSession = { 
-      id: Date.now().toString(), 
-      title: 'New Chat', 
-      messages: [{ sender: 'ai', text: 'Welcome! I am your AI Admin Assistant. You can ask to change user roles, assign units, revoke permissions, and modify prices.' }], 
-      updatedAt: Date.now() 
-    };
-    setChatSessions(prev => [newSession, ...prev]);
-    setCurrentChatId(newSession.id);
-  };
-
-  // Save history to localStorage
-  useEffect(() => {
-    if (chatSessions.length > 0) {
-      localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(chatSessions));
+  const startNewChat = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const newSession = { 
+        title: 'New Chat', 
+        messages: [{ sender: 'ai', text: 'Welcome! I am your AI Admin Assistant. You can ask to change user roles, assign units, revoke permissions, and modify prices.' }]
+      };
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/admin/chats`, newSession, { headers: { 'x-auth-token': token }});
+      const created = { ...res.data, id: res.data._id };
+      setChatSessions(prev => [created, ...prev]);
+      setCurrentChatId(created.id);
+    } catch(err) {
+      console.error(err);
     }
-  }, [chatSessions, CHAT_HISTORY_KEY]);
+  };
 
   useEffect(() => {
     axios.get(`${import.meta.env.VITE_API_URL}/api/admin/users/all`, {
@@ -94,21 +128,32 @@ const AdminAIChatbotTab: React.FC<AdminAIChatbotTabProps> = ({ onAssignUnits }) 
 
   const currentMessages = chatSessions.find(c => c.id === currentChatId)?.messages || [];
 
-  const updateCurrentMessages = (newMessages: {sender: string, text: string}[]) => {
-    setChatSessions(prev => prev.map(c => {
-      if (c.id === currentChatId) {
-        let title = c.title;
-        if (title === 'New Chat') {
-            const firstUserMsg = newMessages.find(m => m.sender === 'user');
-            if (firstUserMsg) {
-              title = 'Generating title...';
-              generateAITitle(currentChatId, firstUserMsg.text);
-            }
-        }
-        return { ...c, messages: newMessages, updatedAt: Date.now(), title };
+  const updateCurrentMessages = async (newMessages: {sender: string, text: string}[]) => {
+    let newTitle = undefined;
+    const currentSession = chatSessions.find(c => c.id === currentChatId);
+    
+    if (currentSession && currentSession.title === 'New Chat') {
+      const firstUserMsg = newMessages.find(m => m.sender === 'user');
+      if (firstUserMsg) {
+        newTitle = 'Generating title...';
+        generateAITitle(currentChatId!, firstUserMsg.text);
       }
-      return c;
-    }));
+    }
+    
+    const payload = {
+      id: currentChatId,
+      messages: newMessages,
+      title: newTitle || currentSession?.title,
+      isPinned: currentSession?.isPinned
+    };
+    
+    setChatSessions(prev => prev.map(c => c.id === currentChatId ? { ...c, messages: newMessages, updatedAt: Date.now(), title: newTitle || c.title } : c));
+    
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/admin/chats`, payload, {
+        headers: { 'x-auth-token': localStorage.getItem('token') }
+      });
+    } catch(err) { console.error(err); }
   };
 
   const generateAITitle = async (chatId: string, firstMessage: string) => {
@@ -118,22 +163,30 @@ const AdminAIChatbotTab: React.FC<AdminAIChatbotTabProps> = ({ onAssignUnits }) 
       });
       const newTitle = res.data.title;
       setChatSessions(prev => prev.map(c => c.id === chatId ? { ...c, title: newTitle } : c));
+      await axios.put(`${import.meta.env.VITE_API_URL}/api/admin/chats/${chatId}`, { title: newTitle }, { headers: { 'x-auth-token': localStorage.getItem('token') }});
     } catch (err) {
-      setChatSessions(prev => prev.map(c => c.id === chatId ? { ...c, title: firstMessage.substring(0, 30) + '...' } : c));
+      const newTitle = firstMessage.substring(0, 30) + '...';
+      setChatSessions(prev => prev.map(c => c.id === chatId ? { ...c, title: newTitle } : c));
+      await axios.put(`${import.meta.env.VITE_API_URL}/api/admin/chats/${chatId}`, { title: newTitle }, { headers: { 'x-auth-token': localStorage.getItem('token') }});
     }
   };
 
-  const handleDeleteChat = (e: React.MouseEvent, id: string) => {
+  const handleDeleteChat = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     if (window.confirm('Are you sure you want to delete this chat?')) {
-      setChatSessions(prev => {
-        const newSessions = prev.filter(c => c.id !== id);
-        if (currentChatId === id) {
-          setCurrentChatId(newSessions.length > 0 ? newSessions[0].id : null);
-          if (newSessions.length === 0) setTimeout(startNewChat, 0);
-        }
-        return newSessions;
-      });
+      try {
+        await axios.delete(`${import.meta.env.VITE_API_URL}/api/admin/chats/${id}`, {
+          headers: { 'x-auth-token': localStorage.getItem('token') }
+        });
+        setChatSessions(prev => {
+          const newSessions = prev.filter(c => c.id !== id);
+          if (currentChatId === id) {
+            setCurrentChatId(newSessions.length > 0 ? newSessions[0].id : null);
+            if (newSessions.length === 0) setTimeout(startNewChat, 0);
+          }
+          return newSessions;
+        });
+      } catch (err) { console.error(err); }
     }
   };
 
@@ -143,20 +196,36 @@ const AdminAIChatbotTab: React.FC<AdminAIChatbotTabProps> = ({ onAssignUnits }) 
     setEditTitleText(currentTitle);
   };
 
-  const handleTogglePin = (e: React.MouseEvent, id: string) => {
+  const handleTogglePin = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    setChatSessions(prev => prev.map(c => c.id === id ? { ...c, isPinned: !c.isPinned } : c));
+    const chat = chatSessions.find(c => c.id === id);
+    if (!chat) return;
+    const newPinned = !chat.isPinned;
+    setChatSessions(prev => prev.map(c => c.id === id ? { ...c, isPinned: newPinned } : c));
+    try {
+      await axios.put(`${import.meta.env.VITE_API_URL}/api/admin/chats/${id}`, { isPinned: newPinned }, {
+        headers: { 'x-auth-token': localStorage.getItem('token') }
+      });
+    } catch (err) { console.error(err); }
   };
 
-  const submitRename = (id: string) => {
-    if (editTitleText.trim()) {
-      setChatSessions(prev => prev.map(c => c.id === id ? { ...c, title: editTitleText.trim() } : c));
+  const submitRename = async (id: string) => {
+    const newTitle = editTitleText.trim();
+    if (newTitle) {
+      setChatSessions(prev => prev.map(c => c.id === id ? { ...c, title: newTitle } : c));
+      try {
+        await axios.put(`${import.meta.env.VITE_API_URL}/api/admin/chats/${id}`, { title: newTitle }, {
+          headers: { 'x-auth-token': localStorage.getItem('token') }
+        });
+      } catch (err) { console.error(err); }
     }
     setEditChatId(null);
   };
 
-  const getRelativeTime = (timestamp: number) => {
-    const diff = Date.now() - timestamp;
+  const getRelativeTime = (timestamp: number | string) => {
+    const timeValue = typeof timestamp === 'string' ? new Date(timestamp).getTime() : timestamp;
+    if (!timeValue || isNaN(timeValue)) return '';
+    const diff = Date.now() - timeValue;
     const minutes = Math.floor(diff / 60000);
     if (minutes < 1) return 'now';
     if (minutes < 60) return `${minutes}m`;
@@ -332,7 +401,9 @@ const AdminAIChatbotTab: React.FC<AdminAIChatbotTabProps> = ({ onAssignUnits }) 
           {chatSessions.sort((a,b) => {
             if (a.isPinned && !b.isPinned) return -1;
             if (!a.isPinned && b.isPinned) return 1;
-            return b.updatedAt - a.updatedAt;
+            const timeA = typeof a.updatedAt === 'string' ? new Date(a.updatedAt).getTime() : a.updatedAt;
+            const timeB = typeof b.updatedAt === 'string' ? new Date(b.updatedAt).getTime() : b.updatedAt;
+            return timeB - timeA;
           }).map(chat => (
             <div 
               key={chat.id} 
@@ -362,16 +433,16 @@ const AdminAIChatbotTab: React.FC<AdminAIChatbotTabProps> = ({ onAssignUnits }) 
               ) : (
                 <>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
-                    {chat.isPinned && <span style={{ fontSize: '12px' }}>📌</span>}
+                    {chat.isPinned && <span style={{ fontSize: '13px', color: 'var(--accent-blue)' }}>★</span>}
                     <div style={{ color: currentChatId === chat.id ? 'var(--accent-blue)' : 'var(--text-secondary)', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
                       {chat.title}
                     </div>
                   </div>
-                  <div style={{ opacity: 0, transition: 'opacity 0.2s', display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', opacity: 0.7 }}>{getRelativeTime(chat.updatedAt)}</span>
-                    <span onClick={(e) => handleTogglePin(e, chat.id)} style={{ cursor: 'pointer', fontSize: '14px' }}>📌</span>
-                    <span onClick={(e) => handleRenameChat(e, chat.id, chat.title)} style={{ cursor: 'pointer', fontSize: '14px' }}>✏️</span>
-                    <span onClick={(e) => handleDeleteChat(e, chat.id)} style={{ cursor: 'pointer', fontSize: '14px' }}>🗑️</span>
+                  <div style={{ opacity: 0, transition: 'opacity 0.2s', display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{getRelativeTime(chat.updatedAt)}</span>
+                    <span title="Pin Chat" onClick={(e) => handleTogglePin(e, chat.id)} style={{ cursor: 'pointer', fontSize: '15px', color: 'var(--text-secondary)' }}>★</span>
+                    <span title="Rename Chat" onClick={(e) => handleRenameChat(e, chat.id, chat.title)} style={{ cursor: 'pointer', fontSize: '15px', color: 'var(--text-secondary)' }}>✎</span>
+                    <span title="Delete Chat" onClick={(e) => handleDeleteChat(e, chat.id)} style={{ cursor: 'pointer', fontSize: '15px', color: 'var(--accent-red)' }}>✕</span>
                   </div>
                 </>
               )}
@@ -486,6 +557,12 @@ const AdminAIChatbotTab: React.FC<AdminAIChatbotTabProps> = ({ onAssignUnits }) 
             />
           </div>
         </div>
+
+        <VoiceInput 
+          disabled={isLoading}
+          onTextCapture={(text) => setInput(prev => (prev + ' ' + text).trim())} 
+        />
+
         <button  
           onClick={handleSend}
           disabled={isLoading}

@@ -191,5 +191,63 @@ router.post('/bulk-update-price', async (req, res) => {
     res.status(500).json({ message: "An error occurred during bulk update." });
   }
 });
+// 7. Admin AI Chat History
+const AdminChat = require('../models/AdminChat');
+
+router.get('/chats', async (req, res) => {
+  try {
+    const chats = await AdminChat.find().sort({ updatedAt: -1 });
+    res.json(chats);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch chats' });
+  }
+});
+
+router.post('/chats', async (req, res) => {
+  try {
+    const { id, title, messages, isPinned } = req.body;
+    let chat;
+    // We can use the client-side generated ID as the Mongoose ID if it's valid,
+    // or just let Mongoose generate one. The frontend sends string ID like "1722424...".
+    // We should allow finding by a generic ID or just replacing it.
+    // For simplicity, we'll let Mongoose handle _id, and we store it as _id.
+    // Wait, frontend sends `id` (string). We can just use findByIdAndUpdate if `id` is a Mongo ID.
+    // Let's use `_id` if provided, else create new.
+    
+    // Actually, since frontend generates timestamp IDs, we should update the schema to have a `client_id` or just adapt.
+    // Let's find one by _id if it's a valid 24-char hex, otherwise we create a new one.
+    if (id && id.length === 24) {
+      chat = await AdminChat.findByIdAndUpdate(id, { title, messages, isPinned }, { new: true });
+    }
+    
+    if (!chat) {
+      chat = await AdminChat.create({ title, messages, isPinned });
+    }
+    
+    res.json(chat);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to save chat' });
+  }
+});
+
+router.put('/chats/:id', async (req, res) => {
+  try {
+    const { title, isPinned } = req.body;
+    const chat = await AdminChat.findByIdAndUpdate(req.params.id, { title, isPinned }, { new: true });
+    res.json(chat);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update chat' });
+  }
+});
+
+router.delete('/chats/:id', async (req, res) => {
+  try {
+    await AdminChat.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Deleted' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete chat' });
+  }
+});
 
 module.exports = router;

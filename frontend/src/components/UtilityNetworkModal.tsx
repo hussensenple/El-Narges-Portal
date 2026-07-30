@@ -515,9 +515,9 @@ const UtilityNetworkModal: React.FC<UtilityNetworkModalProps> = ({ complaintCoor
       <div style={{ position: 'absolute', bottom: '40px', left: '50%', transform: 'translateX(-50%)', width: '800px', maxWidth: '90vw', display: 'flex', flexDirection: 'column', gap: '10px', zIndex: 10 }}>
         
         {/* Toolbar */}
-        <div style={{ display: 'flex', gap: '15px', padding: '15px 20px', backgroundColor: 'rgba(22, 27, 34, 0.9)', backdropFilter: 'blur(10px)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+        <div style={{ display: 'flex', gap: '15px', padding: '15px 20px', backgroundColor: 'var(--bg-secondary)', backdropFilter: 'blur(10px)', borderRadius: '12px', border: '1px solid var(--border-color)', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
           <div style={{ flex: 1 }}>
-            <h4 style={{ margin: '0 0 5px 0', color: 'var(--text-muted)' }}>Instructions:</h4>
+            <h4 style={{ margin: '0 0 5px 0', color: 'var(--text-primary)' }}>Instructions:</h4>
             <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)' }}>
               Click on the map near a pipe to snap to the breakage location. Then run the trace to find isolating valves.
             </p>
@@ -585,7 +585,7 @@ const UtilityNetworkModal: React.FC<UtilityNetworkModalProps> = ({ complaintCoor
 
         {/* Results Bar */}
         {traceResults && (
-            <div style={{ display: 'flex', gap: '20px', padding: '15px 20px', backgroundColor: 'rgba(22, 27, 34, 0.9)', backdropFilter: 'blur(10px)', borderRadius: '12px', border: '1px solid var(--border-color)', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: '20px', padding: '15px 20px', backgroundColor: 'var(--bg-secondary)', backdropFilter: 'blur(10px)', borderRadius: '12px', border: '1px solid var(--border-color)', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#00ffff', fontWeight: 'bold' }}>
                 <div style={{ width: '24px', height: '4px', backgroundColor: '#00ffff', borderRadius: '2px' }} />
                 Isolated Pipes: {traceResults.pipes.length}

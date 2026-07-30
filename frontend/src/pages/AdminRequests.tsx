@@ -173,8 +173,8 @@ const AdminPortal = () => {
 
         {/* 🤖 زر الشات بوت على شمال Analytics */}
         <button 
-          onClick={() => setActiveTab('chatbot')}
-          style={{ backgroundColor: activeTab === 'chatbot' ? 'var(--accent-green-bg)' : 'transparent', color: '#3fb950', border: '1px solid #3fb950', padding: '10px 20px', fontSize: '13px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s', display: 'flex', alignItems: 'center', textAlign: 'center', lineHeight: '1.2' }}
+          onClick={() => setActiveTab('chatbot')} 
+          style={{ backgroundColor: activeTab === 'chatbot' ? '#3fb950' : 'transparent', color: activeTab === 'chatbot' ? '#fff' : '#3fb950', border: activeTab === 'chatbot' ? '1px solid #3fb950' : '1px solid #3fb950', padding: '10px 20px', fontSize: '13px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s', display: 'flex', alignItems: 'center', textAlign: 'center', lineHeight: '1.2' }}
         >
           🤖 AI<br/>Assistant
         </button>

@@ -11,7 +11,7 @@ const register = async (req, res) => {
     // التأكد إن مفيش حد مسجل بنفس التليفون أو الإيميل قبل كده
     const existingUser = await User.findOne({ $or: [{ phone }, { email }] });
     if (existingUser) {
-      return res.status(400).json({ msg: 'رقم الهاتف أو البريد الإلكتروني مستخدم بالفعل!' });
+      return res.status(400).json({ msg: 'Phone number or email is already registered.' });
     }
 
     // تشفير الباسورد (عشان لو الداتابيز اتسربت محدش يعرف الباسوردات)

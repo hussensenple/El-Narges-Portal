@@ -207,8 +207,8 @@ const ActiveTasksModal = ({ onClose, view, onOpenUNModal }: ActiveTasksModalProp
         symbolLayers: [{
           type: "icon", 
           resource: { primitive: "circle" },
-          material: { color: "var(--accent-red-bg)" },
-          outline: { color: "var(--text-primary)", size: 2 },
+          material: { color: "red" },
+          outline: { color: "white", size: 2 },
           size: "20px"
         }]
       };

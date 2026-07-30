@@ -287,9 +287,6 @@ const CustomerInterface = () => {
           <LogoIcon width={32} height={32} showText={false} />
         </div>
         
-        {/* Theme Toggle Switch */}
-        <ThemeToggle />
-
         <button id="tour-map-toggle" title={mapMode === '3D' ? "Switch to 2D Map" : "Switch to 3D Map"} onClick={() => setMapMode(mapMode === '3D' ? '2D' : '3D')} className="map-icon-btn inactive">
           {mapMode === '3D' ? <Icons.Map2D /> : <Icons.Map3D />}
         </button>
@@ -349,6 +346,7 @@ const CustomerInterface = () => {
             )}
           </div>
         )}
+        <ThemeToggle />
       </div>
 
       {showLoginModal && <AuthModal onClose={() => setShowLoginModal(false)} onSuccess={() => setShowLoginModal(false)} />}

@@ -33,6 +33,8 @@ The complete 4-step booking workflow is fully implemented:
 - **AI Chatbot Spatial Filtering:** The AI now uses `definitionExpression` queries to completely hide non-matching units/buildings from the 3D map instead of just highlighting them.
 - **AI Spatial Guardrails:** Gemini is strictly forbidden from hallucinating unit counts; the frontend handles accurate proximity math and count generation.
 - **Top-Aligned AI Questions:** Bilingual suggested questions are moved to the top of the Chatbot widget.
+- **Admin AI Chat Persistence:** Integrated Mongoose `AdminChat` schema and API to persist and share Admin AI Chatbot conversational history across all admin accounts, automatically migrating legacy localStorage data.
+- **UI/UX Polish:** Added a simple SVG-based Show/Hide password toggle in AuthModal, fixed ArcGIS 3D point markers (falling back to white due to CSS variables limitation) to use solid color arrays, and updated Admin UI tabs/floating panels to dynamically match Light/Dark mode themes.
 
 ---
 

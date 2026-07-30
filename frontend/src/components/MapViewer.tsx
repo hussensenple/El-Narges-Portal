@@ -474,9 +474,9 @@ const MapViewer = ({ onViewReady, isLayersOpen, isWeatherOpen, setIsWeatherOpen,
                             symbolLayers: [{
                               type: "icon",
                               resource: { primitive: "circle" },
-                              material: { color: "var(--accent-red-bg)" },
+                              material: { color: "red" },
                               size: "20px",
-                              outline: { color: "var(--text-primary)", size: 2 }
+                              outline: { color: "white", size: 2 }
                             }]
                           }
                         });

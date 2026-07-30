@@ -11,6 +11,7 @@ import esriId from "@arcgis/core/identity/IdentityManager";
 import esriConfig from "@arcgis/core/config";
 import axios from 'axios';
 import AuthModal from './AuthModal'; 
+import VoiceInput from './VoiceInput';
 
 interface AIAdvisorProps {
   view: SceneView | null;
@@ -725,7 +726,13 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
                 style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', direction: 'ltr' }}
                 placeholder="Search for an apartment, ask about prices..." 
               />
-              <button onClick={() => handleSend()} style={{ padding: '10px 16px', backgroundColor: 'var(--accent-green-bg)', color: 'var(--text-primary)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>Send</button>
+              <VoiceInput 
+                disabled={isLoading}
+                onTextCapture={(text) => setInput(prev => (prev + ' ' + text).trim())} 
+              />
+              <button onClick={() => handleSend()} disabled={isLoading} style={{ padding: '10px 16px', backgroundColor: 'var(--accent-green-bg)', color: '#ffffff', border: 'none', borderRadius: '6px', cursor: isLoading ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}>
+                {isLoading ? '...' : 'Send'}
+              </button>
             </div>
           </div>
         )}

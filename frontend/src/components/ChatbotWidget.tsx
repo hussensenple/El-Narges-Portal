@@ -2,6 +2,7 @@ import { useState, useContext, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
+import VoiceInput from './VoiceInput';
 
 const engineerQuestions = [
   "What are the specs for PRV replacement? (ما هي مواصفات تغيير مخفض الضغط PRV؟)",
@@ -169,7 +170,11 @@ const ChatbotWidget = () => {
               disabled={isLoading}
               style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', opacity: isLoading ? 0.6 : 1 }}
             />
-            <button type="submit" disabled={isLoading} style={{ marginLeft: '10px', padding: '10px 15px', backgroundColor: 'var(--accent-blue-bg)', color: 'var(--text-primary)', border: 'none', borderRadius: '8px', cursor: isLoading ? 'not-allowed' : 'pointer', fontWeight: 'bold', opacity: isLoading ? 0.6 : 1 }}>
+            <VoiceInput 
+              disabled={isLoading}
+              onTextCapture={(text) => setInput(prev => (prev + ' ' + text).trim())} 
+            />
+            <button type="submit" disabled={isLoading} style={{ marginLeft: '10px', padding: '10px 15px', backgroundColor: 'var(--accent-blue-bg)', color: '#ffffff', border: 'none', borderRadius: '8px', cursor: isLoading ? 'not-allowed' : 'pointer', fontWeight: 'bold', opacity: isLoading ? 0.6 : 1 }}>
               {isLoading ? '...' : 'Send'}
             </button>
           </form>

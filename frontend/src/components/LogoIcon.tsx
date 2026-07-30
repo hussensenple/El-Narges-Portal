@@ -1,4 +1,4 @@
-import React from 'react';
+
 
 const LogoIcon = ({ width = 40, height = 40, className = '', style = {}, showText = true }) => {
   // If showText is true, the SVG is wider to accommodate the text.

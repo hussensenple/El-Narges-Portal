@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext, useRef } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
@@ -52,7 +52,7 @@ interface EngineerPortalModalProps {
 const EngineerPortalModal = ({ onClose, view, onOpenUNModal }: EngineerPortalModalProps) => {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [technicians, setTechnicians] = useState<Technician[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+
   const [activeComplaint, setActiveComplaint] = useState<Complaint | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<{ [key: string]: string }>({});
   const [editingProblemName, setEditingProblemName] = useState<{ [key: string]: string }>({});
@@ -80,7 +80,7 @@ const EngineerPortalModal = ({ onClose, view, onOpenUNModal }: EngineerPortalMod
 
   const fetchComplaints = async () => {
     try {
-      setIsLoading(true);
+
       const token = localStorage.getItem('token');
       const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/complaints/engineer`, {
         headers: { 'x-auth-token': token }
@@ -112,7 +112,7 @@ const EngineerPortalModal = ({ onClose, view, onOpenUNModal }: EngineerPortalMod
     } catch (error) {
       console.error("Error fetching engineer complaints:", error);
     } finally {
-      setIsLoading(false);
+
     }
   };
 
@@ -515,7 +515,8 @@ const EngineerPortalModal = ({ onClose, view, onOpenUNModal }: EngineerPortalMod
           <ComplaintChatModal 
             complaint={activeComplaint} 
             onClose={() => setActiveComplaint(null)} 
-            onUpdate={() => fetchComplaints()}
+            onRefresh={() => fetchComplaints()}
+            currentUser={{ id: auth?.user?.id || '', name: auth?.user?.name || '', role: auth?.user?.role || '' }}
           />
         )}
 

@@ -35,6 +35,7 @@ The complete 4-step booking workflow is fully implemented:
 - **Top-Aligned AI Questions:** Bilingual suggested questions are moved to the top of the Chatbot widget.
 - **Admin AI Chat Persistence:** Integrated Mongoose `AdminChat` schema and API to persist and share Admin AI Chatbot conversational history across all admin accounts, automatically migrating legacy localStorage data.
 - **UI/UX Polish:** Added a simple SVG-based Show/Hide password toggle in AuthModal, fixed ArcGIS 3D point markers (falling back to white due to CSS variables limitation) to use solid color arrays, and updated Admin UI tabs/floating panels to dynamically match Light/Dark mode themes.
+- **TypeScript & Linting Fixes:** Resolved interface mismatches, fixed `User` type definitions (`id` vs `_id`), and removed unused variables (`useRef`, `isLoading`) across modal components (`ActiveTasksModal`, `EngineerPortalModal`).
 
 ---
 

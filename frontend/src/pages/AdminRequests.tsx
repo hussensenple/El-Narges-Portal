@@ -7,6 +7,7 @@ import AdminDashboardTab from '../components/admin/AdminDashboardTab';
 import AdminAIChatbotTab from '../components/admin/AdminAIChatbotTab';
 import PropertyAssignCatalog from '../components/admin/modals/PropertyAssignCatalog';
 import LogoIcon from '../components/LogoIcon';
+import ThemeToggle from '../components/ThemeToggle';
 
 import RolesWidget from '../components/admin/RolesWidget';
 import RejectionAnalysisTab from '../components/admin/RejectionAnalysisTab';
@@ -164,19 +165,8 @@ const AdminPortal = () => {
       <div style={{ display: 'flex', alignItems: 'center', backgroundColor: 'var(--bg-secondary)', padding: '10px 20px', borderBottom: '1px solid var(--border-color)', gap: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
           <LogoIcon width={36} height={36} />
-          {/* Theme Toggle Button */}
-          <button 
-            title="Toggle Theme" 
-            onClick={() => {
-              const currentTheme = document.documentElement.getAttribute('data-theme');
-              const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-              document.documentElement.setAttribute('data-theme', newTheme);
-              localStorage.setItem('theme', newTheme);
-            }} 
-            style={{ fontSize: '18px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          >
-            🌓
-          </button>
+          {/* Theme Toggle Switch */}
+          <ThemeToggle />
         </div>
         
         <div style={{ flex: 1 }}></div>

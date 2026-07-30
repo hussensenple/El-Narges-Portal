@@ -24,6 +24,7 @@ import UtilityNetworkModal from './components/UtilityNetworkModal';
 import ChatbotWidget from './components/ChatbotWidget';
 import UNDashboardModal from './components/UNDashboardModal';
 import LogoIcon from './components/LogoIcon';
+import ThemeToggle from './components/ThemeToggle';
 
 
 const Icons = {
@@ -286,20 +287,8 @@ const CustomerInterface = () => {
           <LogoIcon width={32} height={32} showText={false} />
         </div>
         
-        {/* Theme Toggle Button */}
-        <button 
-          title="Toggle Theme" 
-          onClick={() => {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-          }} 
-          className="map-icon-btn inactive"
-          style={{ fontSize: '18px' }}
-        >
-          🌓
-        </button>
+        {/* Theme Toggle Switch */}
+        <ThemeToggle />
 
         <button id="tour-map-toggle" title={mapMode === '3D' ? "Switch to 2D Map" : "Switch to 3D Map"} onClick={() => setMapMode(mapMode === '3D' ? '2D' : '3D')} className="map-icon-btn inactive">
           {mapMode === '3D' ? <Icons.Map2D /> : <Icons.Map3D />}

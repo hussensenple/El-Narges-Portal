@@ -13,6 +13,14 @@ import axios from 'axios';
 import AuthModal from './AuthModal'; 
 import VoiceInput from './VoiceInput';
 
+
+interface ChatSession {
+  _id: string;
+  title: string;
+  messages: {sender: string, text: string, action?: string, actionUnitId?: number}[];
+  updatedAt: string;
+  isPinned?: boolean;
+}
 interface AIAdvisorProps {
   view: SceneView | null;
 }
@@ -33,6 +41,174 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
 
   const userToken = localStorage.getItem('token'); 
   const isUserLoggedIn = !!userToken;
+
+  
+  const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
+  const [currentChatId, setCurrentChatId] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [editChatId, setEditChatId] = useState<string | null>(null);
+  const [editTitleText, setEditTitleText] = useState('');
+
+  const fetchChats = async () => {
+    try {
+      const res = await axios.get(import.meta.env.VITE_API_URL + '/api/ai/chats', {
+        headers: { 'x-auth-token': localStorage.getItem('token') }
+      });
+      if (res.data.length > 0) {
+        setChatSessions(res.data);
+        setCurrentChatId(res.data[0]._id);
+        setMessages(res.data[0].messages);
+      } else {
+        startNewChat();
+      }
+    } catch (err) {
+      console.error("Error fetching chats", err);
+    }
+  };
+
+  const startNewChat = async () => {
+    if (!isUserLoggedIn) return;
+    try {
+      const newSession = {
+        title: 'New Chat',
+        messages: [{ sender: 'ai', text: 'Welcome to GeoTwin! How can I assist you in exploring real estate and spatial data?' }]
+      };
+      const res = await axios.post(import.meta.env.VITE_API_URL + '/api/ai/chats', newSession, {
+        headers: { 'x-auth-token': localStorage.getItem('token') }
+      });
+      setChatSessions(prev => [res.data, ...prev]);
+      setCurrentChatId(res.data._id);
+      setMessages(res.data.messages);
+      if (isFilterActive) handleResetFilter();
+      if (window.innerWidth < 768) setIsSidebarOpen(false);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    if (isUserLoggedIn && isOpen) {
+      fetchChats();
+    }
+  }, [isUserLoggedIn, isOpen]);
+
+  const syncChat = async (chatId: string | null, updatedMessages: any[]) => {
+    if (!isUserLoggedIn || !chatId) return;
+    try {
+      let newTitle = undefined;
+      const currentSession = chatSessions.find(c => c._id === chatId);
+      if (currentSession && currentSession.title === 'New Chat') {
+        const firstUserMsg = updatedMessages.find((m:any) => m.sender === 'user');
+        if (firstUserMsg) {
+           axios.post(import.meta.env.VITE_API_URL + '/api/ai/generate-title', { firstMessage: firstUserMsg.text })
+             .then(res => {
+                axios.put(import.meta.env.VITE_API_URL + '/api/ai/chats/' + chatId, { title: res.data.title }, { headers: { 'x-auth-token': localStorage.getItem('token') }})
+                .then(() => fetchChats());
+             });
+        }
+      }
+      await axios.put(import.meta.env.VITE_API_URL + '/api/ai/chats/' + chatId, {
+        messages: updatedMessages
+      }, {
+        headers: { 'x-auth-token': localStorage.getItem('token') }
+      });
+      setChatSessions(prev => prev.map(c => c._id === chatId ? { ...c, messages: updatedMessages } : c));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const deleteChat = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm('Are you sure you want to delete this chat?')) return;
+    try {
+      await axios.delete(import.meta.env.VITE_API_URL + '/api/ai/chats/' + id, { headers: { 'x-auth-token': localStorage.getItem('token') }});
+      if (currentChatId === id) {
+        startNewChat();
+      } else {
+        fetchChats();
+      }
+    } catch (err) { console.error(err); }
+  };
+
+  const pinChat = async (id: string, currentPin: boolean, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await axios.put(import.meta.env.VITE_API_URL + '/api/ai/chats/' + id, { isPinned: !currentPin }, { headers: { 'x-auth-token': localStorage.getItem('token') }});
+      fetchChats();
+    } catch (err) { console.error(err); }
+  };
+
+  const saveTitle = async (id: string) => {
+    try {
+      await axios.put(import.meta.env.VITE_API_URL + '/api/ai/chats/' + id, { title: editTitleText }, { headers: { 'x-auth-token': localStorage.getItem('token') }});
+      setEditChatId(null);
+      fetchChats();
+    } catch (err) { console.error(err); }
+  };
+
+  const renderChatSidebarItem = (chat: ChatSession) => {
+    const isEditing = editChatId === chat._id;
+    return (
+      <div 
+        key={chat._id}
+        onClick={() => {
+          if (!isEditing) {
+            setCurrentChatId(chat._id);
+            setMessages(chat.messages);
+            if (isFilterActive) handleResetFilter();
+            if (window.innerWidth < 768) setIsSidebarOpen(false);
+          }
+        }}
+        style={{
+          padding: '10px 15px',
+          cursor: 'pointer',
+          backgroundColor: currentChatId === chat._id ? 'var(--accent-blue-bg)' : 'transparent',
+          borderLeft: currentChatId === chat._id ? '3px solid var(--accent-blue)' : '3px solid transparent',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          transition: 'background 0.2s'
+        }}
+        onMouseEnter={e => e.currentTarget.style.backgroundColor = currentChatId === chat._id ? 'var(--accent-blue-bg)' : 'var(--bg-tertiary)'}
+        onMouseLeave={e => e.currentTarget.style.backgroundColor = currentChatId === chat._id ? 'var(--accent-blue-bg)' : 'transparent'}
+      >
+        {isEditing ? (
+          <input 
+            autoFocus
+            value={editTitleText}
+            onChange={(e) => setEditTitleText(e.target.value)}
+            onBlur={() => saveTitle(chat._id)}
+            onKeyDown={(e) => e.key === 'Enter' && saveTitle(chat._id)}
+            onClick={(e) => e.stopPropagation()}
+            style={{ flex: 1, padding: '4px', background: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--accent-blue)', borderRadius: '4px', fontSize: '13px' }}
+          />
+        ) : (
+          <span style={{ color: currentChatId === chat._id ? 'var(--accent-blue)' : 'var(--text-primary)', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '140px' }}>
+            {chat.title}
+          </span>
+        )}
+        
+        {!isEditing && (
+          <div style={{ display: 'flex', gap: '5px' }}>
+             <button onClick={(e) => {
+               e.stopPropagation();
+               setEditChatId(chat._id);
+               setEditTitleText(chat.title);
+             }} title="Rename" style={{ background:'none', border:'none', color:'var(--text-muted)', cursor:'pointer', padding: '2px', display: 'flex' }}>
+               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+             </button>
+             <button onClick={(e) => pinChat(chat._id, !!chat.isPinned, e)} title={chat.isPinned ? "Unpin" : "Pin"} style={{ background:'none', border:'none', color: chat.isPinned ? 'var(--accent-blue)' : 'var(--text-muted)', cursor:'pointer', padding: '2px', display: 'flex' }}>
+               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+             </button>
+             <button onClick={(e) => deleteChat(chat._id, e)} title="Delete" style={{ background:'none', border:'none', color:'var(--accent-red)', cursor:'pointer', padding: '2px', display: 'flex' }}>
+               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+             </button>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const TARGET_LAYERS = ["Villas_Global", "Units"];
 
@@ -81,7 +257,7 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
       }
 
       if (!targetGlobalId || !targetSourceLayer) {
-        setMessages(prev => [...prev, { sender: 'ai', text: '❌ Sorry, unit details could not be found on the map.' }]);
+        setMessages(prev => { const n = [...prev, { sender: 'ai', text: '❌ Sorry, unit details could not be found on the map.' }]; syncChat(currentChatId, n); return n; });
         return;
       }
 
@@ -99,7 +275,7 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
 
     } catch (error) {
       console.error("Booking error:", error);
-      setMessages(prev => [...prev, { sender: 'ai', text: '❌ Sorry, an error occurred while trying to book.' }]);
+      setMessages(prev => { const n = [...prev, { sender: 'ai', text: '❌ Sorry, an error occurred while trying to book.' }]; syncChat(currentChatId, n); return n; });
     }
   };
 
@@ -128,7 +304,7 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
       handleResetFilter();
     }
 
-    setMessages(prev => [...prev, { sender: 'user', text: userMsg }]);
+    setMessages(prev => { const n = [...prev, { sender: 'user', text: userMsg }]; syncChat(currentChatId, n); return n; });
     if (!overrideInput) setInput('');
     setIsLoading(true);
 
@@ -322,8 +498,16 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
               }
             }
           }
+          if (finalReplyText.includes('{COUNT}')) {
+            finalReplyText = finalReplyText.replace(/{COUNT}/g, String(filteredItems.length));
+          } else if (!nearTo) {
+            // Arabic detection for correct phrasing
+            const isArabic = /[\u0600-\u06FF]/.test(finalReplyText);
+            const countMsg = isArabic ? `\n\n📍 تم العثور على ${filteredItems.length} وحدة مطابقة لبحثك.` : `\n\n📍 Found ${filteredItems.length} matching properties.`;
+            finalReplyText += countMsg;
+          }
           
-          setMessages(prev => [...prev, { sender: 'ai', text: finalReplyText, action: action, actionUnitId: actionUnitId }]); 
+          setMessages(prev => { const n = [...prev, { sender: 'ai', text: finalReplyText, action: action, actionUnitId: actionUnitId }]; syncChat(currentChatId, n); return n; }); 
           
           const villaIds = filteredItems.filter(u => u.layer === 'Villas_Global').map(u => u.originalId);
           

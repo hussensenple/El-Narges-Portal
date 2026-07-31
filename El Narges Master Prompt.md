@@ -364,6 +364,8 @@ All core features from the original roadmap are **fully implemented and running*
 | Admin AI Chatbot for Roles Management | ✅ Done |
 | One-Click System Launchers (.bat scripts) | ✅ Done |
 
+| User/Owner AI Chatbot History Persistence | ✅ Done |
+
 Both dev servers are currently running:
 - **Backend:** `http://localhost:5000` (Express + Socket.io + MongoDB)
 - **Frontend:** Vite dev server (React + ArcGIS SDK)

@@ -425,4 +425,55 @@ const generateChatTitle = async (req, res) => {
   }
 };
 
-module.exports = { askAI, askEngineerAI, askAdminAI, generateChatTitle };
+const UserChat = require('../models/UserChat');
+
+const getUserChats = async (req, res) => {
+  try {
+    const chats = await UserChat.find({ userId: req.user.id }).sort({ updatedAt: -1 });
+    res.json(chats);
+  } catch (error) {
+    res.status(500).json({ error: "Server error fetching user chats." });
+  }
+};
+
+const createUserChat = async (req, res) => {
+  try {
+    const { title, messages, isPinned } = req.body;
+    const chat = await UserChat.create({
+      userId: req.user.id,
+      title: title || 'New Chat',
+      messages: messages || [],
+      isPinned: isPinned || false
+    });
+    res.status(201).json(chat);
+  } catch (error) {
+    res.status(500).json({ error: "Error creating user chat." });
+  }
+};
+
+const updateUserChat = async (req, res) => {
+  try {
+    const { title, messages, isPinned } = req.body;
+    const chat = await UserChat.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user.id },
+      { title, messages, isPinned },
+      { new: true }
+    );
+    if (!chat) return res.status(404).json({ error: "Chat not found" });
+    res.json(chat);
+  } catch (error) {
+    res.status(500).json({ error: "Error updating user chat." });
+  }
+};
+
+const deleteUserChat = async (req, res) => {
+  try {
+    const chat = await UserChat.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
+    if (!chat) return res.status(404).json({ error: "Chat not found" });
+    res.json({ message: "Chat deleted" });
+  } catch (error) {
+    res.status(500).json({ error: "Error deleting user chat." });
+  }
+};
+
+module.exports = { askAI, askEngineerAI, askAdminAI, generateChatTitle, getUserChats, createUserChat, updateUserChat, deleteUserChat };

@@ -835,10 +835,67 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
           <div style={{ width: '350px', height: '450px', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', display: 'flex', flexDirection: 'column', color: 'var(--text-secondary)', overflow: 'hidden', marginBottom: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
             
             <div style={{ padding: '12px 16px', backgroundColor: 'var(--bg-tertiary)', fontWeight: 'bold', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>🤖 GeoTwin AI Advisor</span> 
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {isUserLoggedIn && (
+                  <button 
+                    onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                    style={{ background: 'none', border: 'none', color: 'var(--text-primary)', fontSize: '20px', cursor: 'pointer', padding: '0 5px' }}
+                  >
+                    ☰
+                  </button>
+                )}
+                🤖 GeoTwin AI Advisor
+              </span> 
               <button onClick={() => setIsOpen(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '20px', cursor: 'pointer' }}>✖</button>
             </div>
             
+            {/* Main Content Wrapper */}
+            <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
+              
+              {/* Sidebar (Slide-out) */}
+              {isUserLoggedIn && (
+                <div style={{
+                  position: 'absolute',
+                  left: isSidebarOpen ? 0 : '-250px',
+                  top: 0,
+                  bottom: 0,
+                  width: '250px',
+                  backgroundColor: 'var(--bg-secondary)',
+                  borderRight: '1px solid var(--border-color)',
+                  transition: 'left 0.3s ease',
+                  zIndex: 10,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  boxShadow: isSidebarOpen ? '4px 0 15px rgba(0,0,0,0.2)' : 'none'
+                }}>
+                  <div style={{ padding: '15px' }}>
+                    <button onClick={startNewChat} style={{ width: '100%', padding: '10px', backgroundColor: 'var(--accent-blue)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                      New Chat
+                    </button>
+                  </div>
+                  
+                  <div style={{ flex: 1, overflowY: 'auto' }}>
+                    {chatSessions.filter(c => c.isPinned).length > 0 && (
+                      <div style={{ marginBottom: '15px' }}>
+                        <div style={{ padding: '0 15px 5px', fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)' }}>PINNED CHATS</div>
+                        {chatSessions.filter(c => c.isPinned).map(chat => renderChatSidebarItem(chat))}
+                      </div>
+                    )}
+                    
+                    <div>
+                      <div style={{ padding: '0 15px 5px', fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)' }}>RECENT CHATS</div>
+                      {chatSessions.filter(c => !c.isPinned).map(chat => renderChatSidebarItem(chat))}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Chat Column */}
+              <div 
+                style={{ flex: 1, display: 'flex', flexDirection: 'column', opacity: isSidebarOpen ? 0.3 : 1, transition: 'opacity 0.3s', pointerEvents: isSidebarOpen ? 'none' : 'auto' }}
+                onClick={() => isSidebarOpen && setIsSidebarOpen(false)}
+              >
             {isFilterActive && (
               <div style={{ padding: '8px', backgroundColor: '#1f2428', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'center' }}>
                 <button 
@@ -901,8 +958,10 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
               ))}
               {isLoading && <div style={{ fontSize: '13px', color: 'var(--text-muted)', alignSelf: 'flex-start' }}>Thinking...</div>}
             </div>
+              </div>
+            </div>
             
-            <div style={{ padding: '12px', borderTop: '1px solid var(--border-color)', display: 'flex', gap: '8px', backgroundColor: 'var(--bg-primary)' }}>
+            <div style={{ padding: '12px', borderTop: '1px solid var(--border-color)', display: 'flex', gap: '8px', backgroundColor: 'var(--bg-primary)', zIndex: 11 }}>
               <input 
                 value={input} 
                 onChange={e => setInput(e.target.value)}

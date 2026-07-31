@@ -166,7 +166,7 @@ const AdminPortal = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
           <LogoIcon width={36} height={36} />
           {/* Theme Toggle Switch */}
-          <ThemeToggle />
+          <ThemeToggle storageKey="admin_theme" />
         </div>
         
         <div style={{ flex: 1 }}></div>

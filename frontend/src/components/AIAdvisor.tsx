@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import SceneView from '@arcgis/core/views/SceneView';
 import FeatureLayer from '@arcgis/core/layers/FeatureLayer';
 import Graphic from '@arcgis/core/Graphic';
@@ -95,7 +95,6 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
   const syncChat = async (chatId: string | null, updatedMessages: any[]) => {
     if (!isUserLoggedIn || !chatId) return;
     try {
-      let newTitle = undefined;
       const currentSession = chatSessions.find(c => c._id === chatId);
       if (currentSession && currentSession.title === 'New Chat') {
         const firstUserMsg = updatedMessages.find((m:any) => m.sender === 'user');
@@ -184,7 +183,7 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
             style={{ flex: 1, padding: '4px', background: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--accent-blue)', borderRadius: '4px', fontSize: '13px' }}
           />
         ) : (
-          <span style={{ color: currentChatId === chat._id ? 'var(--accent-blue)' : 'var(--text-primary)', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '140px' }}>
+          <span style={{ color: currentChatId === chat._id ? '#ffffff' : 'var(--text-primary)', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '140px', fontWeight: currentChatId === chat._id ? 'bold' : 'normal' }}>
             {chat.title}
           </span>
         )}
@@ -195,13 +194,13 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
                e.stopPropagation();
                setEditChatId(chat._id);
                setEditTitleText(chat.title);
-             }} title="Rename" style={{ background:'none', border:'none', color:'var(--text-muted)', cursor:'pointer', padding: '2px', display: 'flex' }}>
+             }} title="Rename" style={{ background:'none', border:'none', color: currentChatId === chat._id ? '#ffffff' : 'var(--text-muted)', cursor:'pointer', padding: '2px', display: 'flex', opacity: currentChatId === chat._id ? 0.9 : 1 }}>
                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
              </button>
-             <button onClick={(e) => pinChat(chat._id, !!chat.isPinned, e)} title={chat.isPinned ? "Unpin" : "Pin"} style={{ background:'none', border:'none', color: chat.isPinned ? 'var(--accent-blue)' : 'var(--text-muted)', cursor:'pointer', padding: '2px', display: 'flex' }}>
+             <button onClick={(e) => pinChat(chat._id, !!chat.isPinned, e)} title={chat.isPinned ? "Unpin" : "Pin"} style={{ background:'none', border:'none', color: chat.isPinned ? (currentChatId === chat._id ? '#ffffff' : 'var(--accent-blue)') : (currentChatId === chat._id ? 'rgba(255,255,255,0.7)' : 'var(--text-muted)'), cursor:'pointer', padding: '2px', display: 'flex' }}>
                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
              </button>
-             <button onClick={(e) => deleteChat(chat._id, e)} title="Delete" style={{ background:'none', border:'none', color:'var(--accent-red)', cursor:'pointer', padding: '2px', display: 'flex' }}>
+             <button onClick={(e) => deleteChat(chat._id, e)} title="Delete" style={{ background:'none', border:'none', color: currentChatId === chat._id ? '#ffcccc' : 'var(--accent-red)', cursor:'pointer', padding: '2px', display: 'flex' }}>
                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
              </button>
           </div>
@@ -869,7 +868,7 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
                   boxShadow: isSidebarOpen ? '4px 0 15px rgba(0,0,0,0.2)' : 'none'
                 }}>
                   <div style={{ padding: '15px' }}>
-                    <button onClick={startNewChat} style={{ width: '100%', padding: '10px', backgroundColor: 'var(--accent-blue)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
+                    <button onClick={startNewChat} style={{ width: '100%', padding: '10px', backgroundColor: 'var(--accent-blue-bg)', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                       New Chat
                     </button>
@@ -938,7 +937,21 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
                 </div>
               </div>
               {messages.map((m, i) => (
-                <div key={i} style={{ alignSelf: m.sender === 'user' ? 'flex-end' : 'flex-start', backgroundColor: m.sender === 'user' ? 'var(--accent-blue-bg)' : 'var(--border-color)', padding: '10px 14px', borderRadius: '12px', borderBottomRightRadius: m.sender === 'user' ? '2px' : '12px', borderBottomLeftRadius: m.sender === 'ai' ? '2px' : '12px', maxWidth: '85%', fontSize: '14px', lineHeight: '1.5', direction: 'ltr', whiteSpace: 'pre-wrap' }}>
+                <div key={i} style={{ 
+                  alignSelf: m.sender === 'user' ? 'flex-end' : 'flex-start', 
+                  backgroundColor: m.sender === 'user' ? 'var(--accent-blue-bg)' : 'var(--bg-tertiary)', 
+                  color: m.sender === 'user' ? '#ffffff' : 'var(--text-primary)',
+                  padding: '10px 14px', 
+                  borderRadius: '12px', 
+                  borderBottomRightRadius: m.sender === 'user' ? '2px' : '12px', 
+                  borderBottomLeftRadius: m.sender === 'ai' ? '2px' : '12px', 
+                  maxWidth: '85%', 
+                  fontSize: '14px', 
+                  lineHeight: '1.5', 
+                  direction: 'ltr', 
+                  whiteSpace: 'pre-wrap',
+                  border: m.sender === 'ai' ? '1px solid var(--border-color)' : 'none'
+                }}>
                   {m.text}
                   
                   {m.action === 'BOOK_UNIT' && m.actionUnitId && (
@@ -946,7 +959,7 @@ const AIAdvisor = ({ view }: AIAdvisorProps) => {
                       onClick={() => handleConfirmBooking(m.actionUnitId as number)}
                       style={{ 
                         display: 'block', marginTop: '10px', backgroundColor: 'var(--accent-green-bg)', 
-                        color: 'var(--text-primary)', border: 'none', padding: '8px 12px', 
+                        color: '#ffffff', border: 'none', padding: '8px 12px', 
                         borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', width: '100%',
                         transition: 'background-color 0.2s'
                       }}

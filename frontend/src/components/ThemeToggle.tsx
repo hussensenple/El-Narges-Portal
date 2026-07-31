@@ -1,27 +1,38 @@
 import React, { useState, useEffect } from 'react';
 
-const ThemeToggle: React.FC = () => {
+interface ThemeToggleProps {
+  storageKey?: string;
+}
+
+const ThemeToggle: React.FC<ThemeToggleProps> = ({ storageKey = 'theme' }) => {
   const [isDark, setIsDark] = useState(true);
 
   useEffect(() => {
-    const currentTheme = document.documentElement.getAttribute('data-theme') || localStorage.getItem('theme') || 'dark';
+    const currentTheme = document.documentElement.getAttribute('data-theme') || localStorage.getItem(storageKey) || 'dark';
     setIsDark(currentTheme === 'dark');
     
     // Listen for theme changes from other tabs/instances
-    const handleStorage = () => {
-      const updatedTheme = localStorage.getItem('theme') || 'dark';
-      setIsDark(updatedTheme === 'dark');
-      document.documentElement.setAttribute('data-theme', updatedTheme);
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === storageKey) {
+        const updatedTheme = e.newValue || 'dark';
+        setIsDark(updatedTheme === 'dark');
+        document.documentElement.setAttribute('data-theme', updatedTheme);
+      }
     };
     
     window.addEventListener('storage', handleStorage);
+    // Initial set on mount
+    const savedTheme = localStorage.getItem(storageKey) || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    setIsDark(savedTheme === 'dark');
+
     return () => window.removeEventListener('storage', handleStorage);
-  }, []);
+  }, [storageKey]);
 
   const toggleTheme = () => {
     const newTheme = isDark ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('theme', newTheme);
+    localStorage.setItem(storageKey, newTheme);
     setIsDark(!isDark);
   };
 

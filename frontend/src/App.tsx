@@ -502,12 +502,6 @@ const CustomerInterface = () => {
 
 
 function App() {
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-      document.documentElement.setAttribute('data-theme', savedTheme);
-    }
-  }, []);
 
   return (
     <Router>

@@ -1,7 +1,13 @@
-import { useState, useContext, useEffect } from 'react';
+import { useState, useContext, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import LogoIcon from './LogoIcon';
+import Map from '@arcgis/core/Map';
+import MapView from '@arcgis/core/views/MapView';
+import Graphic from '@arcgis/core/Graphic';
+import Point from '@arcgis/core/geometry/Point';
+import Search from '@arcgis/core/widgets/Search';
+import Locate from '@arcgis/core/widgets/Locate';
 
 interface AuthModalProps {
   isOpen?: boolean;
@@ -19,40 +25,83 @@ const AuthModal = ({ onClose, onSuccess }: AuthModalProps) => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   
-  const [countryStatus, setCountryStatus] = useState('Egypt');
-  const [governorate, setGovernorate] = useState('');
-  const [governoratesList, setGovernoratesList] = useState<string[]>([]);
+  const [lat, setLat] = useState<number | null>(null);
+  const [lon, setLon] = useState<number | null>(null);
+  const [showMap, setShowMap] = useState<boolean>(false);
+  const mapDiv = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const fetchGovernorates = async () => {
-      try {
-        const url = 'https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Heatmap_WFL1/FeatureServer/0/query';
-        const res = await axios.get(url, {
-          params: {
-            where: '1=1',
-            outFields: '*',
-            returnGeometry: false,
-            f: 'json'
-          }
-        });
-        if (res.data && res.data.features && res.data.features.length > 0) {
-          const fields = Object.keys(res.data.features[0].attributes);
-          const nameField = fields.find(f => f.toLowerCase().includes('name') || f.toLowerCase().includes('gov') || f.toLowerCase().includes('ar')) || fields.find(f => typeof res.data.features[0].attributes[f] === 'string');
-          const govs = [...new Set(res.data.features.map((f: any) => nameField ? f.attributes[nameField] : undefined))].filter(Boolean) as string[];
-          setGovernoratesList(govs);
-          if (govs.length > 0) setGovernorate(govs[0]);
-        } else {
-          throw new Error('Secured layer or no data');
+    if (!isLogin && showMap && mapDiv.current) {
+      const map = new Map({
+        basemap: "satellite"
+      });
+
+      const view = new MapView({
+        container: mapDiv.current,
+        map: map,
+        center: [30.8025, 26.8206], // Egypt center
+        zoom: 4,
+        ui: {
+          components: ["zoom"] // minimal UI
         }
-      } catch (err) {
-        console.warn('Falling back to static governorates list due to AGOL security/error');
-        const fallbackGovs = ['Cairo', 'Giza', 'Alexandria', 'Dakahlia', 'Red Sea', 'Beheira', 'Fayoum', 'Gharbia', 'Ismailia', 'Menofia', 'Minya', 'Qaliubiya', 'New Valley', 'Suez', 'Aswan', 'Assiut', 'Beni Suef', 'Port Said', 'Damietta', 'Sharkia', 'South Sinai', 'Kafr Al sheikh', 'Matrouh', 'Luxor', 'Qena', 'North Sinai', 'Sohag'];
-        setGovernoratesList(fallbackGovs);
-        setGovernorate(fallbackGovs[0]);
+      });
+
+      const searchWidget = new Search({
+        view: view,
+        popupEnabled: false
+      });
+      view.ui.add(searchWidget, "top-right");
+
+      const locateWidget = new Locate({
+        view: view
+      });
+      view.ui.add(locateWidget, "top-left");
+
+      searchWidget.on("select-result", (event) => {
+        const result = event.result;
+        if (result && result.feature) {
+          const pt = result.feature.geometry as any;
+          setLat(pt.latitude);
+          setLon(pt.longitude);
+          
+          view.graphics.removeAll();
+          const markerSymbol: any = { type: "simple-marker", color: [226, 119, 40], outline: { color: [255, 255, 255], width: 2 } };
+          const pointGraphic = new Graphic({ geometry: pt, symbol: markerSymbol });
+          view.graphics.add(pointGraphic);
+          
+          setTimeout(() => setShowMap(false), 500);
+        }
+      });
+
+      if (lat && lon) {
+        const point = new Point({ longitude: lon, latitude: lat });
+        const markerSymbol: any = { type: "simple-marker", color: [226, 119, 40], outline: { color: [255, 255, 255], width: 2 } };
+        const pointGraphic = new Graphic({ geometry: point, symbol: markerSymbol });
+        view.graphics.add(pointGraphic);
       }
-    };
-    fetchGovernorates();
-  }, []);
+
+      view.on("click", (event) => {
+        const clickedLat = event.mapPoint.latitude;
+        const clickedLon = event.mapPoint.longitude;
+        setLat(clickedLat);
+        setLon(clickedLon);
+
+        view.graphics.removeAll();
+        const point = new Point({ longitude: clickedLon, latitude: clickedLat });
+        const markerSymbol: any = { type: "simple-marker", color: [226, 119, 40], outline: { color: [255, 255, 255], width: 2 } };
+        const pointGraphic = new Graphic({ geometry: point, symbol: markerSymbol });
+        view.graphics.add(pointGraphic);
+
+        setTimeout(() => setShowMap(false), 500);
+      });
+
+      return () => {
+        if (view) {
+          view.destroy();
+        }
+      };
+    }
+  }, [isLogin, showMap, lat, lon]);
 
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -93,7 +142,7 @@ const AuthModal = ({ onClose, onSuccess }: AuthModalProps) => {
 
     try {
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
-      const payload = isLogin ? { phone, password } : { name, email, phone, password, countryStatus, governorate: countryStatus === 'Egypt' ? governorate : '' };
+      const payload = isLogin ? { phone, password } : { name, email, phone, password, lat, lon };
       
       const res = await axios.post(`${import.meta.env.VITE_API_URL}${endpoint}`, payload);
 
@@ -119,7 +168,7 @@ const AuthModal = ({ onClose, onSuccess }: AuthModalProps) => {
     return isValid ? '1px solid var(--accent-green)' : '1px solid var(--accent-red)';
   };
 
-  const isFormValid = isLogin ? true : (validity.name && validity.email && validity.phone && validity.password);
+  const isFormValid = isLogin ? true : (validity.name && validity.email && validity.phone && validity.password && lat !== null);
 
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 3000 }}>
@@ -145,19 +194,21 @@ const AuthModal = ({ onClose, onSuccess }: AuthModalProps) => {
                 <input type="email" placeholder="Email (@gmail.com)" value={email} onChange={e => handleValidation('email', e.target.value)} required style={{ width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '6px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', border: getBorderStyle(validity.email), outline: 'none' }} />
                 {validity.email === false && <span style={{ color: '#ff7b72', fontSize: '11px', display: 'block', marginTop: '4px' }}>Must be a valid @gmail.com address.</span>}
               </div>
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <select value={countryStatus} onChange={(e) => setCountryStatus(e.target.value)} style={{ flex: 1, padding: '12px', borderRadius: '6px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', outline: 'none' }}>
-                  <option value="Egypt">Inside Egypt</option>
-                  <option value="Outside Egypt">Outside Egypt</option>
-                </select>
-
-                {countryStatus === 'Egypt' && (
-                  <select value={governorate} onChange={(e) => setGovernorate(e.target.value)} required style={{ flex: 1, padding: '12px', borderRadius: '6px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', outline: 'none' }}>
-                    {governoratesList.map(gov => (
-                      <option key={gov} value={gov}>{gov}</option>
-                    ))}
-                  </select>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label style={{ fontSize: '13px', marginBottom: '5px', color: 'var(--text-primary)' }}>📍 Select your location:</label>
+                <span style={{ fontSize: '11px', color: 'var(--accent-gold)', marginBottom: '8px' }}>⚠️ Please select your actual residence location, not your current device location.</span>
+                
+                {!showMap ? (
+                  <button type="button" onClick={() => setShowMap(true)} style={{ padding: '12px', backgroundColor: lat ? 'var(--accent-green)' : 'var(--bg-primary)', color: lat ? '#000' : 'var(--text-primary)', border: lat ? 'none' : '1px solid var(--border-color)', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
+                    {lat ? '✅ Location Selected (Change)' : '📍 Pick Location on Map'}
+                  </button>
+                ) : (
+                  <div style={{ position: 'relative' }}>
+                    <div ref={mapDiv} style={{ width: '100%', height: '180px', borderRadius: '6px', border: '1px solid var(--accent-blue)', overflow: 'hidden' }}></div>
+                    <button type="button" onClick={() => setShowMap(false)} style={{ position: 'absolute', top: '5px', right: '5px', padding: '4px 8px', backgroundColor: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Close</button>
+                  </div>
                 )}
+                {lat === null && !showMap && <span style={{ color: '#ff7b72', fontSize: '11px', display: 'block', marginTop: '4px' }}>Please set your location.</span>}
               </div>
             </>
           )}

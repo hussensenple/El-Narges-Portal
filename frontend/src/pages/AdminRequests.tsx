@@ -5,6 +5,7 @@ import AdminComplaintsTab from '../components/AdminComplaintsTab'; // 👈 اس�
 import PropertyManagementTab from '../components/admin/PropertyManagementTab';
 import AdminDashboardTab from '../components/admin/AdminDashboardTab';
 import AdminAIChatbotTab from '../components/admin/AdminAIChatbotTab';
+import ArcGISDashboardTab from '../components/admin/ArcGISDashboardTab';
 import PropertyAssignCatalog from '../components/admin/modals/PropertyAssignCatalog';
 import LogoIcon from '../components/LogoIcon';
 import ThemeToggle from '../components/ThemeToggle';
@@ -15,6 +16,8 @@ import RejectionAnalysisTab from '../components/admin/RejectionAnalysisTab';
 const AdminPortal = () => {
 // حالة التابات بعد دمج الشكاوى (شغلك) والصلاحيات (شغل صاحبك)
   const [activeTab, setActiveTab] = useState<'analytics' | 'chatbot' | 'requests' | 'complaints' | 'roles' | 'properties' | 'rejections'>('analytics');
+  const [analyticsSubTab, setAnalyticsSubTab] = useState<'local' | 'spatial'>('local');
+  const [showAnalyticsDropdown, setShowAnalyticsDropdown] = useState(false);
   const [complaintsCount, setComplaintsCount] = useState(0);
   const [requests, setRequests] = useState([]);
   const [selectedRequests, setSelectedRequests] = useState<string[]>([]);
@@ -28,8 +31,8 @@ const AdminPortal = () => {
         headers: { 'x-auth-token': token }
       });
       const sortedData = res.data.sort((a: any, b: any) => {
-        const dateA = new Date(a.createdAt || 0).getTime();
-        const dateB = new Date(b.createdAt || 0).getTime();
+        const dateA = new Date(a.updatedAt || a.createdAt || 0).getTime();
+        const dateB = new Date(b.updatedAt || b.createdAt || 0).getTime();
         return dateB - dateA;
       });
       setRequests(sortedData);
@@ -179,12 +182,42 @@ const AdminPortal = () => {
           🤖 AI<br/>Assistant
         </button>
         
-        <button 
-          onClick={() => setActiveTab('analytics')}
-          style={{ backgroundColor: activeTab === 'analytics' ? 'var(--accent-blue-bg)' : 'transparent', color: 'var(--text-primary)', border: 'none', padding: '10px 20px', fontSize: '13px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s', textAlign: 'center', lineHeight: '1.2' }}
-        >
-          📈 Analytics<br/>Overview
-        </button>
+        <div style={{ position: 'relative' }}>
+          <button 
+            onClick={() => {
+              if (activeTab === 'analytics') {
+                setShowAnalyticsDropdown(!showAnalyticsDropdown);
+              } else {
+                setActiveTab('analytics');
+                setShowAnalyticsDropdown(false);
+              }
+            }}
+            style={{ backgroundColor: activeTab === 'analytics' ? 'var(--accent-blue-bg)' : 'transparent', color: 'var(--text-primary)', border: 'none', padding: '10px 20px', fontSize: '13px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s', textAlign: 'center', lineHeight: '1.2' }}
+          >
+            📈 Analytics<br/>Overview {activeTab === 'analytics' && <span style={{ fontSize: '10px' }}>▼</span>}
+          </button>
+          
+          {showAnalyticsDropdown && activeTab === 'analytics' && (
+            <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: '10px', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', zIndex: 1000, overflow: 'hidden', minWidth: '160px', whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>
+              <div 
+                onClick={() => { setAnalyticsSubTab('local'); setShowAnalyticsDropdown(false); }}
+                style={{ padding: '12px 15px', cursor: 'pointer', backgroundColor: analyticsSubTab === 'local' ? 'var(--accent-blue-bg)' : 'transparent', color: 'var(--text-primary)', fontSize: '13px', fontWeight: 'bold', borderBottom: '1px solid var(--border-color)', transition: '0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--bg-hover)'}
+                onMouseLeave={e => e.currentTarget.style.backgroundColor = analyticsSubTab === 'local' ? 'var(--accent-blue-bg)' : 'transparent'}
+              >
+                📊 Platform Analytics
+              </div>
+              <div 
+                onClick={() => { setAnalyticsSubTab('spatial'); setShowAnalyticsDropdown(false); }}
+                style={{ padding: '12px 15px', cursor: 'pointer', backgroundColor: analyticsSubTab === 'spatial' ? 'var(--accent-green-bg)' : 'transparent', color: 'var(--text-primary)', fontSize: '13px', fontWeight: 'bold', transition: '0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--bg-hover)'}
+                onMouseLeave={e => e.currentTarget.style.backgroundColor = analyticsSubTab === 'spatial' ? 'var(--accent-green-bg)' : 'transparent'}
+              >
+                🌍 Live Map Insights
+              </div>
+            </div>
+          )}
+        </div>
 
         <button 
           onClick={() => setActiveTab('requests')}
@@ -248,8 +281,13 @@ const AdminPortal = () => {
       <div style={{ flex: 1, overflow: 'hidden' }}>
         
         {/* التابة الجديدة: Analytics */}
-        <div style={{ display: activeTab === 'analytics' ? 'block' : 'none', height: '100%', paddingBottom: '5px', boxSizing: 'border-box' }}>
+        <div style={{ display: activeTab === 'analytics' && analyticsSubTab === 'local' ? 'block' : 'none', height: '100%', paddingBottom: '5px', boxSizing: 'border-box' }}>
           <AdminDashboardTab />
+        </div>
+
+        {/* ArcGIS Dashboard */}
+        <div style={{ display: activeTab === 'analytics' && analyticsSubTab === 'spatial' ? 'block' : 'none', height: '100%', paddingBottom: '5px', boxSizing: 'border-box' }}>
+          <ArcGISDashboardTab />
         </div>
 
         {/* التابة 2: Requests */}

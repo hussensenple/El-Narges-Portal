@@ -1,12 +1,13 @@
 const User = require('../models/User');
 const bcrypt = require('bcrypt'); // مكتبة تشفير الباسورد
+const { syncUserToArcGIS } = require('./arcgisSyncController');
 const jwt = require('jsonwebtoken'); // مكتبة عمل التوكن (عشان اليوزر يفضل مسجل دخول)
 
 // 1. دالة إنشاء حساب جديد (Register)
 const register = async (req, res) => {
   try {
     // بنستقبل الداتا من الـ Frontend (وضفنا الـ role والـ location)
-    const { name, email, phone, password, role, countryStatus, governorate } = req.body;
+    const { name, email, phone, password, role, lat, lon } = req.body;
 
     // التأكد إن مفيش حد مسجل بنفس التليفون أو الإيميل قبل كده
     const existingUser = await User.findOne({ $or: [{ phone }, { email }] });
@@ -29,11 +30,16 @@ const register = async (req, res) => {
       phone,
       password: hashedPassword,
       role: userRole,
-      countryStatus,
-      governorate
+      coordinates: {
+        lat: lat || null,
+        lon: lon || null
+      }
     });
 
     await newUser.save();
+
+    // مزامنة المستخدم مع خوادم ArcGIS لحظياً في الخلفية (لا توقف استجابة السيرفر)
+    syncUserToArcGIS(newUser).catch(err => console.error("Sync Error:", err));
 
     // إنشاء Token عشان العميل يفضل مسجل دخول
     const token = jwt.sign(

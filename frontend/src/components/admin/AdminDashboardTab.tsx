@@ -145,9 +145,8 @@ const AdminDashboardTab = () => {
     fetchOwners();
     fetchRegionsStats();
 
-    // 🔴 Real-time WebSocket connection
     const socket = io(import.meta.env.VITE_API_URL);
-    socket.on('requestUpdated', () => {
+    socket.on('newBookingRequest', () => {
       console.log('Real-time update triggered for dashboard stats');
       fetchStats(extentRef.current);
       fetchOwners();
@@ -159,22 +158,9 @@ const AdminDashboardTab = () => {
     };
   }, []);
 
-  useEffect(() => {
-    if (!mapExtent) return;
-    extentRef.current = mapExtent;
-    fetchStats(mapExtent);
-  }, [mapExtent]);
-
   const handleViewReady = (view: any) => {
     setMapView(view);
-    reactiveUtils.watch(
-      () => view.stationary,
-      (isStationary) => {
-        if (isStationary && view.extent) {
-          setMapExtent(view.extent.toJSON());
-        }
-      }
-    );
+    // Removed reactiveUtils.watch to prevent numbers changing on map movement
   };
 
   const COLORS = ['#8957e5', '#3fb950'];
@@ -195,44 +181,6 @@ const AdminDashboardTab = () => {
 
         {/* LEFT COLUMN: Top Selling Regions + Top Owners + Recent Sales */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '15px', overflow: 'hidden' }}>
-
-          {/* Top Selling Regions (Scroll down list) */}
-          <div style={{ flex: 1, backgroundColor: 'var(--bg-tertiary)', padding: '15px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px', marginBottom: '10px' }}>
-              <h4 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '14px' }}>📍 Top Selling Regions</h4>
-              <div style={{ display: 'flex', gap: '6px' }}>
-                <button
-                  title="Open Regions Map"
-                  onClick={() => setIsRegionsChartOpen(true)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', padding: '2px 4px' }}
-                >🗺️</button>
-              </div>
-            </div>
-            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {regionsStats.length > 0 ? regionsStats.map((region, idx) => (
-                <div
-                  key={region.governorate}
-                  onClick={() => setSelectedRegion(region)}
-                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-secondary)', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', cursor: 'pointer', transition: 'background 0.2s' }}
-                  onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--bg-hover)'}
-                  onMouseLeave={e => e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'}
-                >
-                  <div>
-                    <span style={{ color: 'var(--text-primary)', fontWeight: 'bold', fontSize: '13px', display: 'block' }}>{region.governorate}</span>
-                    <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>Rank #{idx + 1}</span>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <span style={{ display: 'block', color: 'var(--accent-blue)', fontWeight: 'bold', fontSize: '13px' }}>{region.count} Clients</span>
-                    <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>
-                      {regionsStats.length > 0 ? `${Math.round((region.count / regionsStats.reduce((a: number, r: any) => a + r.count, 0)) * 100)}% share` : ''}
-                    </span>
-                  </div>
-                </div>
-              )) : (
-                <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px 0', fontSize: '12px' }}>No regional data yet. Data will appear once users register with a governorate and submit requests.</div>
-              )}
-            </div>
-          </div>
 
           {/* Top Owners (Scroll down list) */}
           <div style={{ flex: 1, backgroundColor: 'var(--bg-tertiary)', padding: '15px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
@@ -300,6 +248,61 @@ const AdminDashboardTab = () => {
               )}
             </div>
           </div>
+
+          {/* Top Brokers Leaderboard */}
+          <div style={{ flex: 1, backgroundColor: 'var(--bg-tertiary)', padding: '15px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+            <h4 style={{ marginTop: 0, marginBottom: '10px', color: 'var(--text-primary)', textAlign: 'left', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px', fontSize: '14px' }}>
+              🏆 Top Brokers
+            </h4>
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {stats.topBrokers && stats.topBrokers.length > 0 ? (
+                stats.topBrokers.map((broker: any, index: number) => (
+                  <div
+                    key={broker._id}
+                    onClick={() => setSelectedBroker(broker)}
+                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-secondary)', padding: '10px 12px', borderRadius: '12px', border: '1px solid var(--border-color)', cursor: 'pointer', transition: 'background-color 0.2s' }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-hover)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'}
+                  >
+                    {/* Left: rank circle + name */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{
+                        backgroundColor: index === 0 ? 'var(--accent-gold)' : index === 1 ? 'var(--text-muted)' : index === 2 ? '#b06500' : 'var(--border-color)',
+                        color: 'var(--text-primary)', width: '28px', height: '28px', borderRadius: '50%',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '12px', fontWeight: 'bold', flexShrink: 0
+                      }}>
+                        {index + 1}
+                      </div>
+                      <div>
+                        <span style={{ color: 'var(--text-primary)', fontWeight: 'bold', display: 'block', fontSize: '13px' }}>{broker.name}</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>Req: {broker.totalRequests}</span>
+                      </div>
+                    </div>
+
+                    {/* Right: three stat columns */}
+                    <div style={{ display: 'flex', gap: '14px', textAlign: 'center' }}>
+                      <div>
+                        <span style={{ display: 'block', color: '#3fb950', fontWeight: 'bold', fontSize: '15px', lineHeight: 1.1 }}>{broker.sold}</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Sold</span>
+                      </div>
+                      <div>
+                        <span style={{ display: 'block', color: 'var(--accent-gold)', fontWeight: 'bold', fontSize: '15px', lineHeight: 1.1 }}>{broker.raisedToAdmin}</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Raised</span>
+                      </div>
+                      <div>
+                        <span style={{ display: 'block', color: 'var(--accent-red)', fontWeight: 'bold', fontSize: '15px', lineHeight: 1.1 }}>{broker.declined}</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Declined</span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '10px', fontSize: '13px' }}>No brokers found.</div>
+              )}
+            </div>
+          </div>
+
 
         </div>
 
@@ -391,59 +394,6 @@ const AdminDashboardTab = () => {
             </div>
           </div>
 
-          {/* Top Brokers Leaderboard */}
-          <div style={{ flex: 1, backgroundColor: 'var(--bg-tertiary)', padding: '15px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-            <h4 style={{ marginTop: 0, marginBottom: '10px', color: 'var(--text-primary)', textAlign: 'left', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px', fontSize: '14px' }}>
-              🏆 Top Brokers
-            </h4>
-            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {stats.topBrokers && stats.topBrokers.length > 0 ? (
-                stats.topBrokers.map((broker: any, index: number) => (
-                  <div
-                    key={broker._id}
-                    onClick={() => setSelectedBroker(broker)}
-                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-secondary)', padding: '10px 12px', borderRadius: '12px', border: '1px solid var(--border-color)', cursor: 'pointer', transition: 'background-color 0.2s' }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-hover)'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'}
-                  >
-                    {/* Left: rank circle + name */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div style={{
-                        backgroundColor: index === 0 ? 'var(--accent-gold)' : index === 1 ? 'var(--text-muted)' : index === 2 ? '#b06500' : 'var(--border-color)',
-                        color: 'var(--text-primary)', width: '28px', height: '28px', borderRadius: '50%',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '12px', fontWeight: 'bold', flexShrink: 0
-                      }}>
-                        {index + 1}
-                      </div>
-                      <div>
-                        <span style={{ color: 'var(--text-primary)', fontWeight: 'bold', display: 'block', fontSize: '13px' }}>{broker.name}</span>
-                        <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>Req: {broker.totalRequests}</span>
-                      </div>
-                    </div>
-
-                    {/* Right: three stat columns */}
-                    <div style={{ display: 'flex', gap: '14px', textAlign: 'center' }}>
-                      <div>
-                        <span style={{ display: 'block', color: '#3fb950', fontWeight: 'bold', fontSize: '15px', lineHeight: 1.1 }}>{broker.sold}</span>
-                        <span style={{ color: 'var(--text-muted)', fontSize: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Sold</span>
-                      </div>
-                      <div>
-                        <span style={{ display: 'block', color: 'var(--accent-gold)', fontWeight: 'bold', fontSize: '15px', lineHeight: 1.1 }}>{broker.raisedToAdmin}</span>
-                        <span style={{ color: 'var(--text-muted)', fontSize: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Raised</span>
-                      </div>
-                      <div>
-                        <span style={{ display: 'block', color: 'var(--accent-red)', fontWeight: 'bold', fontSize: '15px', lineHeight: 1.1 }}>{broker.declined}</span>
-                        <span style={{ color: 'var(--text-muted)', fontSize: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Declined</span>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '10px', fontSize: '13px' }}>No brokers found.</div>
-              )}
-            </div>
-          </div>
 
         </div>
 

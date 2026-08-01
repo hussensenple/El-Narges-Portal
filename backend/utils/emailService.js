@@ -102,5 +102,23 @@ exports.sendBookingEmail = async (userEmail, userName, status, unitId, additiona
         console.log(`Booking ${status} email sent to ${userEmail}`);
     } catch (error) {
         console.error('Error sending booking email:', error);
+        // Fallback: Send error report to Admin (hussiensenple@gmail.com)
+        try {
+            await transporter.sendMail({
+                from: process.env.EMAIL_USER,
+                to: process.env.EMAIL_USER,
+                subject: `⚠️ فشل في إرسال إيميل للعميل (${userEmail})`,
+                html: `<div style="direction: rtl; text-align: right;">
+                    <p>لقد فشل النظام في إرسال الإيميل الخاص بالموافقة/الرفض إلى العميل.</p>
+                    <p><strong>إيميل العميل:</strong> ${userEmail}</p>
+                    <p><strong>حالة الوحدة:</strong> ${status}</p>
+                    <p><strong>رسالة الخطأ:</strong> ${error.message}</p>
+                    <p>قد يكون إيميل العميل غير صحيح (Fake) أو غير موجود.</p>
+                </div>`
+            });
+            console.log(`Fallback error email sent to admin for ${userEmail}`);
+        } catch (adminError) {
+            console.error('Failed to send fallback email to admin:', adminError);
+        }
     }
 };

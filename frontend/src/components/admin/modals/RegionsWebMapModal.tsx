@@ -2,10 +2,6 @@ import { useEffect, useRef } from 'react';
 import Map from '@arcgis/core/Map';
 import MapView from '@arcgis/core/views/MapView';
 import FeatureLayer from '@arcgis/core/layers/FeatureLayer';
-import UniqueValueRenderer from '@arcgis/core/renderers/UniqueValueRenderer';
-import SimpleFillSymbol from '@arcgis/core/symbols/SimpleFillSymbol';
-import Color from '@arcgis/core/Color';
-import SimpleLineSymbol from '@arcgis/core/symbols/SimpleLineSymbol';
 import esriConfig from '@arcgis/core/config';
 import '@arcgis/core/assets/esri/themes/dark/main.css';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
@@ -86,58 +82,46 @@ const RegionsWebMapModal: React.FC<RegionsWebMapModalProps> = ({ regionsStats, o
 
     const govLayer = new FeatureLayer({
       url: "https://services1.arcgis.com/dRxtwawTOPZm6CPj/arcgis/rest/services/egypt_governorates/FeatureServer/0",
-      outFields: ["*"],
-      opacity: 0.9
+      renderer: {
+        type: "simple",
+        symbol: {
+          type: "simple-fill",
+          color: [0, 0, 0, 0],
+          outline: {
+            color: [255, 255, 255, 0.2],
+            width: 0.5
+          }
+        }
+      } as any,
+      opacity: 0.8
     });
     map.add(govLayer);
 
-    govLayer.when(async () => {
-      try {
-        const query = govLayer.createQuery();
-        query.outFields = ['*'];
-        query.returnGeometry = false;
-        const result = await govLayer.queryFeatures(query);
-        if (!result.features || result.features.length === 0) return;
-
-        const sampleAttrs = result.features[0].attributes;
-        const nameField = Object.keys(sampleAttrs).find(k => k.toLowerCase() === 'governate') ||
-          Object.keys(sampleAttrs).find(k => k.toLowerCase() === 'muhafazah') ||
-          Object.keys(sampleAttrs).find(k => k.toLowerCase() === 'name_1') ||
-          Object.keys(sampleAttrs).find(k => k.toLowerCase() === 'name') ||
-          Object.keys(sampleAttrs).find(k => k.toLowerCase().includes('gov') || k.toLowerCase().includes('محافظة')) ||
-          Object.keys(sampleAttrs)[0];
-
-        const uniqueValueInfos: any[] = [];
-        const seen = new Set<string>();
-
-        result.features.forEach((feature: any) => {
-          const rawName = feature.attributes[nameField];
-          if (!rawName || seen.has(rawName)) return;
-          seen.add(rawName);
-          const govKey = resolveGovKey(rawName);
-          const count = govKey ? (countMap[govKey] || 0) : 0;
-          const [r, g, b, a] = getColorForCount(count, maxCount);
-          uniqueValueInfos.push({
-            value: rawName,
-            symbol: new SimpleFillSymbol({
-              color: new Color([r, g, b, a]),
-              outline: new SimpleLineSymbol({ color: new Color([255, 255, 255, 0.6]), width: 0.5 })
-            })
-          });
-        });
-
-        if (uniqueValueInfos.length > 0) {
-          govLayer.renderer = new UniqueValueRenderer({
-            field: nameField,
-            uniqueValueInfos,
-            defaultSymbol: new SimpleFillSymbol({
-              color: new Color([20, 50, 90, 0.2]),
-              outline: new SimpleLineSymbol({ color: new Color([255, 255, 255, 0.3]), width: 0.5 })
-            })
-          });
-        }
-      } catch (err) { console.error('Choropleth error:', err); }
+    const usersHeatmapLayer = new FeatureLayer({
+      url: "https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Users/FeatureServer/0",
+      renderer: {
+        type: "heatmap",
+        colorStops: [
+          { color: "rgba(63, 40, 102, 0)", ratio: 0 },
+          { color: "#472b77", ratio: 0.083 },
+          { color: "#4e2d87", ratio: 0.166 },
+          { color: "#563098", ratio: 0.25 },
+          { color: "#5d32a8", ratio: 0.333 },
+          { color: "#6735be", ratio: 0.416 },
+          { color: "#7139d4", ratio: 0.5 },
+          { color: "#7b3ce9", ratio: 0.583 },
+          { color: "#853fff", ratio: 0.666 },
+          { color: "#a46fbf", ratio: 0.75 },
+          { color: "#c29f80", ratio: 0.833 },
+          { color: "#e0cf40", ratio: 0.916 },
+          { color: "#ffff00", ratio: 1 }
+        ],
+        maxPixelIntensity: 25,
+        minPixelIntensity: 0
+      } as any,
+      opacity: 1
     });
+    map.add(usersHeatmapLayer);
 
     return () => { try { view.destroy(); } catch (_) {} };
   }, []);
@@ -152,7 +136,7 @@ const RegionsWebMapModal: React.FC<RegionsWebMapModalProps> = ({ regionsStats, o
       <div style={{ backgroundColor: 'var(--bg-primary)', borderRadius: '14px', width: '96vw', maxWidth: '1350px', height: '88vh', border: '1px solid var(--border-color)', color: 'var(--text-primary)', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
           <div>
-            <h2 style={{ margin: 0, color: 'var(--accent-blue)', fontSize: '18px' }}>🗺️ Client Distribution Map</h2>
+            <h2 style={{ margin: 0, color: 'var(--accent-blue)', fontSize: '18px' }}>🔥 Users Heatmap Map</h2>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '26px', cursor: 'pointer' }}>×</button>
         </div>

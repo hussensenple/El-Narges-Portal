@@ -1,6 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import PropertyAssignCatalog from './PropertyAssignCatalog';
+import Map from '@arcgis/core/Map';
+import MapView from '@arcgis/core/views/MapView';
+import Graphic from '@arcgis/core/Graphic';
+import Point from '@arcgis/core/geometry/Point';
 
 interface EditUserModalProps {
   user: any;
@@ -18,9 +22,10 @@ const EditUserModal = ({ user, onClose, onSuccess }: EditUserModalProps) => {
   const [name, setName] = useState(user.name || '');
   const [phone, setPhone] = useState(user.phone || '');
   const [email, setEmail] = useState(user.email || '');
-  const [countryStatus, setCountryStatus] = useState(user.countryStatus || 'Egypt');
-  const [governorate, setGovernorate] = useState(user.countryStatus === 'Outside Egypt' ? user.governorate : (user.governorate || 'Cairo'));
-  const [governoratesList, setGovernoratesList] = useState<string[]>([]);
+  const [lat, setLat] = useState<number | null>(user.coordinates?.lat || null);
+  const [lon, setLon] = useState<number | null>(user.coordinates?.lon || null);
+  const [showMap, setShowMap] = useState<boolean>(false);
+  const mapDiv = useRef<HTMLDivElement>(null);
   
   // Profile states
   const [manualId, setManualId] = useState(user.profile?.manualId || '');
@@ -49,31 +54,56 @@ const EditUserModal = ({ user, onClose, onSuccess }: EditUserModalProps) => {
   }, [user]);
 
   useEffect(() => {
-    const fetchGovernorates = async () => {
-      try {
-        const url = 'https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Heatmap_WFL1/FeatureServer/0/query';
-        const res = await axios.get(url, { params: { where: '1=1', outFields: '*', returnGeometry: false, f: 'json' } });
-        if (res.data && res.data.features && res.data.features.length > 0) {
-          const fields = Object.keys(res.data.features[0].attributes);
-          const nameField = fields.find(f => f.toLowerCase().includes('name') || f.toLowerCase().includes('gov') || f.toLowerCase().includes('ar')) || fields.find(f => typeof res.data.features[0].attributes[f] === 'string');
-          const govs = [...new Set(res.data.features.map((f: any) => nameField ? f.attributes[nameField] : undefined))].filter(Boolean) as string[];
-          setGovernoratesList(govs);
-        } else {
-          throw new Error('No data');
+    if (showMap && mapDiv.current) {
+      const map = new Map({
+        basemap: "satellite"
+      });
+
+      const view = new MapView({
+        container: mapDiv.current,
+        map: map,
+        center: [lon || 30.8025, lat || 26.8206], // User location or Egypt center
+        zoom: lat ? 12 : 4,
+        ui: {
+          components: ["zoom"] // minimal UI
         }
-      } catch (err) {
-        const fallbackGovs = ['Cairo', 'Giza', 'Alexandria', 'Dakahlia', 'Red Sea', 'Beheira', 'Fayoum', 'Gharbia', 'Ismailia', 'Menofia', 'Minya', 'Qaliubiya', 'New Valley', 'Suez', 'Aswan', 'Assiut', 'Beni Suef', 'Port Said', 'Damietta', 'Sharkia', 'South Sinai', 'Kafr Al sheikh', 'Matrouh', 'Luxor', 'Qena', 'North Sinai', 'Sohag'];
-        setGovernoratesList(fallbackGovs);
+      });
+
+      if (lat && lon) {
+        const point = new Point({ longitude: lon, latitude: lat });
+        const markerSymbol: any = { type: "simple-marker", color: [226, 119, 40], outline: { color: [255, 255, 255], width: 2 } };
+        const pointGraphic = new Graphic({ geometry: point, symbol: markerSymbol });
+        view.graphics.add(pointGraphic);
       }
-    };
-    fetchGovernorates();
-  }, []);
+
+      view.on("click", (event) => {
+        const clickedLat = event.mapPoint.latitude;
+        const clickedLon = event.mapPoint.longitude;
+        setLat(clickedLat);
+        setLon(clickedLon);
+
+        view.graphics.removeAll();
+        const point = new Point({ longitude: clickedLon, latitude: clickedLat });
+        const markerSymbol: any = { type: "simple-marker", color: [226, 119, 40], outline: { color: [255, 255, 255], width: 2 } };
+        const pointGraphic = new Graphic({ geometry: point, symbol: markerSymbol });
+        view.graphics.add(pointGraphic);
+
+        setTimeout(() => setShowMap(false), 500);
+      });
+
+      return () => {
+        if (view) {
+          view.destroy();
+        }
+      };
+    }
+  }, [showMap, lat, lon]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       setLoading(true);
-      const payload: any = { name, phone, email, countryStatus, governorate };
+      const payload: any = { name, phone, email, lat, lon };
       
       if (['broker', 'engineer', 'admin'].includes(user.role)) {
         if (!manualId?.trim()) return alert('Manual ID is required!');
@@ -150,24 +180,19 @@ const EditUserModal = ({ user, onClose, onSuccess }: EditUserModalProps) => {
             <div><label style={{ display: 'block', marginBottom: '5px', color: 'var(--text-secondary)' }}>Email</label>
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} style={{ width: '100%', padding: '10px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '5px', boxSizing: 'border-box' }} /></div>
 
-            <div style={{ display: 'flex', gap: '15px' }}>
-              <div style={{ flex: 1 }}><label style={{ display: 'block', marginBottom: '5px', color: 'var(--text-secondary)' }}>Region</label>
-              <select value={countryStatus} onChange={(e) => setCountryStatus(e.target.value)} style={{ width: '100%', padding: '10px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '5px', boxSizing: 'border-box', outline: 'none' }}>
-                <option value="Egypt">Inside Egypt</option>
-                <option value="Outside Egypt">Outside Egypt</option>
-              </select></div>
-              <div style={{ flex: 1 }}><label style={{ display: 'block', marginBottom: '5px', color: 'var(--text-secondary)' }}>Governorate/Country</label>
-              {countryStatus === 'Egypt' ? (
-                <select value={governorate} onChange={(e) => setGovernorate(e.target.value)} style={{ width: '100%', padding: '10px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '5px', boxSizing: 'border-box', outline: 'none' }}>
-                  <option value="" disabled>Select Governorate</option>
-                  {governoratesList.map(gov => (
-                    <option key={gov} value={gov}>{gov}</option>
-                  ))}
-                </select>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <label style={{ fontSize: '13px', marginBottom: '5px', color: 'var(--text-secondary)' }}>📍 Location on Map</label>
+              
+              {!showMap ? (
+                <button type="button" onClick={() => setShowMap(true)} style={{ padding: '10px', backgroundColor: lat ? 'var(--accent-green)' : 'var(--bg-primary)', color: lat ? '#000' : 'var(--text-primary)', border: lat ? 'none' : '1px solid var(--border-color)', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>
+                  {lat ? '✅ Location Selected (Change)' : '📍 Pick Location on Map'}
+                </button>
               ) : (
-                <input type="text" value={governorate} onChange={(e) => setGovernorate(e.target.value)} style={{ width: '100%', padding: '10px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '5px', boxSizing: 'border-box' }} placeholder="e.g. UAE" />
+                <div style={{ position: 'relative' }}>
+                  <div ref={mapDiv} style={{ width: '100%', height: '200px', borderRadius: '5px', border: '1px solid var(--accent-blue)', overflow: 'hidden' }}></div>
+                  <button type="button" onClick={() => setShowMap(false)} style={{ position: 'absolute', top: '5px', right: '5px', padding: '4px 8px', backgroundColor: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Close</button>
+                </div>
               )}
-              </div>
             </div>
 
             {['broker', 'engineer', 'admin'].includes(user.role) && (
@@ -200,7 +225,10 @@ const EditUserModal = ({ user, onClose, onSuccess }: EditUserModalProps) => {
         {isOwnerOrBroker && (
           <div style={{ flex: 1, borderLeft: '1px solid var(--border-color)', paddingLeft: '30px', display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-              <h3 style={{ margin: 0, color: 'var(--text-secondary)' }}>{user.role === 'owner' ? 'Owned Properties' : 'Assigned Properties'}</h3>
+              <h3 style={{ margin: 0, color: 'var(--text-secondary)' }}>
+                {user.role === 'owner' ? 'Owned Properties' : 'Assigned Properties'} 
+                {units.length > 0 && <span style={{ fontSize: '14px', color: 'var(--text-muted)', marginLeft: '6px' }}>({units.length})</span>}
+              </h3>
               <button 
                 onClick={() => setShowCatalog(true)}
                 style={{ backgroundColor: 'var(--accent-blue-bg)', color: 'var(--text-primary)', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}

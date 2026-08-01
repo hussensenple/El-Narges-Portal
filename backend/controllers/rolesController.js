@@ -5,6 +5,7 @@ const AdminProfile = require('../models/AdminProfile');
 const Unit = require('../models/Unit');
 const BookingRequest = require('../models/BookingRequest');
 const { updateArcGISStatus, checkAndUpdateBuildingCompleteness } = require('../services/arcgisService');
+const { syncUserUpdateToArcGIS } = require('./arcgisSyncController');
 
 // 1. Get users by role
 exports.getUsersByRole = async (req, res) => {
@@ -86,6 +87,9 @@ exports.changeUserRole = async (req, res) => {
     user.role = newRole;
     await user.save();
 
+    // 🚀 Sync the role change to ArcGIS Dashboard Users Layer
+    syncUserUpdateToArcGIS(user).catch(err => console.error("ArcGIS Role Sync Error:", err));
+
     res.status(200).json({ message: `Role successfully changed to ${newRole}`, user });
   } catch (error) {
     console.error('Error changing role:', error);
@@ -97,9 +101,14 @@ exports.changeUserRole = async (req, res) => {
 exports.editUserInfo = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { name, phone, email, manualId, age, specialization, graduationYear, countryStatus, governorate } = req.body;
+    const { name, phone, email, manualId, age, specialization, graduationYear, lat, lon } = req.body;
 
-    const user = await User.findByIdAndUpdate(userId, { name, phone, email, countryStatus, governorate }, { new: true }).select('-password');
+    const updateData = { name, phone, email };
+    if (lat !== undefined && lon !== undefined) {
+      updateData.coordinates = { lat, lon };
+    }
+
+    const user = await User.findByIdAndUpdate(userId, updateData, { new: true }).select('-password');
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     if (user.role === 'broker' && manualId) {
@@ -109,6 +118,9 @@ exports.editUserInfo = async (req, res) => {
     } else if (user.role === 'admin' && manualId) {
       await AdminProfile.findOneAndUpdate({ userId }, { manualId, age });
     }
+
+    // 🚀 Sync edits to ArcGIS Dashboard Users Layer
+    syncUserUpdateToArcGIS(user).catch(err => console.error("ArcGIS Update Sync Error:", err));
 
     res.status(200).json({ message: 'User updated successfully', user });
   } catch (error) {
@@ -133,7 +145,10 @@ exports.assignProperty = async (req, res) => {
       // 2. Add to user's ownedUnits array (MUST be ObjectId)
       await User.findByIdAndUpdate(userId, { $addToSet: { ownedUnits: updatedUnit._id } });
       // 3. Ensure user role is 'owner'
-      await User.findByIdAndUpdate(userId, { role: 'owner' });
+      const updatedOwner = await User.findByIdAndUpdate(userId, { role: 'owner' }, { new: true });
+      if (updatedOwner) {
+        syncUserUpdateToArcGIS(updatedOwner).catch(err => console.error("ArcGIS Role Sync Error:", err));
+      }
       // 4. ✅ Sync ArcGIS: mark property as Sold (status 4)
       if (arcgisObjectId && sourceLayer) {
         await updateArcGISStatus(
@@ -145,6 +160,13 @@ exports.assignProperty = async (req, res) => {
           sourceLayer
         );
       }
+      // 5. Sync Broker if unit has an assigned broker
+      if (updatedUnit.brokerId) {
+        const broker = await User.findById(updatedUnit.brokerId);
+        if (broker) {
+          syncUserUpdateToArcGIS(broker).catch(err => console.error("ArcGIS Broker Sync Error:", err));
+        }
+      }
     } else if (targetRole === 'broker') {
       // Assign unit to broker — also store sourceLayer and OBJECTID
       await Unit.findOneAndUpdate(
@@ -152,6 +174,11 @@ exports.assignProperty = async (req, res) => {
         { brokerId: userId, sourceLayer: sourceLayer, objectId: arcgisObjectId },
         { upsert: true }
       );
+      
+      const broker = await User.findById(userId);
+      if (broker) {
+        syncUserUpdateToArcGIS(broker).catch(err => console.error("ArcGIS Broker Sync Error:", err));
+      }
     }
 
     res.status(200).json({ message: `Property assigned to ${targetRole} successfully` });
@@ -184,7 +211,10 @@ exports.removeProperty = async (req, res) => {
       // Check if owner has no more properties — auto-downgrade to user
       const updatedUser = await User.findById(userId);
       if (!updatedUser.ownedUnits || updatedUser.ownedUnits.length === 0) {
-        await User.findByIdAndUpdate(userId, { role: 'user' });
+        const downgradedUser = await User.findByIdAndUpdate(userId, { role: 'user' }, { new: true });
+        if (downgradedUser) {
+          syncUserUpdateToArcGIS(downgradedUser).catch(err => console.error("ArcGIS Role Sync Error:", err));
+        }
       }
       // ✅ Sync ArcGIS using the correct sourceLayer from MongoDB (Units vs Villas_Global)
       await updateArcGISStatus(correctArcgisId, '1', null, null, null, correctSourceLayer, unitToRemove?.objectId);
@@ -206,6 +236,11 @@ exports.removeProperty = async (req, res) => {
     } else if (currentRole === 'broker') {
       // Unassign broker from unit
       await Unit.findOneAndUpdate({ arcgisId: unitId }, { brokerId: null });
+      
+      const broker = await User.findById(userId);
+      if (broker) {
+        syncUserUpdateToArcGIS(broker).catch(err => console.error("ArcGIS Broker Sync Error:", err));
+      }
     }
 
     res.status(200).json({ message: 'Property removed successfully' });
@@ -252,6 +287,11 @@ exports.getAdminCatalog = async (req, res) => {
       villas = villas.filter(v => !ownedIds.has(v.arcgisId));
     } else {
       // For user catalog ('all'), force the Status to 4 (Sold) if MongoDB says it's owned
+      const assignedUnits = await Unit.find({ brokerId: { $ne: null } }).select('arcgisId');
+      const assignedIds = new Set(assignedUnits.map(u => u.arcgisId));
+      units = units.filter(u => assignedIds.has(u.arcgisId));
+      villas = villas.filter(v => assignedIds.has(v.arcgisId));
+      
       units = units.map(u => ownedIds.has(u.arcgisId) ? { ...u, Status: '4' } : u);
       villas = villas.map(v => ownedIds.has(v.arcgisId) ? { ...v, Status: '4' } : v);
     }
@@ -388,8 +428,13 @@ exports.getBrokerPerformance = async (req, res) => {
     const soldVillasIds = assignedUnits.filter(u => u.status === '4' && u.sourceLayer === 'Villas_Global').map(u => u.arcgisId).filter(id => id);
 
     if (soldApartmentsIds.length > 0) {
-      const whereClause = `OBJECTID IN (${soldApartmentsIds.join(',')})`;
-      const unitsRes = await axios.get(`${UNITS_URL}/query`, { params: { where: whereClause, outFields: 'Price', f: 'json' } });
+      const payload = new URLSearchParams();
+      payload.append('where', `OBJECTID IN (${soldApartmentsIds.join(',')})`);
+      payload.append('outFields', 'Price');
+      payload.append('f', 'json');
+      const unitsRes = await axios.post(`${UNITS_URL}/query`, payload, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      });
       (unitsRes.data.features || []).forEach(f => {
         if (f.attributes.Price) totalRevenue += Number(f.attributes.Price);
       });
@@ -397,8 +442,13 @@ exports.getBrokerPerformance = async (req, res) => {
 
     if (soldVillasIds.length > 0) {
       const formattedIds = soldVillasIds.map(id => `'${id}'`).join(',');
-      const whereClause = `GlobalID IN (${formattedIds})`;
-      const villasRes = await axios.get(`${VILLAS_URL}/query`, { params: { where: whereClause, outFields: 'Price', f: 'json' } });
+      const payload = new URLSearchParams();
+      payload.append('where', `GlobalID IN (${formattedIds})`);
+      payload.append('outFields', 'Price');
+      payload.append('f', 'json');
+      const villasRes = await axios.post(`${VILLAS_URL}/query`, payload, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      });
       (villasRes.data.features || []).forEach(f => {
         if (f.attributes.Price) totalRevenue += Number(f.attributes.Price);
       });
@@ -425,5 +475,42 @@ exports.getBrokerPerformance = async (req, res) => {
   } catch (error) {
     console.error('getBrokerPerformance error:', error);
     res.status(500).json({ error: 'Failed to fetch broker performance' });
+  }
+};
+
+exports.getBrokerByUnit = async (req, res) => {
+  try {
+    const { unitId } = req.params;
+    const Unit = require('../models/Unit');
+    const unit = await Unit.findOne({ objectId: Number(unitId) }).populate('brokerId', 'name email phone role profile');
+    if (!unit) {
+      return res.status(404).json({ message: 'Unit not found' });
+    }
+    if (!unit.brokerId) {
+      return res.status(200).json({ broker: null, message: 'No broker assigned to this unit' });
+    }
+    res.status(200).json({ broker: unit.brokerId });
+  } catch (error) {
+    console.error('Error fetching broker by unit:', error);
+    res.status(500).json({ error: 'Failed to fetch broker' });
+  }
+};
+
+exports.getAssignedUnits = async (req, res) => {
+  try {
+    const Unit = require('../models/Unit');
+    const assignedUnits = await Unit.find({ brokerId: { $ne: null } }).select('arcgisId globalId objectId');
+    
+    let ids = [];
+    assignedUnits.forEach(u => {
+      if (u.arcgisId) ids.push(String(u.arcgisId).toLowerCase());
+      if (u.globalId) ids.push(String(u.globalId).toLowerCase());
+      if (u.objectId) ids.push(String(u.objectId));
+    });
+    
+    res.status(200).json([...new Set(ids)]);
+  } catch (error) {
+    console.error('Error fetching assigned units:', error);
+    res.status(500).json({ error: 'Failed to fetch assigned units' });
   }
 };

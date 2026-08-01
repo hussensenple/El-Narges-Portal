@@ -49,17 +49,72 @@ const BrokersTable = () => {
     return mId.toLowerCase().includes(term) || name.toLowerCase().includes(term) || email.toLowerCase().includes(term);
   });
 
+  const [searchUnitId, setSearchUnitId] = useState('');
+  const [unitBrokerResult, setUnitBrokerResult] = useState<any>(null);
+  const [searchingUnit, setSearchingUnit] = useState(false);
+
+  const handleSearchByUnit = async () => {
+    if (!searchUnitId.trim()) return;
+    try {
+      setSearchingUnit(true);
+      setUnitBrokerResult(null);
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/roles/unit-broker/${searchUnitId.trim()}`);
+      if (res.data.broker) {
+        setUnitBrokerResult(res.data.broker);
+      } else {
+        setUnitBrokerResult({ message: 'No broker assigned to this unit' });
+      }
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        setUnitBrokerResult({ message: 'Unit not found' });
+      } else {
+        setUnitBrokerResult({ message: 'Error finding broker' });
+      }
+    } finally {
+      setSearchingUnit(false);
+    }
+  };
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
         <h4 style={{ margin: 0, color: '#8957e5' }}>Active Brokers</h4>
-        <input 
-          type="text" 
-          placeholder="🔍 Search by ID, Name, Email..." 
-          value={searchId}
-          onChange={(e) => setSearchId(e.target.value)}
-          style={{ padding: '8px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', width: '250px' }}
-        />
+        
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          {/* Search Broker by Unit ID */}
+          <div style={{ display: 'flex', gap: '5px', alignItems: 'center', backgroundColor: 'var(--bg-tertiary)', padding: '5px 10px', borderRadius: '6px' }}>
+            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Find by Unit ID:</span>
+            <input 
+              type="text" 
+              placeholder="Unit ID (e.g. 204)" 
+              value={searchUnitId}
+              onChange={(e) => setSearchUnitId(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearchByUnit()}
+              style={{ padding: '6px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', width: '120px' }}
+            />
+            <button 
+              onClick={handleSearchByUnit}
+              disabled={searchingUnit}
+              style={{ backgroundColor: '#8957e5', color: 'white', border: 'none', padding: '6px 10px', borderRadius: '4px', cursor: 'pointer' }}
+            >
+              {searchingUnit ? '...' : 'Search'}
+            </button>
+            {unitBrokerResult && (
+              <span style={{ fontSize: '12px', color: unitBrokerResult.name ? 'var(--accent-green)' : 'var(--accent-red)', marginLeft: '10px' }}>
+                {unitBrokerResult.name ? `Broker: ${unitBrokerResult.name}` : unitBrokerResult.message}
+              </span>
+            )}
+          </div>
+
+          {/* Original Search */}
+          <input 
+            type="text" 
+            placeholder="🔍 Search by ID, Name, Email..." 
+            value={searchId}
+            onChange={(e) => setSearchId(e.target.value)}
+            style={{ padding: '8px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', width: '250px' }}
+          />
+        </div>
       </div>
 
       <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>

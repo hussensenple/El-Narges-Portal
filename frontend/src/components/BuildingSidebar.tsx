@@ -33,6 +33,20 @@ const BuildingSidebar = ({ buildingId, villaData, onClose }: BuildingSidebarProp
   const [units, setUnits] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const auth = useContext(AuthContext);
+  const [assignedIds, setAssignedIds] = useState<string[]>([]);
+
+  // ── Fetch Assigned Units ───────────────────────────────────────────────
+  useEffect(() => {
+    const fetchAssigned = async () => {
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/roles/assigned-units`);
+        setAssignedIds(res.data);
+      } catch (e) {
+        console.error('BuildingSidebar fetch assigned units error', e);
+      }
+    };
+    fetchAssigned();
+  }, []);
 
   // ── Building mode: fetch apartments ──────────────────────────────────────
   useEffect(() => {
@@ -259,18 +273,24 @@ const BuildingSidebar = ({ buildingId, villaData, onClose }: BuildingSidebarProp
 
                 {/* Book Now (below View Design) */}
                 {!sold && (
-                  <button
-                    onClick={handleBookVilla}
-                    style={{
-                      width: '100%', padding: '10px', backgroundColor: 'var(--accent-green-bg)',
-                      color: 'var(--text-primary)', border: 'none', borderRadius: '8px',
-                      cursor: 'pointer', fontWeight: 700, fontSize: '13px', transition: '0.2s'
-                    }}
-                    onMouseOver={e => e.currentTarget.style.backgroundColor = 'var(--accent-green)'}
-                    onMouseOut={e  => e.currentTarget.style.backgroundColor = 'var(--accent-green-bg)'}
-                  >
-                    🔖 Book Now
-                  </button>
+                  (assignedIds.includes(String(villaData.GlobalID || villaData.globalid).toLowerCase()) || assignedIds.includes(String(villaData.OBJECTID))) ? (
+                    <button
+                      onClick={handleBookVilla}
+                      style={{
+                        width: '100%', padding: '10px', backgroundColor: 'var(--accent-green-bg)',
+                        color: 'var(--text-primary)', border: 'none', borderRadius: '8px',
+                        cursor: 'pointer', fontWeight: 700, fontSize: '13px', transition: '0.2s'
+                      }}
+                      onMouseOver={e => e.currentTarget.style.backgroundColor = 'var(--accent-green)'}
+                      onMouseOut={e  => e.currentTarget.style.backgroundColor = 'var(--accent-green-bg)'}
+                    >
+                      🔖 Book Now
+                    </button>
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '10px', backgroundColor: 'var(--bg-tertiary)', borderRadius: '8px', color: 'var(--text-muted)', fontSize: '12px' }}>
+                      🚫 Not available for booking (No broker assigned)
+                    </div>
+                  )
                 )}
               </div>
             </div>
@@ -283,7 +303,9 @@ const BuildingSidebar = ({ buildingId, villaData, onClose }: BuildingSidebarProp
             ? <div style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '20px' }}>Loading apartments…</div>
             : units.length === 0
               ? <div style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '20px' }}>No apartments found for this building.</div>
-              : units.map((unit, idx) => {
+              : units.filter(u => assignedIds.includes(String(u.GlobalID || u.OBJECTID).toLowerCase()) || assignedIds.includes(String(u.OBJECTID))).length === 0 
+                ? <div style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '20px' }}>No apartments are currently available for booking in this building.</div>
+                : units.filter(u => assignedIds.includes(String(u.GlobalID || u.OBJECTID).toLowerCase()) || assignedIds.includes(String(u.OBJECTID))).map((unit, idx) => {
                 const sold = isSoldStatus(unit.Status);
                 const priceM = unit.Price ? (unit.Price / 1_000_000).toFixed(2) : null;
                 const designUrl = getBuildingDesignUrl(unit.Image_Name || unit.BuildingModel || '');

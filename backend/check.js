@@ -1,1 +1,0 @@
-const mongoose = require('mongoose'); require('dotenv').config(); mongoose.connect(process.env.MONGO_URI).then(async () => { const Unit = require('./models/Unit'); const units = await Unit.find({ brokerId: { $ne: null } }).lean(); console.log(units.length, 'units assigned to brokers.'); console.log(units.slice(0,2)); process.exit(0); });

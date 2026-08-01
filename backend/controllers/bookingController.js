@@ -3,6 +3,7 @@ const Unit = require('../models/Unit');
 const User = require('../models/User'); 
 const { updateArcGISStatus, checkAndUpdateBuildingCompleteness } = require('../services/arcgisService');
 const { sendBookingEmail } = require('../utils/emailService');
+const { syncUserUpdateToArcGIS } = require('./arcgisSyncController');
 
 exports.brokerReviewRequest = async (req, res) => {
   try {
@@ -30,6 +31,10 @@ exports.brokerReviewRequest = async (req, res) => {
       if (updatedUnit) {
           updatedUnit.status = '3';
           await updatedUnit.save();
+          if (updatedUnit.brokerId) {
+            const broker = await User.findById(updatedUnit.brokerId);
+            if (broker) await syncUserUpdateToArcGIS(broker);
+          }
       }
       
       const io = req.app.get('socketio');
@@ -70,6 +75,9 @@ exports.approveRequest = async (req, res) => {
 
     const unitGlobalId = String(request.unitId).replace(/[{}]/g, '').trim();
 
+    const requestUser = await User.findById(request.userId);
+    const isBroker = requestUser && requestUser.role === 'broker';
+
     // 1. تحديث الداتا بيز (MongoDB)
     let updatedUnit = await Unit.findOne({ 
       $or: [
@@ -84,7 +92,8 @@ exports.approveRequest = async (req, res) => {
         arcgisId: unitGlobalId,
         unitName: request.sourceLayer === 'Villas_Global' ? 'Villa' : 'Apartment',
         status: '4',
-        ownerId: request.userId,
+        ownerId: isBroker ? null : request.userId,
+        brokerId: isBroker ? request.userId : null,
         ownerName: request.customerName,
         ownerEmail: request.customerGmail,
         ownerPhone: request.customerPhone,
@@ -95,7 +104,12 @@ exports.approveRequest = async (req, res) => {
       await updatedUnit.save();
     } else {
       updatedUnit.status = '4';
-      updatedUnit.ownerId = request.userId;
+      if (!isBroker) {
+        updatedUnit.ownerId = request.userId;
+      } else {
+        // If it's a broker making the request for a client, the broker is the broker, not the owner.
+        updatedUnit.brokerId = request.userId;
+      }
       updatedUnit.ownerName = request.customerName;
       updatedUnit.ownerEmail = request.customerGmail;
       updatedUnit.ownerPhone = request.customerPhone;
@@ -107,11 +121,15 @@ exports.approveRequest = async (req, res) => {
       await updatedUnit.save();
     }
 
-    // Add unit to user's ownedUnits and upgrade role to owner
-    await User.findByIdAndUpdate(request.userId, { 
-      $addToSet: { ownedUnits: updatedUnit._id },
-      $set: { role: 'owner' } 
-    });
+    // Add unit to user's ownedUnits (or assigned units if broker) and upgrade role to owner ONLY if they are a user
+    if (isBroker) {
+      // For broker, we just ensure they exist. Their stats will be recalculated in syncUserUpdateToArcGIS.
+    } else {
+      await User.findByIdAndUpdate(request.userId, { 
+        $addToSet: { ownedUnits: updatedUnit._id },
+        $set: { role: 'owner' } 
+      });
+    }
     console.log("✅ Unit data updated in MongoDB!");
 
     // 2. 🚀 تحديث الخريطة (ArcGIS) - ده اللي كان متعطل وشغلناه!
@@ -138,19 +156,32 @@ exports.approveRequest = async (req, res) => {
     await request.save();
     console.log("🟢 Booking Request status updated to Approved!");
 
-    // 5. ترقية العميل لـ Owner
+    // 5. ترقية العميل لـ Owner (لو مكنش Broker) ومزامنة ArcGIS
     if (request.userId) {
-      const user = await User.findById(request.userId._id);
+      const user = await User.findById(request.userId);
       if (user) {
         if (user.role === 'user') {
           user.role = 'owner';
+          if (!user.ownedUnits.includes(updatedUnit._id)) {
+            user.ownedUnits.push(updatedUnit._id);
+          }
+          await user.save();
+          console.log("🟢 User promoted to Owner successfully!");
+        } else if (user.role === 'owner') {
+          if (!user.ownedUnits.includes(updatedUnit._id)) {
+            user.ownedUnits.push(updatedUnit._id);
+            await user.save();
+          }
         }
-        if (!user.ownedUnits.includes(updatedUnit._id)) {
-          user.ownedUnits.push(updatedUnit._id);
-        }
-        await user.save();
-        console.log("🟢 User promoted to Owner successfully!");
+        // Sync the user who made the request (either they are the owner, or they are the broker)
+        await syncUserUpdateToArcGIS(user);
       }
+    }
+
+    // If the unit had an existing brokerId (e.g. assigned manually by admin previously), sync that broker too
+    if (updatedUnit.brokerId && String(updatedUnit.brokerId) !== String(request.userId)) {
+      const broker = await User.findById(updatedUnit.brokerId);
+      if (broker) await syncUserUpdateToArcGIS(broker);
     }
 
     // 6. Send Approval Email
@@ -208,6 +239,10 @@ exports.adminRejectRequest = async (req, res) => {
     if (updatedUnit) {
         updatedUnit.status = '1';
         await updatedUnit.save();
+        if (updatedUnit.brokerId) {
+          const broker = await User.findById(updatedUnit.brokerId);
+          if (broker) await syncUserUpdateToArcGIS(broker);
+        }
     }
 
     // Send Rejection Email

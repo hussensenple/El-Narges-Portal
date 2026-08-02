@@ -1,12 +1,12 @@
-# El Narges Portal — Master System Prompt
+﻿# El Narges Portal â€” Master System Prompt
 
-Act as an Expert System Architect, Full-Stack MERN Developer, and Web GIS Engineer. This document describes the **complete, current state** of the "El Narges Portal" system — including all architecture decisions, data models, API contracts, and critical constraints.
+Act as an Expert System Architect, Full-Stack MERN Developer, and Web GIS Engineer. This document describes the **complete, current state** of the "El Narges Portal" system â€” including all architecture decisions, data models, API contracts, and critical constraints.
 
 ---
 
 # 1. Project Overview
 
-**"El Narges Portal"** is an interactive 3D Web GIS real estate platform that integrates real-time transactional data (MongoDB) with 3D spatial data (ArcGIS Feature Servers). It serves multiple user roles — Users, Owners, Brokers, Engineers, and Admins — and features:
+**"El Narges Portal"** is an interactive 3D Web GIS real estate platform that integrates real-time transactional data (MongoDB) with 3D spatial data (ArcGIS Feature Servers). It serves multiple user roles â€” Users, Owners, Brokers, Engineers, and Admins â€” and features:
 
 - **AI-powered Property Advisor** (Google Gemini 2.5 Flash)
 - **Full Admin Role Management Portal** (assign/remove properties, change roles, view dashboards)
@@ -15,18 +15,18 @@ Act as an Expert System Architect, Full-Stack MERN Developer, and Web GIS Engine
 - **User Portal** (submit interest/booking requests, track request status)
 - **Complaint Management** (internal & external complaints with coordinates)
 - **3D Map with GIS Tools** (Closest Facility routing, Multi-Stop routing, Layer control, Basemap gallery)
-- **Real-time dual-database synchronization** (MongoDB ↔ ArcGIS Feature Servers via Socket.io + REST)
+- **Real-time dual-database synchronization** (MongoDB â†” ArcGIS Feature Servers via Socket.io + REST)
 - **Live Weather Overlay** (OpenWeatherMap API mapped onto the 3D scene)
 - **2D/3D Map Toggle** (switch between SceneView and MapView)
 - **Account Settings** (users/owners can update personal info and secondary contact)
 - **Email Notifications** (booking approved/rejected/declined emails sent automatically)
-- **Onboarding Walkthrough Tour** (role-based interactive guided tour using a dark CSS spotlight mask backdrop for Visitors, Users, and Owners, trackable via `localStorage`, with a manual restart button `📖` in the top right)
+- **Onboarding Walkthrough Tour** (role-based interactive guided tour using a dark CSS spotlight mask backdrop for Visitors, Users, and Owners, trackable via `localStorage`, with a manual restart button `ðŸ“–` in the top right)
 - **Engineer Portal & Maintenance Suite** (Technician directory, Active tasks, Utility network placeholder, Engineering AI RAG Assistant with manual knowledge base)
 - **ArcGIS Survey123 & ngrok Live Integration** (Real-time dual-database synchronization for technician registration via ngrok tunnel and Survey123 embedded dark form)
 - **One-Click System Launchers** (Start-Platform.bat and Stop-Platform.bat for seamless multi-service execution)
 
 The complete 4-step booking workflow is fully implemented:
-`User submits Interest (Pending) → Broker reviews → raises to Admin (Reserved) or Declines → Admin Approves (Sold/Owner promoted) or Rejects`
+`User submits Interest (Pending) â†’ Broker reviews â†’ raises to Admin (Reserved) or Declines â†’ Admin Approves (Sold/Owner promoted) or Rejects`
 
 **Recent Feature Updates (July 2026):**
 - **Engineer Dashboard Button:** A dedicated "Open Dashboard" button floats beside the Utility Network button for Engineers.
@@ -65,14 +65,14 @@ This is the **critical bridge** between the two systems. A `Unit` document is cr
 
 | Field | Purpose |
 |---|---|
-| `arcgisId` | The ArcGIS OBJECTID (apartments) or GlobalID (villas) — used as the lookup key for all ArcGIS API calls |
-| `objectId` | The numeric ArcGIS OBJECTID — used as the **display ID** shown to users |
+| `arcgisId` | The ArcGIS OBJECTID (apartments) or GlobalID (villas) â€” used as the lookup key for all ArcGIS API calls |
+| `objectId` | The numeric ArcGIS OBJECTID â€” used as the **display ID** shown to users |
 | `globalId` | ArcGIS GlobalID (GUID string) |
-| `unitName` | Human-readable label (e.g. "فيلا", "Apartment") |
-| `sourceLayer` | `'Units'` for Apartments \| `'Villas_Global'` for Villas & TwinHouses — **CRITICAL** for routing ArcGIS update calls to the correct Feature Layer |
+| `unitName` | Human-readable label (e.g. "ÙÙŠÙ„Ø§", "Apartment") |
+| `sourceLayer` | `'Units'` for Apartments \| `'Villas_Global'` for Villas & TwinHouses â€” **CRITICAL** for routing ArcGIS update calls to the correct Feature Layer |
 | `status` | `'1'` = Available, `'2'` = Interested, `'3'` = Reserved, `'4'` = Sold |
-| `ownerId` | MongoDB ObjectId ref to `User` — set when property is assigned/sold to an owner |
-| `brokerId` | MongoDB ObjectId ref to `User` — set when property is assigned to a broker |
+| `ownerId` | MongoDB ObjectId ref to `User` â€” set when property is assigned/sold to an owner |
+| `brokerId` | MongoDB ObjectId ref to `User` â€” set when property is assigned to a broker |
 | `ownerName`, `ownerEmail`, `ownerPhone` | Denormalized owner contact info (used for ArcGIS map pop-ups) |
 | `strict: false` | Schema allows extra fields without rejection |
 
@@ -130,20 +130,20 @@ The `User` model (MongoDB) has a `role` field. Valid roles: `'user'`, `'owner'`,
 
 ### Frontend Admin Portal
 Located under `frontend/src/components/admin/` and `frontend/src/pages/AdminRequests.tsx`:
-- `AdminRequests.tsx` (page) — Main admin portal page with tabbed navigation
-- `AdminDashboardTab.tsx` — Analytics dashboard with redesigned layout:
+- `AdminRequests.tsx` (page) â€” Main admin portal page with tabbed navigation
+- `AdminDashboardTab.tsx` â€” Analytics dashboard with redesigned layout:
   - **Center Column (Indicators & 3D Map):** Moves the 4 main indicators (Revenue, Sold, Reserved, Available) inside the center column to align directly with the width of the 3D Map viewer.
   - **Right Column (Analytics & Leaderboards):** Stacks the Pie Chart (Sold Units Ratio), Bar Chart (Property Status), and Top Brokers widget vertically. The Top Brokers widget features a custom UI mimicking a leaderboard (gold/silver/bronze rank circles, with SOLD/RAISED/DECLINED counts).
   - **Left Column (Regions, Owners & Sales):** Stacks the scrollable Top Selling Regions list (at the top), Top Owners list (sorted descending by total money paid for their properties via ArcGIS query, with large gold text for the paid amount), and Recent Sales list (at the bottom).
-- `RolesWidget.tsx` — Quick role switcher widget
-- `RejectionAnalysisTab.tsx` — Two-panel view for analyzing rejection reasons (filterable list + live recharts bar chart)
+- `RolesWidget.tsx` â€” Quick role switcher widget
+- `RejectionAnalysisTab.tsx` â€” Two-panel view for analyzing rejection reasons (filterable list + live recharts bar chart)
 - **Tables:** `OwnersTable.tsx`, `BrokersTable.tsx`, `EngineersTable.tsx`, `AdminsTable.tsx`, `UsersTable.tsx`
 - **Modals:** `PropertyAssignCatalog.tsx`, `EditUserModal.tsx`, `RoleChangeModal.tsx`, `BrokerPerformanceModal.tsx`, `OwnerPropertiesModal.tsx` (displays properties owned by selected user in top owners list, with map location sync matching owner dashboard design), `TopOwnersChartModal.tsx` (displays recharts bar chart of top 25 owners by paid amount)
-- **Map Tools:** `AdminUnitSidebar.tsx` — Allows Admins and Engineers to click any building/unit on the 3D map to open a right-side panel containing unit ID, occupancy status, owner details, unit plan exploration, and internal/external complaints management for that specific unit.
+- **Map Tools:** `AdminUnitSidebar.tsx` â€” Allows Admins and Engineers to click any building/unit on the 3D map to open a right-side panel containing unit ID, occupancy status, owner details, unit plan exploration, and internal/external complaints management for that specific unit.
 
 ---
 
-## D. Booking Workflow (Fully Implemented — 4 Steps)
+## D. Booking Workflow (Fully Implemented â€” 4 Steps)
 
 **Route prefix:** `/api/bookings/`
 
@@ -157,22 +157,22 @@ Located under `frontend/src/components/admin/` and `frontend/src/pages/AdminRequ
 | `/all-broker-pending` | GET | Admin fetches all pending requests grouped by broker |
 | `/reject/:requestId` | POST | Admin rejects a request, captures `rejectionReason` (e.g. `Management Decision`) and `rejectionNotes`. Updates ArcGIS to Available, sends email. |
 
-**Booking status flow:** `Pending → Reserved (broker raised) → Approved (admin) / Rejected (admin) / Declined (broker)`
+**Booking status flow:** `Pending â†’ Reserved (broker raised) â†’ Approved (admin) / Rejected (admin) / Declined (broker)`
 
 **Rejection Tracking:** The `BookingRequest` model captures `rejectionReason` (dropdown domain) and `rejectionNotes` (textbox) when a Broker declines or an Admin rejects a request. This data is used for future analytics.
 
-**Unique constraint:** `BookingRequest` has a compound unique index on `{ userId, unitId }` — a user cannot submit two requests for the same unit.
+**Unique constraint:** `BookingRequest` has a compound unique index on `{ userId, unitId }` â€” a user cannot submit two requests for the same unit.
 
 ---
 
 ## E. Broker Portal (Fully Implemented)
 
-`BrokerCatalog.tsx` — Broker's main view:
+`BrokerCatalog.tsx` â€” Broker's main view:
 - Fetches all units assigned to the logged-in broker from `/api/roles/user-units/:userId?role=broker`
 - Fetches pending+reserved booking requests from `/api/bookings/broker-pending`
 - Displays units grouped as **Apartments** and **Villas** with red badge showing request count
 - Real-time updates via Socket.io (`newBookingRequest` event)
-- Click a unit → opens `BrokerUnitRequestsModal.tsx` to raise or decline each request
+- Click a unit â†’ opens `BrokerUnitRequestsModal.tsx` to raise or decline each request
 - Zoom-to-unit button navigates the 3D map camera to the property
 
 ### Broker Self-Service Performance Dashboard
@@ -186,13 +186,13 @@ Located under `frontend/src/components/admin/` and `frontend/src/pages/AdminRequ
 - **Commission Formula:** Calculated as **1.5%** of the Total Revenue generated by sold properties (`revenueMEGP * 15`). Displays in Thousand EGP.
 - **Enhanced Visual Charts:** Features enlarged Requests Conversion (Pie Chart) and Requests by Property Type (Bar Chart) set to an increased height of **420px** for high-resolution readability.
 
-`BrokerMapPopup.tsx` — In-map popup shown when broker clicks a feature on the 3D map.
+`BrokerMapPopup.tsx` â€” In-map popup shown when broker clicks a feature on the 3D map.
 
 ---
 
 ## F. Owner Portal (Fully Implemented)
 
-`OwnerUnitsTab.tsx` — Owner's main view:
+`OwnerUnitsTab.tsx` â€” Owner's main view:
 - Lists all owned units (apartments and villas)
 - Allows submitting complaints per unit (`ComplaintForm.tsx`)
 - Allows viewing/tracking booking requests on their units
@@ -203,7 +203,7 @@ Located under `frontend/src/components/admin/` and `frontend/src/pages/AdminRequ
 
 ## G. User Portal (Fully Implemented)
 
-`UserRequestsModal.tsx` — User's request tracking view:
+`UserRequestsModal.tsx` â€” User's request tracking view:
 - Shows all submitted booking requests with current status
 - Status labels: Pending (yellow), Reserved (purple), Approved/green, Rejected/red, Declined/gray
 
@@ -212,11 +212,11 @@ Located under `frontend/src/components/admin/` and `frontend/src/pages/AdminRequ
 ## H. Property Catalog (User-Facing Map)
 
 `UnitCatalog.tsx`:
-- Fetches data from `/api/roles/catalog?mode=all` (Express backend) — **NOT** from the ArcGIS JS SDK local cache to ensure real-time synchronization.
+- Fetches data from `/api/roles/catalog?mode=all` (Express backend) â€” **NOT** from the ArcGIS JS SDK local cache to ensure real-time synchronization.
 - Status normalization: handles both text (`'Available'`, `'Sold'`) and numeric (`'1'`, `'4'`) ArcGIS status codes.
 - Allows clicking a card to zoom to the property on the 3D map and open the building sidebar.
 
-`BuildingSidebar.tsx` — Shown when a building is clicked on the map. Displays all units within that building with their availability status.
+`BuildingSidebar.tsx` â€” Shown when a building is clicked on the map. Displays all units within that building with their availability status.
 
 ---
 
@@ -224,7 +224,7 @@ Located under `frontend/src/components/admin/` and `frontend/src/pages/AdminRequ
 
 - **3D Map (`MapViewer.tsx`):** ArcGIS SceneView with all Feature Layers loaded. Hit-test on click to identify buildings/villas. Opens `BuildingSidebar` for apartment buildings.
 - **2D Map (`MapViewer2D.tsx`):** ArcGIS MapView with layers and basemap gallery. Has a "Switch to 3D" button.
-- **Closest Facility (`ClosestServices.tsx`):** User clicks a residential building, selects service type (School, Hospital, Gym, Commercial), and gets the nearest route. Relies on ArcGIS `IdentityManager` — no API key injected.
+- **Closest Facility (`ClosestServices.tsx`):** User clicks a residential building, selects service type (School, Hospital, Gym, Commercial), and gets the nearest route. Relies on ArcGIS `IdentityManager` â€” no API key injected.
 - **Multi-Stop Routing (`StopsRoutingWidget.tsx`):** User adds multiple stops on the map and calculates a full route.
 - **Weather Widget (`WeatherWidget.tsx`):** Fetches live weather via OpenWeatherMap backend route and overlays conditions on the 3D scene.
 - **Layer Control:** Toggle visibility of map layers.
@@ -277,12 +277,12 @@ Located under `frontend/src/components/admin/` and `frontend/src/pages/AdminRequ
 2. **`objectId` (numeric OBJECTID) must be saved alongside `arcgisId`.** Used for display and for apartment ArcGIS calls.
 3. **`ownerId` must always be set on the Unit document when a property is owned.**
 4. **ArcGIS JS SDK Cache:** Do NOT use `layer.queryFeatures()` directly in the public-facing catalog (`UnitCatalog.tsx`). Always fetch from the backend API.
-5. **Mongoose Strict Mode:** The `Unit` schema uses `strict: false` — extra fields like `sourceLayer`, `objectId`, `buildingFK` are persisted automatically.
+5. **Mongoose Strict Mode:** The `Unit` schema uses `strict: false` â€” extra fields like `sourceLayer`, `objectId`, `buildingFK` are persisted automatically.
 6. **Network Analysis Login:** Never inject an API Key in `ClosestServices.tsx`. Always allow `IdentityManager` to popup for organizational credit consumption.
 7. **BookingRequest unique index:** `{ userId, unitId }` compound unique index prevents duplicate submissions. Handle `error.code === 11000` on the backend.
 8. **Villas ArcGIS update:** Always use `applyEdits` with `useGlobalIds: true` when the `arcgisId` contains a `-` (GUID format). Use `updateFeatures` only for `Units` (apartments).
 9. **Building Completeness Check:** After selling/reverting an apartment unit, call `checkAndUpdateBuildingCompleteness(buildingFK)` to update the parent `Buildings_Global` layer status.
-10. **Socket.io event name:** `'newBookingRequest'` — emitted by backend on every booking state change. Frontend components subscribe to this event for real-time refresh.
+10. **Socket.io event name:** `'newBookingRequest'` â€” emitted by backend on every booking state change. Frontend components subscribe to this event for real-time refresh.
 
 ---
 
@@ -290,44 +290,44 @@ Located under `frontend/src/components/admin/` and `frontend/src/pages/AdminRequ
 
 ```
 frontend/src/
-├── App.tsx                          ← Main layout, routing (/ and /admin), toolbar buttons, role-based UI
-├── context/AuthContext.tsx          ← JWT auth state (localStorage-persisted), login/logout/updateUser
-├── services/api.ts                  ← Axios base API helper
-├── pages/
-│   └── AdminRequests.tsx            ← Admin portal page (/admin route)
-└── components/
-    ├── MapViewer.tsx                 ← 3D SceneView, hit-test, layer loading
-    ├── MapViewer2D.tsx               ← 2D MapView with basemap & layers
-    ├── BuildingSidebar.tsx           ← Apartment unit list shown on building click
-    ├── UnitCatalog.tsx               ← User-facing property catalog (fetches from backend)
-    ├── BrokerCatalog.tsx             ← Broker's assigned units catalog with request badges
-    ├── BrokerUnitRequestsModal.tsx   ← Broker raise/decline actions per unit
-    ├── BrokerMapPopup.tsx            ← In-map popup for broker when clicking a feature
-    ├── OwnerUnitsTab.tsx             ← Owner's units view with complaints & price update
-    ├── UserRequestsModal.tsx         ← User's booking request tracking
-    ├── AccountSettingsModal.tsx      ← User/owner account info update
-    ├── AIAdvisor.tsx                 ← Gemini AI chatbot panel
-    ├── AuthModal.tsx                 ← Login/register modal
-    ├── ComplaintForm.tsx             ← Complaint submission form
-    ├── ClosestServices.tsx           ← ArcGIS closest facility routing (no API key)
-    ├── StopsRoutingWidget.tsx        ← Multi-stop route planner
-    ├── WeatherWidget.tsx             ← OpenWeatherMap live weather on 3D scene
-    └── admin/
-        ├── AdminDashboardTab.tsx
-        ├── AdminComplaintsTab.tsx
-        ├── PropertyManagementTab.tsx
-        ├── RolesWidget.tsx
-        ├── tables/
-        │   ├── OwnersTable.tsx
-        │   ├── BrokersTable.tsx
-        │   ├── EngineersTable.tsx
-        │   ├── AdminsTable.tsx
-        │   └── UsersTable.tsx
-        └── modals/
-            ├── PropertyAssignCatalog.tsx
-            ├── EditUserModal.tsx
-            ├── RoleChangeModal.tsx
-            └── BrokerPerformanceModal.tsx
+â”œâ”€â”€ App.tsx                          â† Main layout, routing (/ and /admin), toolbar buttons, role-based UI
+â”œâ”€â”€ context/AuthContext.tsx          â† JWT auth state (localStorage-persisted), login/logout/updateUser
+â”œâ”€â”€ services/api.ts                  â† Axios base API helper
+â”œâ”€â”€ pages/
+â”‚   â””â”€â”€ AdminRequests.tsx            â† Admin portal page (/admin route)
+â””â”€â”€ components/
+    â”œâ”€â”€ MapViewer.tsx                 â† 3D SceneView, hit-test, layer loading
+    â”œâ”€â”€ MapViewer2D.tsx               â† 2D MapView with basemap & layers
+    â”œâ”€â”€ BuildingSidebar.tsx           â† Apartment unit list shown on building click
+    â”œâ”€â”€ UnitCatalog.tsx               â† User-facing property catalog (fetches from backend)
+    â”œâ”€â”€ BrokerCatalog.tsx             â† Broker's assigned units catalog with request badges
+    â”œâ”€â”€ BrokerUnitRequestsModal.tsx   â† Broker raise/decline actions per unit
+    â”œâ”€â”€ BrokerMapPopup.tsx            â† In-map popup for broker when clicking a feature
+    â”œâ”€â”€ OwnerUnitsTab.tsx             â† Owner's units view with complaints & price update
+    â”œâ”€â”€ UserRequestsModal.tsx         â† User's booking request tracking
+    â”œâ”€â”€ AccountSettingsModal.tsx      â† User/owner account info update
+    â”œâ”€â”€ AIAdvisor.tsx                 â† Gemini AI chatbot panel
+    â”œâ”€â”€ AuthModal.tsx                 â† Login/register modal
+    â”œâ”€â”€ ComplaintForm.tsx             â† Complaint submission form
+    â”œâ”€â”€ ClosestServices.tsx           â† ArcGIS closest facility routing (no API key)
+    â”œâ”€â”€ StopsRoutingWidget.tsx        â† Multi-stop route planner
+    â”œâ”€â”€ WeatherWidget.tsx             â† OpenWeatherMap live weather on 3D scene
+    â””â”€â”€ admin/
+        â”œâ”€â”€ AdminDashboardTab.tsx
+        â”œâ”€â”€ AdminComplaintsTab.tsx
+        â”œâ”€â”€ PropertyManagementTab.tsx
+        â”œâ”€â”€ RolesWidget.tsx
+        â”œâ”€â”€ tables/
+        â”‚   â”œâ”€â”€ OwnersTable.tsx
+        â”‚   â”œâ”€â”€ BrokersTable.tsx
+        â”‚   â”œâ”€â”€ EngineersTable.tsx
+        â”‚   â”œâ”€â”€ AdminsTable.tsx
+        â”‚   â””â”€â”€ UsersTable.tsx
+        â””â”€â”€ modals/
+            â”œâ”€â”€ PropertyAssignCatalog.tsx
+            â”œâ”€â”€ EditUserModal.tsx
+            â”œâ”€â”€ RoleChangeModal.tsx
+            â””â”€â”€ BrokerPerformanceModal.tsx
 ```
 
 ---
@@ -338,36 +338,36 @@ All core features from the original roadmap are **fully implemented and running*
 
 | Feature | Status |
 |---|---|
-| 3D ArcGIS Map (SceneView) | ✅ Done |
-| 2D ArcGIS Map (MapView) | ✅ Done |
-| User Auth (JWT) | ✅ Done |
-| Admin Role Management Portal | ✅ Done |
-| Property Assignment (Admin → Owner/Broker) | ✅ Done |
-| ArcGIS Dual-DB Sync (MongoDB ↔ ArcGIS) | ✅ Done |
-| Broker Portal (Catalog + Request Management) | ✅ Done |
-| 4-Step Booking Workflow | ✅ Done |
-| Owner Portal (Units + Complaints + Price) | ✅ Done |
-| User Request Tracking Modal | ✅ Done |
-| AI Advisor (Gemini) | ✅ Done |
-| Closest Facility Routing | ✅ Done |
-| Multi-Stop Routing | ✅ Done |
-| Weather Widget | ✅ Done |
-| Real-time Socket.io Notifications | ✅ Done |
-| Email Notifications (Booking status) | ✅ Done |
-| Account Settings Modal | ✅ Done |
-| Broker Performance Dashboard | ✅ Done |
-| Building Completeness Check (ArcGIS) | ✅ Done |
-| Engineer Maintenance Suite (Technicians & Active Tasks) | ✅ Done |
+| 3D ArcGIS Map (SceneView) | âœ… Done |
+| 2D ArcGIS Map (MapView) | âœ… Done |
+| User Auth (JWT) | âœ… Done |
+| Admin Role Management Portal | âœ… Done |
+| Property Assignment (Admin â†’ Owner/Broker) | âœ… Done |
+| ArcGIS Dual-DB Sync (MongoDB â†” ArcGIS) | âœ… Done |
+| Broker Portal (Catalog + Request Management) | âœ… Done |
+| 4-Step Booking Workflow | âœ… Done |
+| Owner Portal (Units + Complaints + Price) | âœ… Done |
+| User Request Tracking Modal | âœ… Done |
+| AI Advisor (Gemini) | âœ… Done |
+| Closest Facility Routing | âœ… Done |
+| Multi-Stop Routing | âœ… Done |
+| Weather Widget | âœ… Done |
+| Real-time Socket.io Notifications | âœ… Done |
+| Email Notifications (Booking status) | âœ… Done |
+| Account Settings Modal | âœ… Done |
+| Broker Performance Dashboard | âœ… Done |
+| Building Completeness Check (ArcGIS) | âœ… Done |
+| Engineer Maintenance Suite (Technicians & Active Tasks) | âœ… Done |
 ---
 
 ## E. Broker Portal (Fully Implemented)
 
-`BrokerCatalog.tsx` — Broker's main view:
+`BrokerCatalog.tsx` â€” Broker's main view:
 - Fetches all units assigned to the logged-in broker from `/api/roles/user-units/:userId?role=broker`
 - Fetches pending+reserved booking requests from `/api/bookings/broker-pending`
 - Displays units grouped as **Apartments** and **Villas** with red badge showing request count
 - Real-time updates via Socket.io (`newBookingRequest` event)
-- Click a unit → opens `BrokerUnitRequestsModal.tsx` to raise or decline each request
+- Click a unit â†’ opens `BrokerUnitRequestsModal.tsx` to raise or decline each request
 - Zoom-to-unit button navigates the 3D map camera to the property
 
 ### Broker Self-Service Performance Dashboard
@@ -381,13 +381,13 @@ All core features from the original roadmap are **fully implemented and running*
 - **Commission Formula:** Calculated as **1.5%** of the Total Revenue generated by sold properties (`revenueMEGP * 15`). Displays in Thousand EGP.
 - **Enhanced Visual Charts:** Features enlarged Requests Conversion (Pie Chart) and Requests by Property Type (Bar Chart) set to an increased height of **420px** for high-resolution readability.
 
-`BrokerMapPopup.tsx` — In-map popup shown when broker clicks a feature on the 3D map.
+`BrokerMapPopup.tsx` â€” In-map popup shown when broker clicks a feature on the 3D map.
 
 ---
 
 ## F. Owner Portal (Fully Implemented)
 
-`OwnerUnitsTab.tsx` — Owner's main view:
+`OwnerUnitsTab.tsx` â€” Owner's main view:
 - Lists all owned units (apartments and villas)
 - Allows submitting complaints per unit (`ComplaintForm.tsx`)
 - Allows viewing/tracking booking requests on their units
@@ -398,7 +398,7 @@ All core features from the original roadmap are **fully implemented and running*
 
 ## G. User Portal (Fully Implemented)
 
-`UserRequestsModal.tsx` — User's request tracking view:
+`UserRequestsModal.tsx` â€” User's request tracking view:
 - Shows all submitted booking requests with current status
 - Status labels: Pending (yellow), Reserved (purple), Approved/green, Rejected/red, Declined/gray
 
@@ -407,11 +407,11 @@ All core features from the original roadmap are **fully implemented and running*
 ## H. Property Catalog (User-Facing Map)
 
 `UnitCatalog.tsx`:
-- Fetches data from `/api/roles/catalog?mode=all` (Express backend) — **NOT** from the ArcGIS JS SDK local cache to ensure real-time synchronization.
+- Fetches data from `/api/roles/catalog?mode=all` (Express backend) â€” **NOT** from the ArcGIS JS SDK local cache to ensure real-time synchronization.
 - Status normalization: handles both text (`'Available'`, `'Sold'`) and numeric (`'1'`, `'4'`) ArcGIS status codes.
 - Allows clicking a card to zoom to the property on the 3D map and open the building sidebar.
 
-`BuildingSidebar.tsx` — Shown when a building is clicked on the map. Displays all units within that building with their availability status.
+`BuildingSidebar.tsx` â€” Shown when a building is clicked on the map. Displays all units within that building with their availability status.
 
 ---
 
@@ -419,7 +419,7 @@ All core features from the original roadmap are **fully implemented and running*
 
 - **3D Map (`MapViewer.tsx`):** ArcGIS SceneView with all Feature Layers loaded. Hit-test on click to identify buildings/villas. Opens `BuildingSidebar` for apartment buildings.
 - **2D Map (`MapViewer2D.tsx`):** ArcGIS MapView with layers and basemap gallery. Has a "Switch to 3D" button.
-- **Closest Facility (`ClosestServices.tsx`):** User clicks a residential building, selects service type (School, Hospital, Gym, Commercial), and gets the nearest route. Relies on ArcGIS `IdentityManager` — no API key injected.
+- **Closest Facility (`ClosestServices.tsx`):** User clicks a residential building, selects service type (School, Hospital, Gym, Commercial), and gets the nearest route. Relies on ArcGIS `IdentityManager` â€” no API key injected.
 - **Multi-Stop Routing (`StopsRoutingWidget.tsx`):** User adds multiple stops on the map and calculates a full route.
 - **Weather Widget (`WeatherWidget.tsx`):** Fetches live weather via OpenWeatherMap backend route and overlays conditions on the 3D scene.
 - **Layer Control:** Toggle visibility of map layers.
@@ -472,12 +472,12 @@ All core features from the original roadmap are **fully implemented and running*
 2. **`objectId` (numeric OBJECTID) must be saved alongside `arcgisId`.** Used for display and for apartment ArcGIS calls.
 3. **`ownerId` must always be set on the Unit document when a property is owned.**
 4. **ArcGIS JS SDK Cache:** Do NOT use `layer.queryFeatures()` directly in the public-facing catalog (`UnitCatalog.tsx`). Always fetch from the backend API.
-5. **Mongoose Strict Mode:** The `Unit` schema uses `strict: false` — extra fields like `sourceLayer`, `objectId`, `buildingFK` are persisted automatically.
+5. **Mongoose Strict Mode:** The `Unit` schema uses `strict: false` â€” extra fields like `sourceLayer`, `objectId`, `buildingFK` are persisted automatically.
 6. **Network Analysis Login:** Never inject an API Key in `ClosestServices.tsx`. Always allow `IdentityManager` to popup for organizational credit consumption.
 7. **BookingRequest unique index:** `{ userId, unitId }` compound unique index prevents duplicate submissions. Handle `error.code === 11000` on the backend.
 8. **Villas ArcGIS update:** Always use `applyEdits` with `useGlobalIds: true` when the `arcgisId` contains a `-` (GUID format). Use `updateFeatures` only for `Units` (apartments).
 9. **Building Completeness Check:** After selling/reverting an apartment unit, call `checkAndUpdateBuildingCompleteness(buildingFK)` to update the parent `Buildings_Global` layer status.
-10. **Socket.io event name:** `'newBookingRequest'` — emitted by backend on every booking state change. Frontend components subscribe to this event for real-time refresh.
+10. **Socket.io event name:** `'newBookingRequest'` â€” emitted by backend on every booking state change. Frontend components subscribe to this event for real-time refresh.
 
 ---
 
@@ -485,44 +485,44 @@ All core features from the original roadmap are **fully implemented and running*
 
 ```
 frontend/src/
-├── App.tsx                          ← Main layout, routing (/ and /admin), toolbar buttons, role-based UI
-├── context/AuthContext.tsx          ← JWT auth state (localStorage-persisted), login/logout/updateUser
-├── services/api.ts                  ← Axios base API helper
-├── pages/
-│   └── AdminRequests.tsx            ← Admin portal page (/admin route)
-└── components/
-    ├── MapViewer.tsx                 ← 3D SceneView, hit-test, layer loading
-    ├── MapViewer2D.tsx               ← 2D MapView with basemap & layers
-    ├── BuildingSidebar.tsx           ← Apartment unit list shown on building click
-    ├── UnitCatalog.tsx               ← User-facing property catalog (fetches from backend)
-    ├── BrokerCatalog.tsx             ← Broker's assigned units catalog with request badges
-    ├── BrokerUnitRequestsModal.tsx   ← Broker raise/decline actions per unit
-    ├── BrokerMapPopup.tsx            ← In-map popup for broker when clicking a feature
-    ├── OwnerUnitsTab.tsx             ← Owner's units view with complaints & price update
-    ├── UserRequestsModal.tsx         ← User's booking request tracking
-    ├── AccountSettingsModal.tsx      ← User/owner account info update
-    ├── AIAdvisor.tsx                 ← Gemini AI chatbot panel
-    ├── AuthModal.tsx                 ← Login/register modal
-    ├── ComplaintForm.tsx             ← Complaint submission form
-    ├── ClosestServices.tsx           ← ArcGIS closest facility routing (no API key)
-    ├── StopsRoutingWidget.tsx        ← Multi-stop route planner
-    ├── WeatherWidget.tsx             ← OpenWeatherMap live weather on 3D scene
-    └── admin/
-        ├── AdminDashboardTab.tsx
-        ├── AdminComplaintsTab.tsx
-        ├── PropertyManagementTab.tsx
-        ├── RolesWidget.tsx
-        ├── tables/
-        │   ├── OwnersTable.tsx
-        │   ├── BrokersTable.tsx
-        │   ├── EngineersTable.tsx
-        │   ├── AdminsTable.tsx
-        │   └── UsersTable.tsx
-        └── modals/
-            ├── PropertyAssignCatalog.tsx
-            ├── EditUserModal.tsx
-            ├── RoleChangeModal.tsx
-            └── BrokerPerformanceModal.tsx
+â”œâ”€â”€ App.tsx                          â† Main layout, routing (/ and /admin), toolbar buttons, role-based UI
+â”œâ”€â”€ context/AuthContext.tsx          â† JWT auth state (localStorage-persisted), login/logout/updateUser
+â”œâ”€â”€ services/api.ts                  â† Axios base API helper
+â”œâ”€â”€ pages/
+â”‚   â””â”€â”€ AdminRequests.tsx            â† Admin portal page (/admin route)
+â””â”€â”€ components/
+    â”œâ”€â”€ MapViewer.tsx                 â† 3D SceneView, hit-test, layer loading
+    â”œâ”€â”€ MapViewer2D.tsx               â† 2D MapView with basemap & layers
+    â”œâ”€â”€ BuildingSidebar.tsx           â† Apartment unit list shown on building click
+    â”œâ”€â”€ UnitCatalog.tsx               â† User-facing property catalog (fetches from backend)
+    â”œâ”€â”€ BrokerCatalog.tsx             â† Broker's assigned units catalog with request badges
+    â”œâ”€â”€ BrokerUnitRequestsModal.tsx   â† Broker raise/decline actions per unit
+    â”œâ”€â”€ BrokerMapPopup.tsx            â† In-map popup for broker when clicking a feature
+    â”œâ”€â”€ OwnerUnitsTab.tsx             â† Owner's units view with complaints & price update
+    â”œâ”€â”€ UserRequestsModal.tsx         â† User's booking request tracking
+    â”œâ”€â”€ AccountSettingsModal.tsx      â† User/owner account info update
+    â”œâ”€â”€ AIAdvisor.tsx                 â† Gemini AI chatbot panel
+    â”œâ”€â”€ AuthModal.tsx                 â† Login/register modal
+    â”œâ”€â”€ ComplaintForm.tsx             â† Complaint submission form
+    â”œâ”€â”€ ClosestServices.tsx           â† ArcGIS closest facility routing (no API key)
+    â”œâ”€â”€ StopsRoutingWidget.tsx        â† Multi-stop route planner
+    â”œâ”€â”€ WeatherWidget.tsx             â† OpenWeatherMap live weather on 3D scene
+    â””â”€â”€ admin/
+        â”œâ”€â”€ AdminDashboardTab.tsx
+        â”œâ”€â”€ AdminComplaintsTab.tsx
+        â”œâ”€â”€ PropertyManagementTab.tsx
+        â”œâ”€â”€ RolesWidget.tsx
+        â”œâ”€â”€ tables/
+        â”‚   â”œâ”€â”€ OwnersTable.tsx
+        â”‚   â”œâ”€â”€ BrokersTable.tsx
+        â”‚   â”œâ”€â”€ EngineersTable.tsx
+        â”‚   â”œâ”€â”€ AdminsTable.tsx
+        â”‚   â””â”€â”€ UsersTable.tsx
+        â””â”€â”€ modals/
+            â”œâ”€â”€ PropertyAssignCatalog.tsx
+            â”œâ”€â”€ EditUserModal.tsx
+            â”œâ”€â”€ RoleChangeModal.tsx
+            â””â”€â”€ BrokerPerformanceModal.tsx
 ```
 
 ---
@@ -533,35 +533,35 @@ All core features from the original roadmap are **fully implemented and running*
 
 | Feature | Status |
 |---|---|
-| 3D ArcGIS Map (SceneView) | ✅ Done |
-| 2D ArcGIS Map (MapView) | ✅ Done |
-| User Auth (JWT) | ✅ Done |
-| Admin Role Management Portal | ✅ Done |
-| Property Assignment (Admin → Owner/Broker) | ✅ Done |
-| ArcGIS Dual-DB Sync (MongoDB ↔ ArcGIS) | ✅ Done |
-| Broker Portal (Catalog + Request Management) | ✅ Done |
-| 4-Step Booking Workflow | ✅ Done |
-| Owner Portal (Units + Complaints + Price) | ✅ Done |
-| User Request Tracking Modal | ✅ Done |
-| AI Advisor (Gemini) | ✅ Done |
-| Closest Facility Routing | ✅ Done |
-| Multi-Stop Routing | ✅ Done |
-| Weather Widget | ✅ Done |
-| Real-time Socket.io Notifications | ✅ Done |
-| Email Notifications (Booking status) | ✅ Done |
-| Account Settings Modal | ✅ Done |
-| Broker Performance Dashboard | ✅ Done |
-| Building Completeness Check (ArcGIS) | ✅ Done |
-| Engineer Maintenance Suite (Technicians & Active Tasks) | ✅ Done |
-| ArcGIS Survey123 & ngrok Live Webhook Integration | ✅ Done |
-| Engineering AI RAG Assistant (Manual Knowledge Base) | ✅ Done |
-| ArcGIS Dashboard In-App Portal Integration (UNDashboardModal) | ✅ Done |
-| ArcGIS Email Sync & Retroactive Gmail Synchronization | ✅ Done |
-| Property Management Advanced Dependent Filtering | ✅ Done |
-| Admin AI Chatbot for Roles Management | ✅ Done |
-| One-Click System Launchers (.bat scripts) | ✅ Done |
-| User/Owner AI Chatbot History Persistence | ✅ Done |
-| Engineer AI Chatbot History Persistence | ✅ Done |
+| 3D ArcGIS Map (SceneView) | âœ… Done |
+| 2D ArcGIS Map (MapView) | âœ… Done |
+| User Auth (JWT) | âœ… Done |
+| Admin Role Management Portal | âœ… Done |
+| Property Assignment (Admin â†’ Owner/Broker) | âœ… Done |
+| ArcGIS Dual-DB Sync (MongoDB â†” ArcGIS) | âœ… Done |
+| Broker Portal (Catalog + Request Management) | âœ… Done |
+| 4-Step Booking Workflow | âœ… Done |
+| Owner Portal (Units + Complaints + Price) | âœ… Done |
+| User Request Tracking Modal | âœ… Done |
+| AI Advisor (Gemini) | âœ… Done |
+| Closest Facility Routing | âœ… Done |
+| Multi-Stop Routing | âœ… Done |
+| Weather Widget | âœ… Done |
+| Real-time Socket.io Notifications | âœ… Done |
+| Email Notifications (Booking status) | âœ… Done |
+| Account Settings Modal | âœ… Done |
+| Broker Performance Dashboard | âœ… Done |
+| Building Completeness Check (ArcGIS) | âœ… Done |
+| Engineer Maintenance Suite (Technicians & Active Tasks) | âœ… Done |
+| ArcGIS Survey123 & ngrok Live Webhook Integration | âœ… Done |
+| Engineering AI RAG Assistant (Manual Knowledge Base) | âœ… Done |
+| ArcGIS Dashboard In-App Portal Integration (UNDashboardModal) | âœ… Done |
+| ArcGIS Email Sync & Retroactive Gmail Synchronization | âœ… Done |
+| Property Management Advanced Dependent Filtering | âœ… Done |
+| Admin AI Chatbot for Roles Management | âœ… Done |
+| One-Click System Launchers (.bat scripts) | âœ… Done |
+| User/Owner AI Chatbot History Persistence | âœ… Done |
+| Engineer AI Chatbot History Persistence | âœ… Done |
 
 Both dev servers are currently running:
 - **Backend:** `http://localhost:5000` (Express + Socket.io + MongoDB)

@@ -224,31 +224,6 @@ const AdminDashboardTab = () => {
             </div>
           </div>
 
-          {/* Recent Sales List */}
-          <div style={{ flex: 1, backgroundColor: 'var(--bg-tertiary)', padding: '15px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
-            <h4 style={{ marginTop: 0, marginBottom: '10px', color: 'var(--text-primary)', textAlign: 'left', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px', fontSize: '14px' }}>
-              🛒 Recent Sales
-            </h4>
-            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {stats.recentSales && stats.recentSales.length > 0 ? (
-                stats.recentSales.map((sale: any) => (
-                  <div key={sale._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-secondary)', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                      <span style={{ color: 'var(--text-primary)', fontWeight: 'bold', fontSize: '13px' }}>{sale.customerName}</span>
-                      <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>{sale.type} #{sale.unitId}</span>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <span style={{ display: 'block', color: '#3fb950', fontWeight: 'bold', fontSize: '13px' }}>{sale.price}</span>
-                      <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>{new Date(sale.date).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '10px', fontSize: '13px' }}>No recent sales.</div>
-              )}
-            </div>
-          </div>
-
           {/* Top Brokers Leaderboard */}
           <div style={{ flex: 1, backgroundColor: 'var(--bg-tertiary)', padding: '15px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
             <h4 style={{ marginTop: 0, marginBottom: '10px', color: 'var(--text-primary)', textAlign: 'left', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px', fontSize: '14px' }}>
@@ -303,6 +278,31 @@ const AdminDashboardTab = () => {
             </div>
           </div>
 
+          {/* Recent Sales List */}
+          <div style={{ flex: 1, backgroundColor: 'var(--bg-tertiary)', padding: '15px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
+            <h4 style={{ marginTop: 0, marginBottom: '10px', color: 'var(--text-primary)', textAlign: 'left', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px', fontSize: '14px' }}>
+              🛒 Recent Sales
+            </h4>
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {stats.recentSales && stats.recentSales.length > 0 ? (
+                stats.recentSales.map((sale: any) => (
+                  <div key={sale._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-secondary)', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                      <span style={{ color: 'var(--text-primary)', fontWeight: 'bold', fontSize: '13px' }}>{sale.customerName}</span>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>{sale.type} #{sale.unitId}</span>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ display: 'block', color: '#3fb950', fontWeight: 'bold', fontSize: '13px' }}>{sale.price}</span>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>{new Date(sale.date).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '10px', fontSize: '13px' }}>No recent sales.</div>
+              )}
+            </div>
+          </div>
+
 
         </div>
 
@@ -312,23 +312,22 @@ const AdminDashboardTab = () => {
           {/* Indicators row aligned directly with the map frame */}
           <div style={{ display: 'flex', gap: '10px' }}>
             <div style={{ flex: 1, backgroundColor: 'var(--bg-tertiary)', padding: '10px 15px', borderRadius: '16px', border: '1px solid var(--border-color)', textAlign: 'center' }}>
-              <h4 style={{ margin: '0 0 5px 0', color: 'var(--text-muted)', fontSize: '12px' }}>Total Available Units</h4>
+              <h4 style={{ margin: '0 0 5px 0', color: 'white', fontSize: '12px' }}>Total Available Units</h4>
               <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#3fb950' }}>{stats.indicators.totalAvailableUnits}</div>
             </div>
             <div style={{ flex: 1, backgroundColor: 'var(--bg-tertiary)', padding: '10px 15px', borderRadius: '16px', border: '1px solid var(--border-color)', textAlign: 'center' }}>
-              <h4 style={{ margin: '0 0 5px 0', color: 'var(--text-muted)', fontSize: '12px' }}>Total Reserved Units</h4>
+              <h4 style={{ margin: '0 0 5px 0', color: 'white', fontSize: '12px' }}>Total Reserved Units</h4>
               <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--accent-gold)' }}>{stats.indicators.totalReservedUnits}</div>
             </div>
             <div style={{ flex: 1, backgroundColor: 'var(--bg-tertiary)', padding: '10px 15px', borderRadius: '16px', border: '1px solid var(--border-color)', textAlign: 'center' }}>
-              <h4 style={{ margin: '0 0 5px 0', color: 'var(--text-muted)', fontSize: '12px' }}>Total Sold Units</h4>
+              <h4 style={{ margin: '0 0 5px 0', color: 'white', fontSize: '12px' }}>Total Sold Units</h4>
               <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--accent-red-bg)' }}>{stats.indicators.totalSoldUnits}</div>
             </div>
             <div style={{ flex: 1, backgroundColor: 'var(--bg-tertiary)', padding: '10px 15px', borderRadius: '16px', border: '1px solid var(--border-color)', textAlign: 'center' }}>
-              <h4 style={{ margin: '0 0 5px 0', color: 'var(--text-muted)', fontSize: '12px' }}>Total Revenue <span style={{ fontSize: '10px', fontWeight: 'normal', textTransform: 'none' }}>(M EGY)</span></h4>
+              <h4 style={{ margin: '0 0 5px 0', color: 'white', fontSize: '12px' }}>Total Revenue <span style={{ fontSize: '10px', fontWeight: 'normal', color: 'var(--text-muted)' }}>(M EGY)</span></h4>
               <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffc658' }}>{Number(stats.indicators.totalRevenue).toFixed(2)}</div>
             </div>
           </div>
-
           {/* 3D Map Container */}
           <div style={{ flex: 1, backgroundColor: 'var(--bg-tertiary)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden', position: 'relative' }}>
             <MapViewer

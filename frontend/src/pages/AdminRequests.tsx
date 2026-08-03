@@ -15,9 +15,11 @@ import RejectionAnalysisTab from '../components/admin/RejectionAnalysisTab';
 
 const AdminPortal = () => {
 // حالة التابات بعد دمج الشكاوى (شغلك) والصلاحيات (شغل صاحبك)
-  const [activeTab, setActiveTab] = useState<'analytics' | 'chatbot' | 'requests' | 'complaints' | 'roles' | 'properties' | 'rejections'>('analytics');
-  const [analyticsSubTab, setAnalyticsSubTab] = useState<'local' | 'spatial'>('local');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'chatbot' | 'requests' | 'complaints' | 'management'>('analytics');
+  const [analyticsSubTab, setAnalyticsSubTab] = useState<'local' | 'spatial' | 'rejections'>('local');
   const [showAnalyticsDropdown, setShowAnalyticsDropdown] = useState(false);
+  const [managementSubTab, setManagementSubTab] = useState<'roles' | 'properties'>('roles');
+  const [showManagementDropdown, setShowManagementDropdown] = useState(false);
   const [complaintsCount, setComplaintsCount] = useState(0);
   const [requests, setRequests] = useState([]);
   const [selectedRequests, setSelectedRequests] = useState<string[]>([]);
@@ -177,9 +179,9 @@ const AdminPortal = () => {
         {/* 🤖 زر الشات بوت على شمال Analytics */}
         <button 
           onClick={() => setActiveTab('chatbot')} 
-          style={{ backgroundColor: activeTab === 'chatbot' ? '#3fb950' : 'transparent', color: activeTab === 'chatbot' ? '#fff' : '#3fb950', border: activeTab === 'chatbot' ? '1px solid #3fb950' : '1px solid #3fb950', padding: '10px 20px', fontSize: '13px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s', display: 'flex', alignItems: 'center', textAlign: 'center', lineHeight: '1.2' }}
+          style={{ backgroundColor: activeTab === 'chatbot' ? '#3fb950' : 'transparent', color: activeTab === 'chatbot' ? '#fff' : '#3fb950', border: activeTab === 'chatbot' ? '1px solid #3fb950' : '1px solid #3fb950', padding: '12px 20px', fontSize: '15px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s', display: 'flex', alignItems: 'center', textAlign: 'center', lineHeight: '1.2', whiteSpace: 'nowrap' }}
         >
-          🤖 AI<br/>Assistant
+          🤖 AI Assistant
         </button>
         
         <div style={{ position: 'relative' }}>
@@ -192,9 +194,9 @@ const AdminPortal = () => {
                 setShowAnalyticsDropdown(false);
               }
             }}
-            style={{ backgroundColor: activeTab === 'analytics' ? 'var(--accent-blue-bg)' : 'transparent', color: 'var(--text-primary)', border: 'none', padding: '10px 20px', fontSize: '13px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s', textAlign: 'center', lineHeight: '1.2' }}
+            style={{ backgroundColor: activeTab === 'analytics' ? 'var(--accent-blue-bg)' : 'transparent', color: activeTab === 'analytics' ? '#ffffff' : 'var(--text-primary)', border: 'none', padding: '12px 20px', fontSize: '15px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s', textAlign: 'center', lineHeight: '1.2', whiteSpace: 'nowrap' }}
           >
-            📈 Analytics<br/>Overview {activeTab === 'analytics' && <span style={{ fontSize: '10px' }}>▼</span>}
+            📈 Analytics Overview {activeTab === 'analytics' && <span style={{ fontSize: '12px', marginLeft: '6px' }}>▼</span>}
           </button>
           
           {showAnalyticsDropdown && activeTab === 'analytics' && (
@@ -209,11 +211,19 @@ const AdminPortal = () => {
               </div>
               <div 
                 onClick={() => { setAnalyticsSubTab('spatial'); setShowAnalyticsDropdown(false); }}
-                style={{ padding: '12px 15px', cursor: 'pointer', backgroundColor: analyticsSubTab === 'spatial' ? 'var(--accent-green-bg)' : 'transparent', color: 'var(--text-primary)', fontSize: '13px', fontWeight: 'bold', transition: '0.2s' }}
+                style={{ padding: '12px 15px', cursor: 'pointer', backgroundColor: analyticsSubTab === 'spatial' ? 'var(--accent-green-bg)' : 'transparent', color: 'var(--text-primary)', fontSize: '13px', fontWeight: 'bold', borderBottom: '1px solid var(--border-color)', transition: '0.2s' }}
                 onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--bg-hover)'}
                 onMouseLeave={e => e.currentTarget.style.backgroundColor = analyticsSubTab === 'spatial' ? 'var(--accent-green-bg)' : 'transparent'}
               >
                 🌍 Live Map Insights
+              </div>
+              <div 
+                onClick={() => { setAnalyticsSubTab('rejections'); setShowAnalyticsDropdown(false); }}
+                style={{ padding: '12px 15px', cursor: 'pointer', backgroundColor: analyticsSubTab === 'rejections' ? 'var(--accent-red-bg)' : 'transparent', color: 'var(--text-primary)', fontSize: '13px', fontWeight: 'bold', transition: '0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--bg-hover)'}
+                onMouseLeave={e => e.currentTarget.style.backgroundColor = analyticsSubTab === 'rejections' ? 'var(--accent-red-bg)' : 'transparent'}
+              >
+                📉 Analyze Rejections
               </div>
             </div>
           )}
@@ -221,11 +231,11 @@ const AdminPortal = () => {
 
         <button 
           onClick={() => setActiveTab('requests')}
-          style={{ backgroundColor: activeTab === 'requests' ? 'var(--accent-blue-bg)' : 'transparent', color: 'var(--text-primary)', border: 'none', padding: '10px 20px', fontSize: '13px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s', display: 'flex', alignItems: 'center', textAlign: 'center', lineHeight: '1.2' }}
+          style={{ backgroundColor: activeTab === 'requests' ? 'var(--accent-blue-bg)' : 'transparent', color: activeTab === 'requests' ? '#ffffff' : 'var(--text-primary)', border: 'none', padding: '12px 20px', fontSize: '15px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s', display: 'flex', alignItems: 'center', textAlign: 'center', lineHeight: '1.2', whiteSpace: 'nowrap' }}
         >
-          <div>📥 Booking<br/>Requests</div>
+          <div>📥 Booking Requests</div>
           {requests.length > 0 && (
-            <span style={{ backgroundColor: 'var(--accent-red)', color: 'var(--text-primary)', borderRadius: '50%', padding: '2px 8px', marginLeft: '8px', fontSize: '12px' }}>
+            <span style={{ backgroundColor: 'var(--accent-red)', color: 'var(--text-primary)', borderRadius: '50%', padding: '2px 8px', marginLeft: '8px', fontSize: '13px' }}>
               {requests.length}
             </span>
           )}
@@ -234,7 +244,7 @@ const AdminPortal = () => {
         {/* 👈 زرار الشكاوى بقى زيه زيهم بيغير التابة */}
         <button 
           onClick={() => setActiveTab('complaints')}
-          style={{ backgroundColor: activeTab === 'complaints' ? 'var(--accent-blue-bg)' : 'transparent', color: 'var(--text-primary)', border: 'none', padding: '10px 20px', fontSize: '13px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s', display: 'flex', alignItems: 'center', textAlign: 'center', lineHeight: '1.2' }}
+          style={{ backgroundColor: activeTab === 'complaints' ? 'var(--accent-blue-bg)' : 'transparent', color: activeTab === 'complaints' ? '#ffffff' : 'var(--text-primary)', border: 'none', padding: '12px 20px', fontSize: '15px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s', display: 'flex', alignItems: 'center', textAlign: 'center', lineHeight: '1.2', whiteSpace: 'nowrap' }}
         >
           <div>🛡️ Complaints</div>
           {/* 👈 البادج الأحمر هيظهر بس لو في شكاوى (بيقرا من الـ State اللي جاية من الابن) */}
@@ -245,35 +255,42 @@ const AdminPortal = () => {
           )}
         </button>
         
-        <button 
-          onClick={() => setActiveTab('roles')}
-          style={{
-            backgroundColor: activeTab === 'roles' ? 'var(--accent-blue-bg)' : 'transparent',
-            color: 'var(--text-primary)', border: 'none', padding: '10px 20px', fontSize: '13px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s', textAlign: 'center', lineHeight: '1.2'
-          }}
-        >
-          👥 Roles<br/>Management
-        </button>
-        
-        <button 
-          onClick={() => setActiveTab('properties')}
-          style={{
-            backgroundColor: activeTab === 'properties' ? 'var(--accent-blue-bg)' : 'transparent',
-            color: 'var(--text-primary)', border: 'none', padding: '10px 20px', fontSize: '13px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s', textAlign: 'center', lineHeight: '1.2'
-          }}
-        >
-          🏢 Property<br/>Management
-        </button>
-
-        <button 
-          onClick={() => setActiveTab('rejections')}
-          style={{
-            backgroundColor: activeTab === 'rejections' ? 'var(--accent-blue-bg)' : 'transparent',
-            color: 'var(--text-primary)', border: 'none', padding: '10px 20px', fontSize: '13px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s', textAlign: 'center', lineHeight: '1.2'
-          }}
-        >
-          📉 Analyze<br/>Rejections
-        </button>
+        <div style={{ position: 'relative' }}>
+          <button 
+            onClick={() => {
+              if (activeTab === 'management') {
+                setShowManagementDropdown(!showManagementDropdown);
+              } else {
+                setActiveTab('management');
+                setShowManagementDropdown(false);
+              }
+            }}
+            style={{ backgroundColor: activeTab === 'management' ? 'var(--accent-blue-bg)' : 'transparent', color: activeTab === 'management' ? '#ffffff' : 'var(--text-primary)', border: 'none', padding: '12px 20px', fontSize: '15px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s', textAlign: 'center', lineHeight: '1.2', whiteSpace: 'nowrap' }}
+          >
+            ⚙️ Management {activeTab === 'management' && <span style={{ fontSize: '12px', marginLeft: '6px' }}>▼</span>}
+          </button>
+          
+          {showManagementDropdown && activeTab === 'management' && (
+            <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: '10px', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', zIndex: 1000, overflow: 'hidden', minWidth: '160px', whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>
+              <div 
+                onClick={() => { setManagementSubTab('roles'); setShowManagementDropdown(false); }}
+                style={{ padding: '12px 15px', cursor: 'pointer', backgroundColor: managementSubTab === 'roles' ? 'var(--accent-blue-bg)' : 'transparent', color: 'var(--text-primary)', fontSize: '13px', fontWeight: 'bold', borderBottom: '1px solid var(--border-color)', transition: '0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--bg-hover)'}
+                onMouseLeave={e => e.currentTarget.style.backgroundColor = managementSubTab === 'roles' ? 'var(--accent-blue-bg)' : 'transparent'}
+              >
+                👥 Roles Management
+              </div>
+              <div 
+                onClick={() => { setManagementSubTab('properties'); setShowManagementDropdown(false); }}
+                style={{ padding: '12px 15px', cursor: 'pointer', backgroundColor: managementSubTab === 'properties' ? 'var(--accent-green-bg)' : 'transparent', color: 'var(--text-primary)', fontSize: '13px', fontWeight: 'bold', transition: '0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--bg-hover)'}
+                onMouseLeave={e => e.currentTarget.style.backgroundColor = managementSubTab === 'properties' ? 'var(--accent-green-bg)' : 'transparent'}
+              >
+                🏢 Property Management
+              </div>
+            </div>
+          )}
+        </div>
 
       </div>
 
@@ -288,6 +305,11 @@ const AdminPortal = () => {
         {/* ArcGIS Dashboard */}
         <div style={{ display: activeTab === 'analytics' && analyticsSubTab === 'spatial' ? 'block' : 'none', height: '100%', paddingBottom: '5px', boxSizing: 'border-box' }}>
           <ArcGISDashboardTab />
+        </div>
+
+        {/* Analyze Rejections Dashboard */}
+        <div style={{ display: activeTab === 'analytics' && analyticsSubTab === 'rejections' ? 'block' : 'none', height: '100%', paddingBottom: '5px', boxSizing: 'border-box' }}>
+          <RejectionAnalysisTab />
         </div>
 
         {/* التابة 2: Requests */}
@@ -363,20 +385,17 @@ const AdminPortal = () => {
         </div>
 
         {/* التابة الثالثة: إدارة الأدوار */}
-        <div style={{ display: activeTab === 'roles' ? 'block' : 'none', height: '100%', overflowY: 'auto' }}>
-          <RolesWidget />
+        <div style={{ display: activeTab === 'management' && managementSubTab === 'roles' ? 'block' : 'none', height: '100%', overflowY: 'auto' }}>
+          <RolesWidget onAssignUser={(user) => {
+            setChatbotAssignUser(user);
+            setActiveTab('chatbot');
+          }} />
         </div>
 
         {/* التابة الرابعة: إدارة العقارات */}
-        <div style={{ display: activeTab === 'properties' ? 'block' : 'none', height: '100%', overflowY: 'auto' }}>
+        <div style={{ display: activeTab === 'management' && managementSubTab === 'properties' ? 'block' : 'none', height: '100%', overflowY: 'auto' }}>
           <PropertyManagementTab />
         </div>
-
-        {/* التابة الخامسة: تحليل الرفضات */}
-        <div style={{ display: activeTab === 'rejections' ? 'flex' : 'none', height: '100%', flexDirection: 'column', overflowY: 'auto' }}>
-          <RejectionAnalysisTab />
-        </div>
-
       {/* Reject Modal */}
       {rejectModalState && (
         <div style={{ position: 'fixed', inset: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 3000 }}>

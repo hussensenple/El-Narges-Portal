@@ -392,7 +392,7 @@ const AdminAIChatbotTab: React.FC<AdminAIChatbotTabProps> = ({ onAssignUnits }) 
         <div style={{ padding: '15px' }}>
           <button 
             onClick={startNewChat} 
-            style={{ width: '100%', padding: '12px', backgroundColor: 'var(--accent-green-bg)', color: 'var(--text-primary)', border: '1px solid rgba(240, 246, 252, 0.1)', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: 'bold' }}
+            style={{ width: '100%', padding: '12px', backgroundColor: 'var(--accent-green-bg)', color: '#ffffff', border: '1px solid var(--border-color)', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: 'bold' }}
           >
             <span>+</span> New Chat
           </button>
@@ -411,7 +411,7 @@ const AdminAIChatbotTab: React.FC<AdminAIChatbotTabProps> = ({ onAssignUnits }) 
               style={{ 
                 padding: '12px 15px', 
                 cursor: 'pointer', 
-                backgroundColor: currentChatId === chat.id ? '#1f2428' : 'transparent', 
+                backgroundColor: currentChatId === chat.id ? 'var(--bg-hover)' : 'transparent', 
                 borderBottom: '1px solid var(--border-color)',
                 borderLeft: currentChatId === chat.id ? '3px solid var(--accent-blue)' : '3px solid transparent',
                 display: 'flex',
@@ -566,7 +566,7 @@ const AdminAIChatbotTab: React.FC<AdminAIChatbotTabProps> = ({ onAssignUnits }) 
         <button  
           onClick={handleSend}
           disabled={isLoading}
-          style={{ padding: '10px 20px', backgroundColor: 'var(--accent-green-bg)', color: 'var(--text-primary)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+          style={{ padding: '10px 20px', backgroundColor: 'var(--accent-green-bg)', color: '#ffffff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
         >
           Send
         </button>

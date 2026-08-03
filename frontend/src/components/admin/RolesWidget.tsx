@@ -1,12 +1,35 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import UsersTable from './tables/UsersTable';
 import OwnersTable from './tables/OwnersTable';
 import BrokersTable from './tables/BrokersTable';
 import EngineersTable from './tables/EngineersTable';
 import AdminsTable from './tables/AdminsTable';
 
-const RolesWidget = () => {
+const RolesWidget = ({ onAssignUser }: { onAssignUser?: (user: { id: string, role: string }) => void }) => {
   const [activeRole, setActiveRole] = useState<'user' | 'owner' | 'broker' | 'engineer' | 'admin'>('user');
+  const [counts, setCounts] = useState({ user: 0, owner: 0, broker: 0, engineer: 0, admin: 0 });
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const roles = ['user', 'owner', 'broker', 'engineer', 'admin'];
+        const promises = roles.map(r => axios.get(`${import.meta.env.VITE_API_URL}/api/roles/${r}`));
+        const results = await Promise.all(promises);
+        
+        setCounts({
+          user: results[0].data.length,
+          owner: results[1].data.length,
+          broker: results[2].data.length,
+          engineer: results[3].data.length,
+          admin: results[4].data.length
+        });
+      } catch (error) {
+        console.error("Failed to fetch role counts", error);
+      }
+    };
+    fetchCounts();
+  }, []);
 
   return (
     <div style={{ backgroundColor: 'var(--bg-secondary)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)', marginBottom: '20px' }}>
@@ -29,10 +52,10 @@ const RolesWidget = () => {
               transition: 'all 0.2s'
             }}
           >
-            {role === 'user' ? 'Users' : 
-             role === 'owner' ? 'Owners' : 
-             role === 'broker' ? 'Brokers' : 
-             role === 'engineer' ? 'Engineer' : 'Admins'}
+            {role === 'user' ? `Users (${counts.user})` : 
+             role === 'owner' ? `Owners (${counts.owner})` : 
+             role === 'broker' ? `Brokers (${counts.broker})` : 
+             role === 'engineer' ? `Engineer (${counts.engineer})` : `Admins (${counts.admin})`}
           </button>
         ))}
       </div>

@@ -441,3 +441,9 @@
 - ØªÙ…Øª Ø¥Ø¶Ø§ÙØ© Ù…Ø¹Ø§Ù„Ø¬Ø© Ù„Ù„Ø£Ø®Ø·Ø§Ø¡ (Error Fallback) ÙÙŠ `emailService.js` (ØªØ­Ø¯ÙŠØ¯Ø§Ù‹ `sendBookingEmail`) Ø¨Ø­ÙŠØ« Ø£Ù†Ù‡ ÙÙŠ Ø­Ø§Ù„ ÙØ´Ù„ Ø¥Ø±Ø³Ø§Ù„ Ø¥ÙŠÙ…ÙŠÙ„ Ø§Ù„Ù…ÙˆØ§ÙÙ‚Ø©/Ø§Ù„Ø±ÙØ¶ Ù„Ø¹Ù…ÙŠÙ„ Ø¨Ø³Ø¨Ø¨ Ø£Ù† Ø§Ù„Ø¥ÙŠÙ…ÙŠÙ„ ÙˆÙ‡Ù…ÙŠ Ø£Ùˆ ØºÙŠØ± Ù…ØªØ§Ø­ØŒ ÙŠØªÙ… Ø¥Ø±Ø³Ø§Ù„ Ø±Ø³Ø§Ù„Ø© ØªÙØµÙŠÙ„ÙŠØ© ØªØ­ØªÙˆÙŠ Ø¹Ù„Ù‰ Ø§Ù„Ø®Ø·Ø£ Ù„Ù„Ø¥ÙŠÙ…ÙŠÙ„ Ø§Ù„Ø®Ø§Øµ Ø¨Ø§Ù„Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…Ø³Ø¬Ù„ ÙÙŠ `.env`.
 - تم تعديل ترتيب المكونات في AdminDashboardTab.tsx ليصبح Top Brokers أعلى Recent Sales.
 - تم تعديل بطاقات المؤشرات (Indicators) في Platform Analytics لتعود لحجمها الأصلي الصغير مع جعل لون النص أبيض وإزالة التأثيرات الحركية (Hover effects).
+
+ # #   1 4 .   R e g i s t r a t i o n   G o v e r n o r a t e   S p a t i a l   Q u e r y 
+ -   W h e n   a   u s e r   r e g i s t e r s   a n d   p i c k s   a   l o c a t i o n   o n   t h e   m a p ,   t h e   f r o n t e n d   p e r f o r m s   a   s p a t i a l   i n t e r s e c t   q u e r y   a g a i n s t   t h e   E g y p t   G o v e r n o r a t e s   A r c G I S   F e a t u r e   l a y e r . 
+ -   T h e   E _ N a m e   a t t r i b u t e   ( g o v e r n o r a t e   n a m e )   i s   f e t c h e d   a n d   s e n t   t o   t h e   b a c k e n d   a s   e N a m e . 
+ -   T h e   b a c k e n d   s t o r e s   e N a m e   i n   M o n g o D B   a n d   s y n c h r o n i z e s   i t   t o   t h e   A r c G I S   U s e r s   F e a t u r e   L a y e r   s o   t h e   D a s h b o a r d   c a n   a c c u r a t e l y   v i s u a l i z e   u s e r s   b y   g o v e r n o r a t e .  
+ 

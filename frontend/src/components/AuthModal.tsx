@@ -27,8 +27,28 @@ const AuthModal = ({ onClose, onSuccess }: AuthModalProps) => {
   
   const [lat, setLat] = useState<number | null>(null);
   const [lon, setLon] = useState<number | null>(null);
+  const [eName, setEName] = useState<string>('');
   const [showMap, setShowMap] = useState<boolean>(false);
   const mapDiv = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (lat !== null && lon !== null) {
+      const queryUrl = `https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Heatmap_WFL1/FeatureServer/0/query?geometryType=esriGeometryPoint&geometry=${encodeURIComponent(JSON.stringify({x: lon, y: lat}))}&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=E_Name&f=json`;
+      fetch(queryUrl)
+        .then(res => res.json())
+        .then(data => {
+          if (data.features && data.features.length > 0) {
+            setEName(data.features[0].attributes.E_Name);
+          } else {
+            setEName('');
+          }
+        })
+        .catch(err => {
+          console.error("Error fetching governorate:", err);
+          setEName('');
+        });
+    }
+  }, [lat, lon]);
 
   useEffect(() => {
     if (!isLogin && showMap && mapDiv.current) {
@@ -83,8 +103,8 @@ const AuthModal = ({ onClose, onSuccess }: AuthModalProps) => {
       view.on("click", (event) => {
         const clickedLat = event.mapPoint.latitude;
         const clickedLon = event.mapPoint.longitude;
-        setLat(clickedLat);
-        setLon(clickedLon);
+        setLat(clickedLat as number);
+        setLon(clickedLon as number);
 
         view.graphics.removeAll();
         const point = new Point({ longitude: clickedLon, latitude: clickedLat });
@@ -142,7 +162,7 @@ const AuthModal = ({ onClose, onSuccess }: AuthModalProps) => {
 
     try {
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
-      const payload = isLogin ? { phone, password } : { name, email, phone, password, lat, lon };
+      const payload = isLogin ? { phone, password } : { name, email, phone, password, lat, lon, eName };
       
       const res = await axios.post(`${import.meta.env.VITE_API_URL}${endpoint}`, payload);
 

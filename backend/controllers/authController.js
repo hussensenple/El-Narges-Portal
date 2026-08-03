@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const bcrypt = require('bcrypt'); // مكتبة تشفير الباسورد
+const axios = require('axios');
 const { syncUserToArcGIS } = require('./arcgisSyncController');
 const jwt = require('jsonwebtoken'); // مكتبة عمل التوكن (عشان اليوزر يفضل مسجل دخول)
 
@@ -7,7 +8,7 @@ const jwt = require('jsonwebtoken'); // مكتبة عمل التوكن (عشان
 const register = async (req, res) => {
   try {
     // بنستقبل الداتا من الـ Frontend (وضفنا الـ role والـ location)
-    const { name, email, phone, password, role, lat, lon } = req.body;
+    const { name, email, phone, password, role, lat, lon, eName } = req.body;
 
     // التأكد إن مفيش حد مسجل بنفس التليفون أو الإيميل قبل كده
     const existingUser = await User.findOne({ $or: [{ phone }, { email }] });
@@ -21,7 +22,22 @@ const register = async (req, res) => {
 
     // حماية: بنحدد الـ Role، لو الـ Frontend بعت 'broker' هنحطه، غير كده هيبقى 'user' افتراضي
     // ده بيمنع أي حد يسجل نفسه كـ admin أو owner بالاختراق
+
+
     const userRole = role === 'broker' ? 'broker' : 'user';
+
+    let finalEName = eName;
+    if (!finalEName && lat && lon) {
+      try {
+        const queryUrl = `https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Heatmap_WFL1/FeatureServer/0/query?geometryType=esriGeometryPoint&geometry=${encodeURIComponent(JSON.stringify({x: lon, y: lat}))}&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=E_Name&f=json`;
+        const arcRes = await axios.get(queryUrl);
+        if (arcRes.data && arcRes.data.features && arcRes.data.features.length > 0) {
+          finalEName = arcRes.data.features[0].attributes.E_Name;
+        }
+      } catch (err) {
+        console.error('Error fetching governorate in backend:', err.message);
+      }
+    }
 
     // إنشاء مستخدم جديد
     const newUser = new User({
@@ -33,7 +49,8 @@ const register = async (req, res) => {
       coordinates: {
         lat: lat || null,
         lon: lon || null
-      }
+      },
+      eName: finalEName || ''
     });
 
     await newUser.save();

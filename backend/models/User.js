@@ -28,6 +28,7 @@ const userSchema = new mongoose.Schema({
     lat: { type: Number },
     lon: { type: Number }
   },
+  eName: { type: String },
   role: { 
     type: String, 
     enum: ['user', 'owner', 'broker', 'engineer', 'admin'],

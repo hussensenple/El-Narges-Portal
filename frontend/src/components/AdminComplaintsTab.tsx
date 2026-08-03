@@ -305,7 +305,7 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
                   </span>
                   <button 
                     onClick={() => handleTogglePriority(complaint._id, complaint.priority || 'Normal')}
-                    style={{ backgroundColor: complaint.priority === 'High' ? 'var(--accent-red-bg)' : 'var(--border-color)', color: 'var(--text-primary)', border: 'none', padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s' }}
+                    style={{ backgroundColor: complaint.priority === 'High' ? 'var(--accent-red-bg)' : 'var(--border-color)', color: complaint.priority === 'High' ? '#ffffff' : 'var(--text-primary)', border: 'none', padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s' }}
                   >
                     {complaint.priority === 'High' ? '🚨 High Priority' : '⬇️ Normal Priority'}
                   </button>
@@ -344,7 +344,7 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
                   )}
                   <button 
                     onClick={() => handleZoomToMap(complaint)}
-                    style={{ flex: 1, backgroundColor: 'var(--accent-blue-bg)', color: 'var(--text-primary)', border: 'none', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                    style={{ flex: 1, backgroundColor: 'var(--accent-blue-bg)', color: '#ffffff', border: 'none', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
                   >
                     🗺️ Map
                   </button>
@@ -361,9 +361,6 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
 
       <div style={{ flex: 1, height: '100%', position: 'relative' }}>
         <div ref={mapDiv} style={{ width: '100%', height: '100%' }} />
-        <div style={{ position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)', backgroundColor: 'rgba(13,17,23,0.85)', padding: '10px 20px', borderRadius: '20px', color: 'var(--text-primary)', border: '1px solid var(--border-color)', pointerEvents: 'none', backdropFilter: 'blur(5px)' }}>
-          Click "Explore on 3D Map" to locate the issue 📍
-        </div>
       </div>
 
       {activeComplaint && (

@@ -122,6 +122,7 @@ const syncUserToArcGIS = async (user) => {
       },
       attributes: {
         Name: user.name,
+        E_Name: user.eName || '',
         Role: user.role,
         Phone: user.phone,
         JoinDate: new Date(user.createdAt || Date.now()).getTime(),
@@ -181,6 +182,7 @@ const syncUserUpdateToArcGIS = async (user) => {
           OBJECTID: objectId,
           Role: user.role,
           Name: user.name,
+          E_Name: user.eName || '',
           Phone: user.phone,
           UnitsCount: stats.unitsCount,
           TotalValue: stats.totalValue,

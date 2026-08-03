@@ -211,7 +211,7 @@ const AdminDashboardTab = () => {
                       <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>{owner.phone}</span>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <span style={{ display: 'block', color: '#ffc658', fontWeight: 'bold', fontSize: '13px' }}>
+                      <span style={{ display: 'block', color: 'var(--accent-gold)', fontWeight: 'bold', fontSize: '13px' }}>
                         {owner.totalPrice !== undefined && owner.totalPrice > 0 ? (owner.totalPrice / 1000000).toFixed(2) + ' M EGP' : '—'}
                       </span>
                       <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>{owner.ownedUnits?.length || 0} units</span>
@@ -312,20 +312,20 @@ const AdminDashboardTab = () => {
           {/* Indicators row aligned directly with the map frame */}
           <div style={{ display: 'flex', gap: '10px' }}>
             <div style={{ flex: 1, backgroundColor: 'var(--bg-tertiary)', padding: '10px 15px', borderRadius: '16px', border: '1px solid var(--border-color)', textAlign: 'center' }}>
-              <h4 style={{ margin: '0 0 5px 0', color: 'white', fontSize: '12px' }}>Total Available Units</h4>
+              <h4 style={{ margin: '0 0 5px 0', color: 'var(--text-primary)', fontSize: '12px' }}>Total Available Units</h4>
               <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#3fb950' }}>{stats.indicators.totalAvailableUnits}</div>
             </div>
             <div style={{ flex: 1, backgroundColor: 'var(--bg-tertiary)', padding: '10px 15px', borderRadius: '16px', border: '1px solid var(--border-color)', textAlign: 'center' }}>
-              <h4 style={{ margin: '0 0 5px 0', color: 'white', fontSize: '12px' }}>Total Reserved Units</h4>
+              <h4 style={{ margin: '0 0 5px 0', color: 'var(--text-primary)', fontSize: '12px' }}>Total Reserved Units</h4>
               <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--accent-gold)' }}>{stats.indicators.totalReservedUnits}</div>
             </div>
             <div style={{ flex: 1, backgroundColor: 'var(--bg-tertiary)', padding: '10px 15px', borderRadius: '16px', border: '1px solid var(--border-color)', textAlign: 'center' }}>
-              <h4 style={{ margin: '0 0 5px 0', color: 'white', fontSize: '12px' }}>Total Sold Units</h4>
+              <h4 style={{ margin: '0 0 5px 0', color: 'var(--text-primary)', fontSize: '12px' }}>Total Sold Units</h4>
               <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--accent-red-bg)' }}>{stats.indicators.totalSoldUnits}</div>
             </div>
             <div style={{ flex: 1, backgroundColor: 'var(--bg-tertiary)', padding: '10px 15px', borderRadius: '16px', border: '1px solid var(--border-color)', textAlign: 'center' }}>
-              <h4 style={{ margin: '0 0 5px 0', color: 'white', fontSize: '12px' }}>Total Revenue <span style={{ fontSize: '10px', fontWeight: 'normal', color: 'var(--text-muted)' }}>(M EGY)</span></h4>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffc658' }}>{Number(stats.indicators.totalRevenue).toFixed(2)}</div>
+              <h4 style={{ margin: '0 0 5px 0', color: 'var(--text-primary)', fontSize: '12px' }}>Total Revenue <span style={{ fontSize: '10px', fontWeight: 'normal', color: 'var(--text-muted)' }}>(M EGY)</span></h4>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--accent-gold)' }}>{Number(stats.indicators.totalRevenue).toFixed(2)}</div>
             </div>
           </div>
           {/* 3D Map Container */}

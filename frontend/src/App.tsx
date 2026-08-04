@@ -316,32 +316,36 @@ const CustomerInterface = () => {
         )}
 
         {mapMode === '3D' && isAuthenticated && auth?.user?.role !== 'broker' && auth?.user?.role !== 'engineer' && (
-          <div id="tour-gis-tools" style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start' }}>
+          <div id="tour-gis-tools" style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
             <button title="GIS Tools" onClick={() => setIsToolsMenuOpen(!isToolsMenuOpen)} className={`map-icon-btn ${isToolsMenuOpen ? 'active' : 'inactive'}`}>
               <Icons.GisTools />
             </button>
 
-            {isToolsMenuOpen && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: 'rgba(22, 27, 34, 0.9)', backdropFilter: 'blur(10px)', padding: '10px', borderRadius: '12px', border: '1px solid #444c56', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', width: '200px' }}>
-                <button 
-                  onClick={() => { setIsRoutingOpen(!isRoutingOpen); setIsStopsRoutingOpen(false); }} 
-                  style={{ padding: '10px', borderRadius: '6px', cursor: 'pointer', background: isRoutingOpen ? 'var(--accent-blue-bg)' : 'transparent', color: isRoutingOpen ? 'var(--text-primary)' : 'var(--text-secondary)', border: '1px solid #444c56', fontSize: '13px', fontWeight: 'bold', transition: 'all 0.2s ease', textAlign: 'left' }}
-                >
-                  {isRoutingOpen ? '✖ Close Services' : '📍 Closest Services'}
-                </button>
-                <button 
-                  onClick={() => { setIsStopsRoutingOpen(!isStopsRoutingOpen); setIsRoutingOpen(false); }} 
-                  style={{ padding: '10px', borderRadius: '6px', cursor: 'pointer', background: isStopsRoutingOpen ? 'var(--accent-blue-bg)' : 'transparent', color: isStopsRoutingOpen ? 'var(--text-primary)' : 'var(--text-secondary)', border: '1px solid #444c56', fontSize: '13px', fontWeight: 'bold', transition: 'all 0.2s ease', textAlign: 'left' }}
-                >
-                  {isStopsRoutingOpen ? '✖ Close Routing' : '🗺️ Multi-Stop Route'}
-                </button>
-              </div>
-            )}
+            {(isToolsMenuOpen || isRoutingOpen || isStopsRoutingOpen) && (
+              <div style={{ position: 'absolute', top: 'calc(100% + 10px)', left: '0', display: 'flex', flexDirection: 'row', alignItems: 'flex-start', gap: '10px', zIndex: 10 }}>
+                {isToolsMenuOpen && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: 'rgba(22, 27, 34, 0.9)', backdropFilter: 'blur(10px)', padding: '10px', borderRadius: '12px', border: '1px solid #444c56', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', width: '200px' }}>
+                    <button 
+                      onClick={() => { setIsRoutingOpen(!isRoutingOpen); setIsStopsRoutingOpen(false); }} 
+                      style={{ padding: '10px', borderRadius: '6px', cursor: 'pointer', background: isRoutingOpen ? 'var(--accent-blue-bg)' : 'transparent', color: isRoutingOpen ? 'var(--text-primary)' : 'var(--text-secondary)', border: '1px solid #444c56', fontSize: '13px', fontWeight: 'bold', transition: 'all 0.2s ease', textAlign: 'left' }}
+                    >
+                      {isRoutingOpen ? '✖ Close Services' : '📍 Closest Services'}
+                    </button>
+                    <button 
+                      onClick={() => { setIsStopsRoutingOpen(!isStopsRoutingOpen); setIsRoutingOpen(false); }} 
+                      style={{ padding: '10px', borderRadius: '6px', cursor: 'pointer', background: isStopsRoutingOpen ? 'var(--accent-blue-bg)' : 'transparent', color: isStopsRoutingOpen ? 'var(--text-primary)' : 'var(--text-secondary)', border: '1px solid #444c56', fontSize: '13px', fontWeight: 'bold', transition: 'all 0.2s ease', textAlign: 'left' }}
+                    >
+                      {isStopsRoutingOpen ? '✖ Close Routing' : '🗺️ Multi-Stop Route'}
+                    </button>
+                  </div>
+                )}
 
-            {(isRoutingOpen || isStopsRoutingOpen) && (
-              <div style={{ width: '300px', marginTop: '10px' }}>
-                {isRoutingOpen && <ClosestServices view={mapView} />}
-                {isStopsRoutingOpen && <StopsRoutingWidget view={mapView} />}
+                {(isRoutingOpen || isStopsRoutingOpen) && (
+                  <div style={{ width: '300px' }}>
+                    {isRoutingOpen && <ClosestServices view={mapView} />}
+                    {isStopsRoutingOpen && <StopsRoutingWidget view={mapView} />}
+                  </div>
+                )}
               </div>
             )}
           </div>

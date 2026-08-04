@@ -446,4 +446,6 @@
  -   W h e n   a   u s e r   r e g i s t e r s   a n d   p i c k s   a   l o c a t i o n   o n   t h e   m a p ,   t h e   f r o n t e n d   p e r f o r m s   a   s p a t i a l   i n t e r s e c t   q u e r y   a g a i n s t   t h e   E g y p t   G o v e r n o r a t e s   A r c G I S   F e a t u r e   l a y e r . 
  -   T h e   E _ N a m e   a t t r i b u t e   ( g o v e r n o r a t e   n a m e )   i s   f e t c h e d   a n d   s e n t   t o   t h e   b a c k e n d   a s   e N a m e . 
  -   T h e   b a c k e n d   s t o r e s   e N a m e   i n   M o n g o D B   a n d   s y n c h r o n i z e s   i t   t o   t h e   A r c G I S   U s e r s   F e a t u r e   L a y e r   s o   t h e   D a s h b o a r d   c a n   a c c u r a t e l y   v i s u a l i z e   u s e r s   b y   g o v e r n o r a t e .  
+ # #   R e c e n t   U I   F i x e s   ( A u g u s t   2 0 2 6 ) 
+ -   F i x e d   G I S   T o o l s   d r o p d o w n   l a y o u t   i n   M a p V i e w e r / A p p   t o   u s e   a b s o l u t e   p o s i t i o n i n g   a n d   r o w   f l e x   d i r e c t i o n   t o   a v o i d   p u s h i n g   a d j a c e n t   w i d g e t s   a n d   k e e p   p a n e l s   s i d e - b y - s i d e .  
  

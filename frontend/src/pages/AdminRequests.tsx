@@ -395,10 +395,7 @@ const AdminPortal = () => {
 
         {/* التابة الثالثة: إدارة الأدوار */}
         <div style={{ display: activeTab === 'management' && managementSubTab === 'roles' ? 'block' : 'none', height: '100%', overflowY: 'auto' }}>
-          <RolesWidget onAssignUser={(user) => {
-            setChatbotAssignUser(user);
-            setActiveTab('chatbot');
-          }} />
+          <RolesWidget />
         </div>
 
         {/* التابة الرابعة: إدارة العقارات */}

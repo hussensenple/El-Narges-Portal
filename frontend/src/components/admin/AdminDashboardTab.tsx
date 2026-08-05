@@ -8,7 +8,7 @@ import OwnerPropertiesModal from './modals/OwnerPropertiesModal';
 import TopOwnersChartModal from './modals/TopOwnersChartModal';
 import RegionClientsModal from './modals/RegionClientsModal';
 import RegionsWebMapModal from './modals/RegionsWebMapModal';
-import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
+
 
 const renderCustomizedLabel = (props: any) => {
   const { cx, percent, index, x, y } = props;
@@ -27,7 +27,7 @@ const AdminDashboardTab = () => {
   const [owners, setOwners] = useState<any[]>([]);
   const [selectedOwner, setSelectedOwner] = useState<any>(null);
   const [isTopOwnersChartOpen, setIsTopOwnersChartOpen] = useState(false);
-  const [mapExtent, setMapExtent] = useState<any>(null);
+
   const [mapView, setMapView] = useState<any>(null);
   const extentRef = useRef<any>(null);
   const [regionsStats, setRegionsStats] = useState<any[]>([]);

@@ -316,7 +316,7 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
       
       <div style={{ width: '450px', height: '100%', overflowY: 'auto', borderRight: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '20px', backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', position: 'sticky', top: 0, zIndex: 10 }}>
-          <h2 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.4rem' }}>🛡️ Admin Complaints</h2>
+          <h2 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.4rem' }}>🛡️ Complaints</h2>
           
           <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
             <button onClick={() => setStatusFilter('Pending')} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: 'none', backgroundColor: statusFilter === 'Pending' ? 'var(--accent-blue-bg)' : 'var(--bg-tertiary)', color: statusFilter === 'Pending' ? '#fff' : 'var(--text-primary)', cursor: 'pointer', fontWeight: 'bold' }}>Pending</button>

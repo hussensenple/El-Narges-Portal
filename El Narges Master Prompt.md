@@ -1,4 +1,4 @@
-﻿# El Narges Portal â€” Master System Prompt
+# El Narges Portal â€” Master System Prompt
 
 Act as an Expert System Architect, Full-Stack MERN Developer, and Web GIS Engineer. This document describes the **complete, current state** of the "El Narges Portal" system â€” including all architecture decisions, data models, API contracts, and critical constraints.
 
@@ -38,6 +38,9 @@ The complete 4-step booking workflow is fully implemented:
 - **TypeScript & Linting Fixes:** Resolved interface mismatches, fixed `User` type definitions (`id` vs `_id`), and removed unused variables (`useRef`, `isLoading`) across modal components (`ActiveTasksModal`, `EngineerPortalModal`).
 - **Engineer AI Support Upgrade:** Ported the full Chat Persistence, Sidebar, Pin, Rename, and Delete functionality to the Engineer's `ChatbotWidget`, matching the Customer UI.
 - **Theme Independence:** Fixed a synchronization bug where the Light/Dark mode state was unintentionally shared across different portals. The `AdminRequests` portal and the `CustomerInterface` portal now maintain completely independent theme states using separate `localStorage` keys.
+- **Complaints Management Enhancement (August 2026):** Updated `AdminComplaintsTab` with status filters (Pending, In Progress, Solved), search by phone/date for Solved, and restricted Priority/Dismiss actions to Pending status only. "Chat" button is now hidden for Owners/Engineers on Solved complaints, and converts to a "Review Chat" button for Admins.
+- **Complaints Status Filtering Fixes (August 2026):** Fixed status-string mismatches across `AdminComplaintsTab`, `OwnerUnitsTab`, `EngineerPortalModal`, `ActiveTasksModal`, and `ComplaintChatModal`. All components now correctly handle both `"Solved"`/`"Resolved"` and `"In Progress"`/`"Maintenance"` status variants. The `ComplaintChatModal` message input is now fully hidden (read-only) when a complaint is Solved/Resolved. Chat button is also hidden for Owners when a complaint is `Dismissed`.
+- **Engineer Complaint Routing Fix (August 2026):** Corrected the `isTask()` logic in both `EngineerPortalModal` and `ActiveTasksModal` so that **status alone** (not technician assignment) determines whether a complaint is in the "New Complaints" or "Active Tasks" view. Additionally, the backend `updateComplaintStatus` controller now automatically clears `assignedTechnician` and `assignedSpecialization` when a complaint is reverted to `Pending`, ensuring a full clean reset to the New Complaints pool.
 
 ---
 

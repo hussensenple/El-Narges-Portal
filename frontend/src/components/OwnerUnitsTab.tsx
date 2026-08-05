@@ -583,12 +583,14 @@ const OwnerUnitsTab = ({ onClose, view }: OwnerUnitsTabProps) => {
                                 </span>
                               </td>
                               <td style={{ padding: '16px' }}>
-                                <button
-                                  onClick={() => setActiveComplaint(complaint)}
-                                  style={{ padding: '6px 12px', backgroundColor: 'var(--accent-blue-bg)', color: 'var(--text-primary)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', transition: 'background 0.2s' }}
-                                >
-                                  💬 Chat
-                                </button>
+                                {((complaint.status || 'pending').toLowerCase() !== 'resolved' && (complaint.status || 'pending').toLowerCase() !== 'solved' && (complaint.status || 'pending').toLowerCase() !== 'dismissed') && (
+                                  <button
+                                    onClick={() => setActiveComplaint(complaint)}
+                                    style={{ padding: '6px 12px', backgroundColor: 'var(--accent-blue-bg)', color: 'var(--text-primary)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', transition: 'background 0.2s' }}
+                                  >
+                                    💬 Chat
+                                  </button>
+                                )}
                               </td>
                             </tr>
                           );

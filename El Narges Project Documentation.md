@@ -449,3 +449,9 @@
  # #   R e c e n t   U I   F i x e s   ( A u g u s t   2 0 2 6 ) 
  -   F i x e d   G I S   T o o l s   d r o p d o w n   l a y o u t   i n   M a p V i e w e r / A p p   t o   u s e   a b s o l u t e   p o s i t i o n i n g   a n d   r o w   f l e x   d i r e c t i o n   t o   a v o i d   p u s h i n g   a d j a c e n t   w i d g e t s   a n d   k e e p   p a n e l s   s i d e - b y - s i d e .  
  
+## تحديثات النظام الأخيرة (أغسطس 2026)
+- **إدارة الشكاوى المحسنة (Complaints Management):** تم تحديث واجهة الشكاوى للإدارة لإضافة فلاتر الحالة (Pending, In Progress, Solved) وبحث برقم الهاتف والتاريخ للشكاوى المحلولة. كما تم حظر خيارات Chat للمالك والمهندس عند تحول الشكوى إلى Solved، وتقتصر على Review Chat للإدارة فقط، مع إخفاء أزرار الـ Dismiss والأولوية للشكاوى غير المعلقة.
+
+## تحديثات إضافية (أغسطس 2026)
+- **إصلاح فلترة حالات الشكاوى:** تم إصلاح عدم تطابق أسماء الحالات (Solved/Resolved و In Progress/Maintenance) عبر ملفات AdminComplaintsTab, OwnerUnitsTab, EngineerPortalModal, ActiveTasksModal, و ComplaintChatModal. تم إخفاء نموذج إدخال الرسائل بالكامل في ComplaintChatModal عند فتح شكوى محلولة (وضع المراجعة فقط). كما تم إخفاء زر الـ Chat للمالك في حال كانت الشكوى Dismissed.
+- **إصلاح توجيه الشكاوى في بوابة المهندس:** تم تصحيح منطق دالة isTask() في EngineerPortalModal و ActiveTasksModal بحيث تعتمد **الحالة فقط** (وليس تعيين الفني) لتحديد ما إذا كانت الشكوى في قسم 'الشكاوى الجديدة' أو 'المهام النشطة'. وتم تحديث Backend لمسح ssignedTechnician و ssignedSpecialization تلقائياً عند إعادة تعيين الحالة إلى Pending.

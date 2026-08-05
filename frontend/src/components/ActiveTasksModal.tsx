@@ -301,14 +301,23 @@ const ActiveTasksModal = ({ onClose, view, onOpenUNModal }: ActiveTasksModalProp
   };
 
   // 2. Separate into "New Complaints" and "Active Tasks"
-  // A complaint is "unassigned" if it has no technician and is Pending.
-  const isTask = (c: Complaint) => c.assignedTechnician || c.status !== 'Pending';
+  // A complaint is a "task" only if it is NOT pending — regardless of technician assignment.
+  const isTask = (c: Complaint) => {
+    const s = (c.status || 'pending').toLowerCase();
+    return s !== 'pending';
+  };
   
   const activeTasks = complaints.filter(c => isTask(c));
 
   // Columns for "Active Tasks" Modal (In Progress vs Solved)
-  const inProgressTasks = activeTasks.filter(c => c.status === 'In Progress');
-  const solvedTasks = activeTasks.filter(c => c.status === 'Solved' || c.status === 'Resolved');
+  const inProgressTasks = activeTasks.filter(c => {
+    const s = (c.status || '').toLowerCase();
+    return s === 'in progress' || s === 'maintenance';
+  });
+  const solvedTasks = activeTasks.filter(c => {
+    const s = (c.status || '').toLowerCase();
+    return s === 'solved' || s === 'resolved';
+  });
 
   const renderComplaintCard = (complaint: Complaint) => {
     const spec = selectedSpec[complaint._id] || '';
@@ -433,7 +442,9 @@ const ActiveTasksModal = ({ onClose, view, onOpenUNModal }: ActiveTasksModalProp
           {(spec === 'Infrastructure (بنية تحتية / شبكات المياه)' || complaint.assignedSpecialization === 'Infrastructure (بنية تحتية / شبكات المياه)') && (
              <button onClick={() => handleZoomToUNMap(complaint)} style={{ flex: 1, backgroundColor: '#8957e5', color: 'var(--text-primary)', border: 'none', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>⚡ UN Map</button>
           )}
-          <button onClick={() => setActiveComplaint(complaint)} style={{ flex: 1, backgroundColor: 'transparent', color: 'var(--accent-blue)', border: '1px solid var(--accent-blue)', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>💬 Chat</button>
+          {((complaint.status || 'pending').toLowerCase() !== 'resolved' && (complaint.status || 'pending').toLowerCase() !== 'solved') && (
+            <button onClick={() => setActiveComplaint(complaint)} style={{ flex: 1, backgroundColor: 'transparent', color: 'var(--accent-blue)', border: '1px solid var(--accent-blue)', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>💬 Chat</button>
+          )}
         </div>
       </div>
     );

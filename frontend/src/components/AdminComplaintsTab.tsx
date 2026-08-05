@@ -40,6 +40,9 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [activeComplaint, setActiveComplaint] = useState<Complaint | null>(null);
   const [designImage, setDesignImage] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'Pending' | 'Maintenance' | 'Resolved'>('Pending');
+  const [searchPhone, setSearchPhone] = useState('');
+  const [searchDate, setSearchDate] = useState('');
   const auth = useContext(AuthContext);
 
   // 🚀 دالة لتفريغ التحديد
@@ -57,7 +60,8 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
   // 🚀 3. تحديث الرقم في הـ Navbar أوتوماتيك كل ما الداتا (complaints) تتغير
   useEffect(() => {
     if (onCountUpdate) {
-      onCountUpdate(complaints.length);
+      const pendingCount = complaints.filter(c => (c.status || 'pending').toLowerCase() === 'pending').length;
+      onCountUpdate(pendingCount);
     }
   }, [complaints, onCountUpdate]);
 
@@ -103,9 +107,7 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
       });
       
       const activeComplaints = response.data.filter((c: any) => 
-        c.status?.toLowerCase() !== 'dismissed' && 
-        c.status?.toLowerCase() !== 'maintenance' &&
-        c.status?.toLowerCase() !== 'resolved'
+        c.status?.toLowerCase() !== 'dismissed'
       );
       
       setComplaints(activeComplaints);
@@ -115,6 +117,32 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
       setIsLoading(false); 
     }
   };
+
+  const filteredComplaints = complaints.filter(c => {
+    const s = (c.status || 'pending').toLowerCase();
+    
+    if (statusFilter === 'Pending') {
+      if (s !== 'pending') return false;
+    } else if (statusFilter === 'Maintenance') {
+      if (s !== 'maintenance' && s !== 'in progress') return false;
+    } else if (statusFilter === 'Resolved') {
+      if (s !== 'resolved' && s !== 'solved') return false;
+      
+      if (searchPhone && c.ownerId?.phone) {
+        if (!c.ownerId.phone.includes(searchPhone)) return false;
+      } else if (searchPhone && !c.ownerId?.phone) {
+        return false;
+      }
+
+      if (searchDate && c.createdAt) {
+        const cDate = new Date(c.createdAt).toISOString().split('T')[0];
+        if (cDate !== searchDate) return false;
+      } else if (searchDate && !c.createdAt) {
+        return false;
+      }
+    }
+    return true;
+  });
 
   // 🚀 الـ WebSockets
   useEffect(() => {
@@ -289,26 +317,41 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
       <div style={{ width: '450px', height: '100%', overflowY: 'auto', borderRight: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '20px', backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', position: 'sticky', top: 0, zIndex: 10 }}>
           <h2 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.4rem' }}>🛡️ Admin Complaints</h2>
+          
+          <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+            <button onClick={() => setStatusFilter('Pending')} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: 'none', backgroundColor: statusFilter === 'Pending' ? 'var(--accent-blue-bg)' : 'var(--bg-tertiary)', color: statusFilter === 'Pending' ? '#fff' : 'var(--text-primary)', cursor: 'pointer', fontWeight: 'bold' }}>Pending</button>
+            <button onClick={() => setStatusFilter('Maintenance')} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: 'none', backgroundColor: statusFilter === 'Maintenance' ? 'var(--accent-green-bg)' : 'var(--bg-tertiary)', color: statusFilter === 'Maintenance' ? '#fff' : 'var(--text-primary)', cursor: 'pointer', fontWeight: 'bold' }}>In Progress</button>
+            <button onClick={() => setStatusFilter('Resolved')} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: 'none', backgroundColor: statusFilter === 'Resolved' ? 'var(--accent-red-bg)' : 'var(--bg-tertiary)', color: statusFilter === 'Resolved' ? '#fff' : 'var(--text-primary)', cursor: 'pointer', fontWeight: 'bold' }}>Solved</button>
+          </div>
+
+          {statusFilter === 'Resolved' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '15px' }}>
+              <input type="text" placeholder="Search by Owner Mobile..." value={searchPhone} onChange={(e) => setSearchPhone(e.target.value)} style={{ padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }} />
+              <input type="date" value={searchDate} onChange={(e) => setSearchDate(e.target.value)} style={{ padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }} />
+            </div>
+          )}
         </div>
 
         <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {isLoading ? (
             <div style={{ textAlign: 'center', color: 'var(--accent-blue)' }}>Loading complaints... ⏳</div>
-          ) : complaints.length === 0 ? (
-            <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No pending complaints found. 🎉</div>
+          ) : filteredComplaints.length === 0 ? (
+            <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No complaints found. 🎉</div>
           ) : (
-            complaints.map((complaint) => (
+            filteredComplaints.map((complaint) => (
               <div key={complaint._id} style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', backgroundColor: complaint.type === 'external' ? '#a371f722' : '#f0883e22', color: complaint.type === 'external' ? '#a371f7' : '#f0883e', border: `1px solid ${complaint.type === 'external' ? '#a371f755' : '#f0883e55'}` }}>
                     {complaint.specialization || (complaint.type === 'external' ? '🛣️ External' : '🏠 Internal')}
                   </span>
-                  <button 
-                    onClick={() => handleTogglePriority(complaint._id, complaint.priority || 'Normal')}
-                    style={{ backgroundColor: complaint.priority === 'High' ? 'var(--accent-red-bg)' : 'var(--border-color)', color: complaint.priority === 'High' ? '#ffffff' : 'var(--text-primary)', border: 'none', padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s' }}
-                  >
-                    {complaint.priority === 'High' ? '🚨 High Priority' : '⬇️ Normal Priority'}
-                  </button>
+                  {(complaint.status || 'pending').toLowerCase() === 'pending' && (
+                    <button 
+                      onClick={() => handleTogglePriority(complaint._id, complaint.priority || 'Normal')}
+                      style={{ backgroundColor: complaint.priority === 'High' ? 'var(--accent-red-bg)' : 'var(--border-color)', color: complaint.priority === 'High' ? '#ffffff' : 'var(--text-primary)', border: 'none', padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s' }}
+                    >
+                      {complaint.priority === 'High' ? '🚨 High Priority' : '⬇️ Normal Priority'}
+                    </button>
+                  )}
                   <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                     {complaint.createdAt ? new Date(complaint.createdAt).toLocaleDateString() : ''}
                   </span>
@@ -350,8 +393,14 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
                   </button>
                 </div>
                 <div style={{ display: 'flex', gap: '10px', marginTop: '10px', borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
-                  <button onClick={() => setActiveComplaint(complaint)} style={{ flex: 1, backgroundColor: 'transparent', color: 'var(--accent-blue)', border: '1px solid var(--accent-blue)', padding: '10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>💬 Chat</button>
-                  <button onClick={() => handleAction(complaint._id, 'dismiss')} style={{ flex: 1, backgroundColor: 'transparent', color: 'var(--accent-red-bg)', border: '1px solid var(--accent-red-bg)', padding: '10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>❌ Dismiss</button>
+                  {((complaint.status || 'pending').toLowerCase() !== 'resolved' && (complaint.status || 'pending').toLowerCase() !== 'solved') ? (
+                    <button onClick={() => setActiveComplaint(complaint)} style={{ flex: 1, backgroundColor: 'transparent', color: 'var(--accent-blue)', border: '1px solid var(--accent-blue)', padding: '10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>💬 Chat</button>
+                  ) : (
+                    <button onClick={() => setActiveComplaint(complaint)} style={{ flex: 1, backgroundColor: 'transparent', color: 'var(--accent-blue)', border: '1px solid var(--accent-blue)', padding: '10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>🔍 Review Chat</button>
+                  )}
+                  {(complaint.status || 'pending').toLowerCase() === 'pending' && (
+                    <button onClick={() => handleAction(complaint._id, 'dismiss')} style={{ flex: 1, backgroundColor: 'transparent', color: 'var(--accent-red-bg)', border: '1px solid var(--accent-red-bg)', padding: '10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>❌ Dismiss</button>
+                  )}
                 </div>
               </div>
             ))

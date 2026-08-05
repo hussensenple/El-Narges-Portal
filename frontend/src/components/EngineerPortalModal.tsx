@@ -303,8 +303,11 @@ const EngineerPortalModal = ({ onClose, view, onOpenUNModal }: EngineerPortalMod
   };
 
   // 2. Separate into "New Complaints" and "Active Tasks"
-  // A complaint is "unassigned" if it has no technician and is Pending.
-  const isTask = (c: Complaint) => c.assignedTechnician || c.status !== 'Pending';
+  // Status is the sole determinant — a Pending complaint is always a "new" complaint.
+  const isTask = (c: Complaint) => {
+    const s = (c.status || 'pending').toLowerCase();
+    return s !== 'pending';
+  };
   
   const unassignedComplaints = complaints.filter(c => !isTask(c));
 
@@ -431,7 +434,9 @@ const EngineerPortalModal = ({ onClose, view, onOpenUNModal }: EngineerPortalMod
           {(spec === 'Infrastructure (بنية تحتية / شبكات المياه)' || complaint.assignedSpecialization === 'Infrastructure (بنية تحتية / شبكات المياه)') && (
              <button onClick={() => handleZoomToUNMap(complaint)} style={{ flex: 1, backgroundColor: '#8957e5', color: 'var(--text-primary)', border: 'none', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>⚡ UN Map</button>
           )}
-          <button onClick={() => setActiveComplaint(complaint)} style={{ flex: 1, backgroundColor: 'transparent', color: 'var(--accent-blue)', border: '1px solid var(--accent-blue)', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>💬 Chat</button>
+          {((complaint.status || 'pending').toLowerCase() !== 'resolved' && (complaint.status || 'pending').toLowerCase() !== 'solved') && (
+            <button onClick={() => setActiveComplaint(complaint)} style={{ flex: 1, backgroundColor: 'transparent', color: 'var(--accent-blue)', border: '1px solid var(--accent-blue)', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>💬 Chat</button>
+          )}
         </div>
       </div>
     );

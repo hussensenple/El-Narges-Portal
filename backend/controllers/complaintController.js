@@ -133,6 +133,13 @@ const updateComplaintStatus = async (req, res) => {
     if (status) updateData.status = status;
     if (problemName) updateData.problemName = problemName;
 
+    // If reverting back to Pending, clear the technician assignment so it
+    // re-appears in the "New Complaints" pool for the engineer.
+    if (status && status.toLowerCase() === 'pending') {
+      updateData.assignedTechnician = null;
+      updateData.assignedSpecialization = null;
+    }
+
     const complaint = await Complaint.findByIdAndUpdate(complaintId, updateData, { new: true });
     if (!complaint) return res.status(404).json({ msg: 'Complaint not found' });
 

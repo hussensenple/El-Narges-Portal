@@ -119,22 +119,24 @@ const ComplaintChatModal = ({ complaint, onClose, onRefresh, currentUser }: Comp
         </div>
 
         {/* Message Input Form */}
-        <form onSubmit={handleSendMessage} style={{ padding: '16px', backgroundColor: 'var(--bg-secondary)', borderTop: '1px solid var(--border-color)', display: 'flex', gap: '10px' }}>
-          <input
-            type="text"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Type your message..."
-            style={{ flex: 1, padding: '12px', borderRadius: '20px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', outline: 'none' }}
-          />
-          <button 
-            type="submit" 
-            disabled={isSubmitting || !text.trim()} 
-            style={{ padding: '10px 20px', borderRadius: '20px', border: 'none', backgroundColor: 'var(--accent-green)', color: 'var(--text-primary)', fontWeight: 'bold', cursor: isSubmitting || !text.trim() ? 'not-allowed' : 'pointer', opacity: isSubmitting || !text.trim() ? 0.5 : 1 }}
-          >
-            {isSubmitting ? '...' : 'Send'}
-          </button>
-        </form>
+        {((complaint.status || 'pending').toLowerCase() !== 'resolved' && (complaint.status || 'pending').toLowerCase() !== 'solved') && (
+          <form onSubmit={handleSendMessage} style={{ padding: '16px', backgroundColor: 'var(--bg-secondary)', borderTop: '1px solid var(--border-color)', display: 'flex', gap: '10px' }}>
+            <input
+              type="text"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Type your message..."
+              style={{ flex: 1, padding: '12px', borderRadius: '20px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', outline: 'none' }}
+            />
+            <button 
+              type="submit" 
+              disabled={isSubmitting || !text.trim()} 
+              style={{ padding: '10px 20px', borderRadius: '20px', border: 'none', backgroundColor: 'var(--accent-green)', color: 'var(--text-primary)', fontWeight: 'bold', cursor: isSubmitting || !text.trim() ? 'not-allowed' : 'pointer', opacity: isSubmitting || !text.trim() ? 0.5 : 1 }}
+            >
+              {isSubmitting ? '...' : 'Send'}
+            </button>
+          </form>
+        )}
 
       </div>
     </div>,

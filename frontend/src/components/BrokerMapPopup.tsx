@@ -11,7 +11,7 @@ interface BrokerMapPopupProps {
 
 const BASE_URL = window.location.origin;
 
-const getVillaDesignUrl = (model: string) => {
+const _getVillaDesignUrl = (model: string) => {
   if (!model) return null;
   return `${BASE_URL}/${model}.png`;
 };
@@ -101,7 +101,7 @@ const BrokerMapPopup = ({ buildingId, villaData, onClose }: BrokerMapPopupProps)
     return requests.filter(r => String(r.unitId) === String(arcgisId));
   };
 
-  const statusLabel = (s: any) => {
+  const _statusLabel = (s: any) => {
     const v = String(s).toLowerCase();
     if (v === '1' || v === 'available') return { label: 'Available', color: 'var(--accent-green)' };
     if (v === '2' || v === 'interested') return { label: 'Interested', color: 'var(--accent-gold)' };

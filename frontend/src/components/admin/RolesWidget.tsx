@@ -6,7 +6,7 @@ import BrokersTable from './tables/BrokersTable';
 import EngineersTable from './tables/EngineersTable';
 import AdminsTable from './tables/AdminsTable';
 
-const RolesWidget = ({ onAssignUser }: { onAssignUser?: (user: { id: string, role: string }) => void }) => {
+const RolesWidget = ({ onAssignUser: _onAssignUser }: { onAssignUser?: (user: { id: string, role: string }) => void }) => {
   const [activeRole, setActiveRole] = useState<'user' | 'owner' | 'broker' | 'engineer' | 'admin'>('user');
   const [counts, setCounts] = useState({ user: 0, owner: 0, broker: 0, engineer: 0, admin: 0 });
 

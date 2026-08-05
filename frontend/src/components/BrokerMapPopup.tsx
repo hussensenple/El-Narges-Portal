@@ -9,7 +9,6 @@ interface BrokerMapPopupProps {
   onClose: () => void;
 }
 
-const BASE_URL = window.location.origin;
 
 
 

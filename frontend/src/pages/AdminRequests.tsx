@@ -344,13 +344,14 @@ const AdminPortal = () => {
                     </th>
                     <th style={{ padding: '12px' }}>Unit ID</th>
                     <th style={{ padding: '12px' }}>Unit Type</th>
+                    <th style={{ padding: '12px' }}>Price</th>
                     <th style={{ padding: '12px' }}>Customer Name</th>
                     <th style={{ padding: '12px' }}>Phone</th>
                     <th style={{ padding: '12px' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {requests.map((req: { _id: string, objectId?: number, unitId: string, sourceLayer?: string, userId?: { name: string, phone: string } }) => (
+                  {requests.map((req: { _id: string, objectId?: number, unitId: string, sourceLayer?: string, price?: number, userId?: { name: string, phone: string } }) => (
                     <tr key={req._id} style={{ borderTop: '1px solid var(--border-color)', backgroundColor: selectedRequests.includes(req._id) ? 'var(--accent-blue-bg)22' : 'transparent' }}>
                       <td style={{ padding: '12px' }}>
                         <input 
@@ -362,10 +363,13 @@ const AdminPortal = () => {
                       </td>
                       <td style={{ padding: '12px' }}>#{req.objectId || req.unitId}</td>
                       <td style={{ padding: '12px' }}>
-                        {req.sourceLayer?.toLowerCase().includes('apartment') ? 'Apartment' : 
+                        {req.sourceLayer?.toLowerCase().includes('apartment') || req.sourceLayer?.toLowerCase().includes('unit') ? 'Apartment' : 
                          req.sourceLayer?.toLowerCase().includes('villa') ? 'Villa' : 
                          req.sourceLayer?.toLowerCase().includes('twinhouse') ? 'TwinHouse' : 
                          req.sourceLayer?.replace('_Global', '') || 'Unknown'}
+                      </td>
+                      <td style={{ padding: '12px' }}>
+                        {req.price ? (req.price >= 10000 ? (req.price / 1000000).toFixed(2) + 'M EGP' : req.price + ' EGP') : 'Contact Sales'}
                       </td>
                       <td style={{ padding: '12px' }}>{req.userId?.name}</td>
                       <td style={{ padding: '12px' }}>{req.userId?.phone}</td>

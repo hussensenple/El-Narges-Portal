@@ -235,7 +235,7 @@ const AdminPortal = () => {
         >
           <div>📥 Booking Requests</div>
           {requests.length > 0 && (
-            <span style={{ backgroundColor: 'var(--accent-red)', color: 'var(--text-primary)', borderRadius: '50%', padding: '2px 8px', marginLeft: '8px', fontSize: '13px' }}>
+            <span style={{ backgroundColor: 'var(--accent-red)', color: 'white', borderRadius: '50%', padding: '2px 8px', marginLeft: '8px', fontSize: '13px' }}>
               {requests.length}
             </span>
           )}
@@ -249,7 +249,7 @@ const AdminPortal = () => {
           <div>🛡️ Complaints</div>
           {/* 👈 البادج الأحمر هيظهر بس لو في شكاوى (بيقرا من الـ State اللي جاية من الابن) */}
           {complaintsCount > 0 && (
-            <span style={{ backgroundColor: 'var(--accent-red-bg)', color: 'var(--text-primary)', borderRadius: '50%', padding: '2px 8px', marginLeft: '8px', fontSize: '12px' }}>
+            <span style={{ backgroundColor: 'var(--accent-red-bg)', color: 'white', borderRadius: '50%', padding: '2px 8px', marginLeft: '8px', fontSize: '12px' }}>
               {complaintsCount}
             </span>
           )}
@@ -319,10 +319,10 @@ const AdminPortal = () => {
               <h2 style={{ margin: 0, color: 'var(--accent-blue)' }}>Pending Requests</h2>
               {selectedRequests.length > 0 && (
                 <div style={{ display: 'flex', gap: '10px' }}>
-                  <button onClick={handleBulkApprove} disabled={isProcessing} style={{ backgroundColor: 'var(--accent-green-bg)', color: 'var(--text-primary)', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: isProcessing ? 'not-allowed' : 'pointer', fontWeight: 'bold', opacity: isProcessing ? 0.7 : 1 }}>
+                  <button onClick={handleBulkApprove} disabled={isProcessing} style={{ backgroundColor: 'var(--accent-green-bg)', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: isProcessing ? 'not-allowed' : 'pointer', fontWeight: 'bold', opacity: isProcessing ? 0.7 : 1 }}>
                     {isProcessing ? 'Processing...' : `Approve Selected (${selectedRequests.length})`}
                   </button>
-                  <button onClick={() => openRejectModal(null, true)} disabled={isProcessing} style={{ backgroundColor: 'var(--accent-red-bg)', color: 'var(--text-primary)', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: isProcessing ? 'not-allowed' : 'pointer', fontWeight: 'bold', opacity: isProcessing ? 0.7 : 1 }}>
+                  <button onClick={() => openRejectModal(null, true)} disabled={isProcessing} style={{ backgroundColor: 'var(--accent-red-bg)', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: isProcessing ? 'not-allowed' : 'pointer', fontWeight: 'bold', opacity: isProcessing ? 0.7 : 1 }}>
                     {isProcessing ? 'Processing...' : `Reject Selected (${selectedRequests.length})`}
                   </button>
                 </div>
@@ -374,8 +374,8 @@ const AdminPortal = () => {
                       <td style={{ padding: '12px' }}>{req.userId?.name}</td>
                       <td style={{ padding: '12px' }}>{req.userId?.phone}</td>
                       <td style={{ padding: '12px' }}>
-                        <button onClick={() => handleApprove(req._id)} style={{ marginRight: '10px', backgroundColor: 'var(--accent-green-bg)', color: 'var(--text-primary)', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>Approve</button>
-                        <button onClick={() => openRejectModal(req._id, false)} style={{ backgroundColor: 'var(--accent-red-bg)', color: 'var(--text-primary)', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>Reject</button>
+                        <button onClick={() => handleApprove(req._id)} style={{ marginRight: '10px', backgroundColor: 'var(--accent-green-bg)', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>Approve</button>
+                        <button onClick={() => openRejectModal(req._id, false)} style={{ backgroundColor: 'var(--accent-red-bg)', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>Reject</button>
                       </td>
                     </tr>
                   ))}
@@ -451,7 +451,7 @@ const AdminPortal = () => {
               <button 
                 onClick={submitReject} 
                 disabled={!rejectReason || isProcessing}
-                style={{ backgroundColor: rejectReason ? 'var(--accent-red-bg)' : '#444c56', color: 'var(--text-primary)', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: rejectReason ? 'pointer' : 'not-allowed', fontWeight: 'bold' }}
+                style={{ backgroundColor: rejectReason ? 'var(--accent-red-bg)' : '#444c56', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: rejectReason ? 'pointer' : 'not-allowed', fontWeight: 'bold' }}
               >
                 {isProcessing ? 'Processing...' : 'Confirm Reject'}
               </button>

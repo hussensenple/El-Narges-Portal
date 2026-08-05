@@ -80,19 +80,11 @@ html, body, #root {
 }
 
 /* Fix Date and Time Picker Icons in Dark Mode */
-:root {
+input[type="date"],
+input[type="time"] {
   color-scheme: dark;
 }
-[data-theme='light'] {
+[data-theme='light'] input[type="date"],
+[data-theme='light'] input[type="time"] {
   color-scheme: light;
-}
-
-input[type="date"]::-webkit-calendar-picker-indicator,
-input[type="time"]::-webkit-calendar-picker-indicator {
-  filter: invert(1);
-  cursor: pointer;
-}
-[data-theme='light'] input[type="date"]::-webkit-calendar-picker-indicator,
-[data-theme='light'] input[type="time"]::-webkit-calendar-picker-indicator {
-  filter: none;
 }

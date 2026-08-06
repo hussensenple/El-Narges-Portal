@@ -572,3 +572,5 @@ Both dev servers are currently running:
 
  -   A d d e d   a u t o m a t i c   g o v e r n o r a t e   s p a t i a l   q u e r y   o n   U s e r   R e g i s t r a t i o n   t o   p o p u l a t e   E _ N a m e .  
  - Fixed Broker Unassignment Logic (removeProperty) and UI Catalog Status Overrides to fully synchronize MongoDB as the Source of Truth.
+ - Fixed Booking Request bugs where a previous owner could not request their unit again by replacing strict db uniqueness with logical checks. Also filtered out Approved requests from the My Requests dashboard.
+ - Fixed missing price in new Booking Requests created by frontend.

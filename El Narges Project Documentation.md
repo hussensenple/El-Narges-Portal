@@ -460,3 +460,5 @@
 - **إضافة عمود Price في Booking Requests Table:** تم إضافة عمود 'Price' في جدول الطلبات المعلقة (Pending Requests) داخل تبويب Booking Requests في Admin Portal. العمود يعرض قيمة price المخزنة في موديل BookingRequest بقيمة منسقة (EGP + toLocaleString()) باللون الأخضر لتمييزها. في حال عدم وجود سعر يُعرض شرطة (—). الملف المعدّل: frontend/src/pages/AdminRequests.tsx.
 
 - **Property Status Sync and Rejection Cleanup:** Updated backend olesController.js to ensure MongoDB status overrides ArcGIS status in the Admin Catalog, making MongoDB the definitive source of truth for property status. Also updated emoveProperty to correctly set rokerId: null and sync ArcGIS when an owner's property is removed, fixing broker re-assignment logic. Finally, ran a data cleanup script to distribute all No Reason rejections (48 Declined, 41 Rejected) across valid categories.
+ - Fixed Booking Request bugs where a previous owner could not request their unit again by replacing strict db uniqueness with logical checks. Also filtered out Approved requests from the My Requests dashboard.
+ - Fixed missing price in new Booking Requests created by frontend.

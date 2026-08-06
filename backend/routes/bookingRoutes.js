@@ -18,7 +18,7 @@ router.get('/my-requests', auth, getMyBookingRequests);
 // ==========================================
 router.post('/request', auth, async (req, res) => {
   try {
-    const { unitId, objectId, sourceLayer, buildingFK } = req.body;
+    const { unitId, objectId, sourceLayer, buildingFK, price } = req.body;
     const userId = req.user.id; 
 
     // 🚀 الفحص الجديد: نمنع الـ Crash لو الفرونت إند نسي يبعت الـ ID
@@ -31,6 +31,16 @@ router.post('/request', auth, async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
+    // الفحص المنطقي لمنع تقديم طلب لنفس الوحدة إذا كان هناك طلب نشط
+    const activeRequest = await BookingRequest.findOne({
+      userId,
+      unitId,
+      status: { $in: ['Pending', 'Reserved'] }
+    });
+    if (activeRequest) {
+      return res.status(400).json({ error: "You have already submitted a request for this unit. It is currently under review." });
+    }
+
     const newRequest = new BookingRequest({
       userId,
       unitId,
@@ -40,6 +50,7 @@ router.post('/request', auth, async (req, res) => {
       customerName: user.name,     
       customerPhone: user.phone,   
       customerGmail: user.email,   
+      price: price || 0,
       status: 'Pending'
     });
 
@@ -54,9 +65,6 @@ router.post('/request', auth, async (req, res) => {
 
   } catch (error) {
     console.error("🚨 Booking Crash Error:", error);
-    if (error.code === 11000) {
-      return res.status(400).json({ error: "You have already submitted a request for this unit. It is currently under review." });
-    }
     res.status(500).json({ error: "An error occurred while submitting the request" });
   }
 });

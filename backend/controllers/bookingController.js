@@ -263,7 +263,10 @@ exports.getMyBookingRequests = async (req, res) => {
   try {
     const userId = req.user.id;
     
-    const userRequests = await BookingRequest.find({ userId }).populate('userId', 'name phone email').lean();
+    const userRequests = await BookingRequest.find({ 
+      userId,
+      status: { $in: ['Pending', 'Reserved', 'Declined', 'Rejected'] }
+    }).populate('userId', 'name phone email').lean();
     
     const ownerUnits = await Unit.find({ ownerId: userId });
     let unitIds = [];
@@ -274,7 +277,8 @@ exports.getMyBookingRequests = async (req, res) => {
     
     const unitRequests = await BookingRequest.find({
       unitId: { $in: unitIds },
-      userId: { $ne: userId } 
+      userId: { $ne: userId },
+      status: { $in: ['Pending', 'Reserved', 'Declined', 'Rejected'] }
     }).populate('userId', 'name phone email').lean();
 
     const allRequests = [...userRequests, ...unitRequests];

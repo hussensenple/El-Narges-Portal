@@ -15,7 +15,7 @@ const bookingRequestSchema = new mongoose.Schema({
   rejectionNotes: { type: String }
 }, { timestamps: true });
 
-// منع العميل يحجز نفس الوحدة مرتين وهي لسه قيد المراجعة
-bookingRequestSchema.index({ userId: 1, unitId: 1 }, { unique: true });
+// فهرس لتحسين سرعة البحث ولن نستخدم unique هنا للسماح للمالك بطلب الوحدة مرة أخرى إذا تم سحبها منه
+bookingRequestSchema.index({ userId: 1, unitId: 1 });
 
 module.exports = mongoose.model('BookingRequest', bookingRequestSchema);

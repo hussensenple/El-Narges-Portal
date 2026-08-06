@@ -195,7 +195,8 @@ const UnitCatalog = ({ view, onClose }: UnitCatalogProps) => {
         buildingFK: bookingUnit.attributes.BuildingID_FK || null,
         customerName: auth.user.name,
         customerPhone: (auth.user as any).phone || 'N/A', 
-        customerGmail: (auth.user as any).email || (auth.user as any).gmail || 'N/A'
+        customerGmail: (auth.user as any).email || (auth.user as any).gmail || 'N/A',
+        price: bookingUnit.attributes?.Price || 0
       }, {
         headers: { 'x-auth-token': currentToken }
       });

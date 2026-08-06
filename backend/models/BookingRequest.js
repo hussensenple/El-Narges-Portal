@@ -9,6 +9,7 @@ const bookingRequestSchema = new mongoose.Schema({
   customerName: { type: String, required: true },
   customerPhone: { type: String, required: true },
   customerGmail: { type: String, required: true },
+  price: { type: Number },
   status: { type: String, enum: ['Pending', 'Reserved', 'Approved', 'Rejected', 'Declined'], default: 'Pending' },
   rejectionReason: { type: String },
   rejectionNotes: { type: String }

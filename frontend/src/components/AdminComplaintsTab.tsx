@@ -4,11 +4,11 @@ import WebScene from '@arcgis/core/WebScene';
 import SceneView from '@arcgis/core/views/SceneView';
 import Graphic from '@arcgis/core/Graphic';
 import Point from '@arcgis/core/geometry/Point';
-import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
-import { io } from 'socket.io-client';
+import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer'; 
+import { io } from 'socket.io-client'; 
 import { AuthContext } from '../context/AuthContext';
 import { useContext } from 'react';
-import ComplaintChatModal from './ComplaintChatModal';
+import ComplaintChatModal from './ComplaintChatModal'; 
 
 interface Complaint {
   _id: string;
@@ -99,35 +99,35 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
 
   // 🚀 دالة جلب الشكاوى وتصفيتها
   const fetchComplaints = async () => {
-    setIsLoading(true);
+    setIsLoading(true); 
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/complaints/all`, {
         headers: { 'x-auth-token': token }
       });
-
-      const activeComplaints = response.data.filter((c: any) =>
+      
+      const activeComplaints = response.data.filter((c: any) => 
         c.status?.toLowerCase() !== 'dismissed'
       );
-
+      
       setComplaints(activeComplaints);
     } catch (error) {
       console.error("Error fetching complaints:", error);
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); 
     }
   };
 
   const filteredComplaints = complaints.filter(c => {
     const s = (c.status || 'pending').toLowerCase();
-
+    
     if (statusFilter === 'Pending') {
       if (s !== 'pending') return false;
     } else if (statusFilter === 'Maintenance') {
       if (s !== 'maintenance' && s !== 'in progress') return false;
     } else if (statusFilter === 'Resolved') {
       if (s !== 'resolved' && s !== 'solved') return false;
-
+      
       if (searchPhone && c.ownerId?.phone) {
         if (!c.ownerId.phone.includes(searchPhone)) return false;
       } else if (searchPhone && !c.ownerId?.phone) {
@@ -146,13 +146,13 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
 
   // 🚀 الـ WebSockets
   useEffect(() => {
-    fetchComplaints();
+    fetchComplaints(); 
 
     const socket = io(`${import.meta.env.VITE_API_URL}`);
-
+    
     socket.on('newComplaint', () => {
       console.log("🔔 New complaint received via Socket!");
-      fetchComplaints();
+      fetchComplaints(); 
     });
 
     return () => {
@@ -167,7 +167,7 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
     clearSelection();
 
     if (complaint.type === 'external' && complaint.coordinates) {
-
+      
       const lng = complaint.coordinates.lng || complaint.coordinates.lon;
       const lat = complaint.coordinates.lat;
 
@@ -182,9 +182,9 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
       });
 
       const markerSymbol = {
-        type: "point-3d",
+        type: "point-3d", 
         symbolLayers: [{
-          type: "icon",
+          type: "icon", 
           resource: { primitive: "circle" },
           material: { color: "red" },
           outline: { color: "white", size: 2 },
@@ -197,8 +197,8 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
       const complaintLayer = new GraphicsLayer({
         id: "complaint-marker-layer",
         elevationInfo: {
-          mode: "relative-to-ground",
-          offset: 5
+            mode: "relative-to-ground",
+            offset: 5 
         }
       });
 
@@ -211,7 +211,7 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
         const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/roles/catalog?mode=all`);
         const allFeatures = [...(res.data.units || []), ...(res.data.villas || [])];
         const complaintCleanId = String(complaint.arcgisId).replace(/[{}]/g, '').trim().toLowerCase();
-
+        
         const unitData = allFeatures.find(u => {
           const uObj = String(u.OBJECTID).replace(/[{}]/g, '').trim().toLowerCase();
           const uGlob = String(u.GlobalID || '').replace(/[{}]/g, '').trim().toLowerCase();
@@ -274,8 +274,8 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
     try {
       const token = localStorage.getItem('token');
       const newPriority = currentPriority === 'High' ? 'Normal' : 'High';
-      await axios.put(`${import.meta.env.VITE_API_URL}/api/complaints/${complaintId}/priority`,
-        { priority: newPriority },
+      await axios.put(`${import.meta.env.VITE_API_URL}/api/complaints/${complaintId}/priority`, 
+        { priority: newPriority }, 
         { headers: { 'x-auth-token': token } }
       );
       setComplaints(prev => prev.map(c => c._id === complaintId ? { ...c, priority: newPriority } : c));
@@ -288,7 +288,7 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
   // 🚀 تنفيذ أمر الـ Dismiss للباك إند
   const handleAction = async (complaintId: string, action: 'raise' | 'dismiss') => {
     setComplaints(prev => prev.filter(c => c._id !== complaintId));
-
+    
     if (view) {
       const oldLayer = view.map?.findLayerById("complaint-marker-layer");
       if (oldLayer) view.map?.remove(oldLayer);
@@ -298,12 +298,12 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
     try {
       const token = localStorage.getItem('token');
       const newStatus = action === 'raise' ? 'Maintenance' : 'Dismissed';
-
-      await axios.put(`${import.meta.env.VITE_API_URL}/api/complaints/resolve/${complaintId}`,
-        { status: newStatus },
+      
+      await axios.put(`${import.meta.env.VITE_API_URL}/api/complaints/resolve/${complaintId}`, 
+        { status: newStatus }, 
         { headers: { 'x-auth-token': token } }
       );
-
+      
       alert(action === 'raise' ? "✅ Raised to maintenance!" : "❌ Dismissed and removed.");
     } catch (error) {
       console.error("Error updating complaint status:", error);
@@ -313,11 +313,11 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
 
   return (
     <div style={{ display: 'flex', width: '100%', height: '100%', backgroundColor: 'var(--bg-primary)' }}>
-
+      
       <div style={{ width: '450px', height: '100%', overflowY: 'auto', borderRight: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '20px', backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', position: 'sticky', top: 0, zIndex: 10 }}>
-          <h2 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.4rem' }}>🛡️ Admin Complaints</h2>
-
+          <h2 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.4rem' }}>🛡️ Complaints</h2>
+          
           <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
             <button onClick={() => setStatusFilter('Pending')} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: 'none', backgroundColor: statusFilter === 'Pending' ? 'var(--accent-blue-bg)' : 'var(--bg-tertiary)', color: statusFilter === 'Pending' ? '#fff' : 'var(--text-primary)', cursor: 'pointer', fontWeight: 'bold' }}>Pending</button>
             <button onClick={() => setStatusFilter('Maintenance')} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: 'none', backgroundColor: statusFilter === 'Maintenance' ? 'var(--accent-green-bg)' : 'var(--bg-tertiary)', color: statusFilter === 'Maintenance' ? '#fff' : 'var(--text-primary)', cursor: 'pointer', fontWeight: 'bold' }}>In Progress</button>
@@ -345,7 +345,7 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
                     {complaint.specialization || (complaint.type === 'external' ? '🛣️ External' : '🏠 Internal')}
                   </span>
                   {(complaint.status || 'pending').toLowerCase() === 'pending' && (
-                    <button
+                    <button 
                       onClick={() => handleTogglePriority(complaint._id, complaint.priority || 'Normal')}
                       style={{ backgroundColor: complaint.priority === 'High' ? 'var(--accent-red-bg)' : 'var(--border-color)', color: complaint.priority === 'High' ? '#ffffff' : 'var(--text-primary)', border: 'none', padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s' }}
                     >
@@ -357,25 +357,25 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
                   </span>
                 </div>
                 <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
-                  {(complaint as any).problemName || complaint.title} <span style={{ color: 'var(--accent-blue)', fontSize: '12px', fontWeight: 'normal' }}>({complaint.status})</span>
+                  {(complaint as any).problemName || complaint.title} <span style={{color: 'var(--accent-blue)', fontSize: '12px', fontWeight: 'normal'}}>({complaint.status})</span>
                 </div>
                 {complaint.ownerId && (
                   <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '-4px', marginBottom: '4px' }}>
-                    👤 <strong>{complaint.ownerId.name}</strong>
+                    👤 <strong>{complaint.ownerId.name}</strong> 
                     {complaint.ownerId.phone ? ` 📞 ${complaint.ownerId.phone}` : ''}
                   </div>
                 )}
                 <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '15px', lineHeight: '1.5' }}>{complaint.description}</p>
-
+                
                 {complaint.images && complaint.images.length > 0 && (
                   <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '5px' }}>
                     {complaint.images.map((img, i) => (
-                      <img
-                        key={i}
-                        src={img}
-                        alt="Complaint attached"
+                      <img 
+                        key={i} 
+                        src={img} 
+                        alt="Complaint attached" 
                         onClick={() => setDesignImage(img)}
-                        style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--border-color)', cursor: 'pointer' }}
+                        style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--border-color)', cursor: 'pointer' }} 
                       />
                     ))}
                   </div>
@@ -385,7 +385,7 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
                   {complaint.type === 'internal' && (
                     <button onClick={() => setDesignImage('/A.png')} style={{ flex: 1, backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>📐 Explore Plan</button>
                   )}
-                  <button
+                  <button 
                     onClick={() => handleZoomToMap(complaint)}
                     style={{ flex: 1, backgroundColor: 'var(--accent-blue-bg)', color: '#ffffff', border: 'none', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
                   >
@@ -417,16 +417,16 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
           complaint={activeComplaint}
           onClose={() => setActiveComplaint(null)}
           onRefresh={fetchComplaints}
-          currentUser={{
-            id: auth?.user?.id || 'admin_id',
-            name: auth?.user?.name || 'Admin',
-            role: 'admin'
+          currentUser={{ 
+            id: auth?.user?.id || 'admin_id', 
+            name: auth?.user?.name || 'Admin', 
+            role: 'admin' 
           }}
         />
       )}
 
       {designImage && (
-        <div
+        <div 
           onClick={() => setDesignImage(null)}
           style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 9999999, display: 'flex', justifyContent: 'center', alignItems: 'center' }}
         >

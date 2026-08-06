@@ -49,9 +49,42 @@ html, body, #root {
 .esri-view {
   width: 100%;
   height: 100%;
-} 
- / *   C u s t o m   A r c G I S   P o p u p   A c t i o n s   S t y l i n g   * /  
- . e s r i - p o p u p _ _ a c t i o n   {   b a c k g r o u n d :   l i n e a r - g r a d i e n t ( t o   r i g h t ,   # 1 f 6 f e b ,   # 1 d 4 e d 8 )   ! i m p o r t a n t ;   c o l o r :   w h i t e   ! i m p o r t a n t ;   m a r g i n :   8 p x   ! i m p o r t a n t ;   b o r d e r - r a d i u s :   8 p x   ! i m p o r t a n t ;   p a d d i n g :   5 p x   1 2 p x   ! i m p o r t a n t ;   b o r d e r :   1 p x   s o l i d   # 3 8 8 b f d   ! i m p o r t a n t ;   t r a n s i t i o n :   a l l   0 . 2 s   e a s e - i n - o u t   ! i m p o r t a n t ;   d i s p l a y :   f l e x   ! i m p o r t a n t ;   a l i g n - i t e m s :   c e n t e r   ! i m p o r t a n t ;   g a p :   5 p x   ! i m p o r t a n t ;   }  
- . e s r i - p o p u p _ _ a c t i o n : h o v e r   {   b a c k g r o u n d :   l i n e a r - g r a d i e n t ( t o   r i g h t ,   # 3 8 8 b f d ,   # 2 5 6 3 e b )   ! i m p o r t a n t ;   t r a n s f o r m :   t r a n s l a t e Y ( - 2 p x ) ;   b o x - s h a d o w :   0   4 p x   1 0 p x   r g b a ( 3 1 ,   1 1 1 ,   2 3 5 ,   0 . 4 )   ! i m p o r t a n t ;   }  
- . e s r i - p o p u p _ _ a c t i o n - t e x t   {   c o l o r :   w h i t e   ! i m p o r t a n t ;   f o n t - w e i g h t :   b o l d   ! i m p o r t a n t ;   f o n t - f a m i l y :   ' I n t e r ' ,   s a n s - s e r i f   ! i m p o r t a n t ;   }  
- . e s r i - i c o n - p l u s - c i r c l e d : : b e f o r e   {   c o l o r :   w h i t e   ! i m p o r t a n t ;   f o n t - s i z e :   1 6 p x   ! i m p o r t a n t ;   }
+}
+
+/* Custom ArcGIS Popup Actions Styling */
+.esri-popup__action { 
+  background: linear-gradient(to right, #1f6feb, #1d4ed8) !important; 
+  color: white !important; 
+  margin: 8px !important; 
+  border-radius: 8px !important; 
+  padding: 5px 12px !important; 
+  border: 1px solid #388bfd !important; 
+  transition: all 0.2s ease-in-out !important; 
+  display: flex !important; 
+  align-items: center !important; 
+  gap: 5px !important; 
+}
+.esri-popup__action:hover { 
+  background: linear-gradient(to right, #388bfd, #2563eb) !important; 
+  transform: translateY(-2px); 
+  box-shadow: 0 4px 10px rgba(31, 111, 235, 0.4) !important; 
+}
+.esri-popup__action-text { 
+  color: white !important; 
+  font-weight: bold !important; 
+  font-family: 'Inter', sans-serif !important; 
+}
+.esri-icon-plus-circled::before { 
+  color: white !important; 
+  font-size: 16px !important; 
+}
+
+/* Fix Date and Time Picker Icons in Dark Mode */
+input[type="date"],
+input[type="time"] {
+  color-scheme: dark;
+}
+[data-theme='light'] input[type="date"],
+[data-theme='light'] input[type="time"] {
+  color-scheme: light;
+}

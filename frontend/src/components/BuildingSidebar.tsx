@@ -85,7 +85,8 @@ const BuildingSidebar = ({ buildingId, villaData, onClose }: BuildingSidebarProp
         buildingFK: unit.BuildingID_FK,
         customerName: auth.user.name,
         customerPhone: (auth.user as any).phone || 'N/A',
-        customerGmail: (auth.user as any).email || (auth.user as any).gmail || 'N/A'
+        customerGmail: (auth.user as any).email || (auth.user as any).gmail || 'N/A',
+        price: unit.Price || 0
       }, { headers: { 'x-auth-token': currentToken } });
       alert('🎉 Booking request sent successfully! Our sales team will review your request.');
     } catch (error: any) {
@@ -113,7 +114,8 @@ const BuildingSidebar = ({ buildingId, villaData, onClose }: BuildingSidebarProp
         buildingFK: null,
         customerName: (currentUser as any).name,
         customerPhone: (currentUser as any).phone || 'N/A',
-        customerGmail: (currentUser as any).email || (currentUser as any).gmail || 'N/A'
+        customerGmail: (currentUser as any).email || (currentUser as any).gmail || 'N/A',
+        price: villaData.Price || 0
       }, { headers: { 'x-auth-token': currentToken } });
       alert('🎉 Booking request sent successfully!');
     } catch (err: any) {

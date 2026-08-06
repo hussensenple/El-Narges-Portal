@@ -199,14 +199,22 @@ exports.removeProperty = async (req, res) => {
       const correctSourceLayer = unitToRemove?.sourceLayer || 'Units';
       const correctArcgisId = unitToRemove?.arcgisId || unitId;
 
-      // Unlink from MongoDB unit
+      // Unlink from MongoDB unit (remove owner and broker so it goes back to available catalog)
       const updatedUnit = await Unit.findOneAndUpdate(
         { arcgisId: unitId },
-        { ownerId: null, status: '1' }
+        { ownerId: null, brokerId: null, status: '1' }
       );
       if (updatedUnit) {
         // Remove from user's ownedUnits array (MUST be ObjectId)
         await User.findByIdAndUpdate(userId, { $pull: { ownedUnits: updatedUnit._id } });
+        
+        // Sync the old broker if one existed
+        if (updatedUnit.brokerId) {
+          const oldBroker = await User.findById(updatedUnit.brokerId);
+          if (oldBroker) {
+            syncUserUpdateToArcGIS(oldBroker).catch(err => console.error("ArcGIS Broker Sync Error:", err));
+          }
+        }
       }
       // Check if owner has no more properties — auto-downgrade to user
       const updatedUser = await User.findById(userId);
@@ -276,6 +284,14 @@ exports.getAdminCatalog = async (req, res) => {
     let units = (unitsRes.data.features || []).map(f => ({ ...f.attributes, sourceLayer: 'Units', arcgisId: String(f.attributes.OBJECTID) }));
     let villas = (villasRes.data.features || []).map(f => ({ ...f.attributes, sourceLayer: 'Villas_Global', arcgisId: f.attributes.GlobalID || String(f.attributes.OBJECTID) }));
     let buildings = (buildingsRes.data.features || []).map(f => ({ ...f.attributes, sourceLayer: 'Buildings_Global', arcgisId: f.attributes.GlobalID || String(f.attributes.OBJECTID) }));
+
+    // ✅ Override ArcGIS status with MongoDB status (MongoDB is the source of truth)
+    const allMongoUnits = await Unit.find({}).select('arcgisId status');
+    const mongoStatusMap = {};
+    allMongoUnits.forEach(u => { mongoStatusMap[u.arcgisId] = u.status; });
+    units = units.map(u => mongoStatusMap[u.arcgisId] ? { ...u, Status: mongoStatusMap[u.arcgisId] } : u);
+    villas = villas.map(v => mongoStatusMap[v.arcgisId] ? { ...v, Status: mongoStatusMap[v.arcgisId] } : v);
+
 
     // ✅ Always filter out properties already owned (ownerId set in MongoDB) IF mode is owner or broker.
     // For 'all' mode, we don't filter them out, but we SHOULD mark them as Sold (4) if MongoDB says they have an owner, ensuring perfect sync.

@@ -344,7 +344,7 @@ const AdminPortal = () => {
                     </th>
                     <th style={{ padding: '12px' }}>Unit ID</th>
                     <th style={{ padding: '12px' }}>Unit Type</th>
-
+                    <th style={{ padding: '12px' }}>Price</th>
                     <th style={{ padding: '12px' }}>Customer Name</th>
                     <th style={{ padding: '12px' }}>Phone</th>
                     <th style={{ padding: '12px' }}>Actions</th>
@@ -368,7 +368,9 @@ const AdminPortal = () => {
                          req.sourceLayer?.toLowerCase().includes('twinhouse') ? 'TwinHouse' : 
                          req.sourceLayer?.replace('_Global', '') || 'Unknown'}
                       </td>
-
+                      <td style={{ padding: '12px', color: 'var(--accent-green)', fontWeight: 'bold' }}>
+                        {req.price ? `${(req.price / 1_000_000).toFixed(2)} M EGP` : '—'}
+                      </td>
                       <td style={{ padding: '12px' }}>{req.userId?.name}</td>
                       <td style={{ padding: '12px' }}>{req.userId?.phone}</td>
                       <td style={{ padding: '12px' }}>

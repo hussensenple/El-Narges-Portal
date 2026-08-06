@@ -455,3 +455,8 @@
 ## تحديثات إضافية (أغسطس 2026)
 - **إصلاح فلترة حالات الشكاوى:** تم إصلاح عدم تطابق أسماء الحالات (Solved/Resolved و In Progress/Maintenance) عبر ملفات AdminComplaintsTab, OwnerUnitsTab, EngineerPortalModal, ActiveTasksModal, و ComplaintChatModal. تم إخفاء نموذج إدخال الرسائل بالكامل في ComplaintChatModal عند فتح شكوى محلولة (وضع المراجعة فقط). كما تم إخفاء زر الـ Chat للمالك في حال كانت الشكوى Dismissed.
 - **إصلاح توجيه الشكاوى في بوابة المهندس:** تم تصحيح منطق دالة isTask() في EngineerPortalModal و ActiveTasksModal بحيث تعتمد **الحالة فقط** (وليس تعيين الفني) لتحديد ما إذا كانت الشكوى في قسم 'الشكاوى الجديدة' أو 'المهام النشطة'. وتم تحديث Backend لمسح ssignedTechnician و ssignedSpecialization تلقائياً عند إعادة تعيين الحالة إلى Pending.
+
+## تحديثات (أغسطس 2026) - إضافة عمود السعر في جدول طلبات الحجز
+- **إضافة عمود Price في Booking Requests Table:** تم إضافة عمود 'Price' في جدول الطلبات المعلقة (Pending Requests) داخل تبويب Booking Requests في Admin Portal. العمود يعرض قيمة price المخزنة في موديل BookingRequest بقيمة منسقة (EGP + toLocaleString()) باللون الأخضر لتمييزها. في حال عدم وجود سعر يُعرض شرطة (—). الملف المعدّل: frontend/src/pages/AdminRequests.tsx.
+
+- **Property Status Sync and Rejection Cleanup:** Updated backend olesController.js to ensure MongoDB status overrides ArcGIS status in the Admin Catalog, making MongoDB the definitive source of truth for property status. Also updated emoveProperty to correctly set rokerId: null and sync ArcGIS when an owner's property is removed, fixing broker re-assignment logic. Finally, ran a data cleanup script to distribute all No Reason rejections (48 Declined, 41 Rejected) across valid categories.

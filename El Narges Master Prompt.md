@@ -571,4 +571,4 @@ Both dev servers are currently running:
 - **Frontend:** Vite dev server (React + ArcGIS SDK)
 
  -   A d d e d   a u t o m a t i c   g o v e r n o r a t e   s p a t i a l   q u e r y   o n   U s e r   R e g i s t r a t i o n   t o   p o p u l a t e   E _ N a m e .  
- 
+ - Fixed Broker Unassignment Logic (removeProperty) and UI Catalog Status Overrides to fully synchronize MongoDB as the Source of Truth.

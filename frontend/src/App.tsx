@@ -251,9 +251,11 @@ const CustomerInterface = () => {
                 <Icons.Weather />
               </button>
             )}
-            <button title="Layers" onClick={() => { setIsLayersOpen(!isLayersOpen); setIsBasemapOpen(false); setIsWeatherOpen(false); }} className={`map-icon-btn ${isLayersOpen ? 'active' : 'inactive'}`}>
-              <Icons.Layers />
-            </button>
+            {mapMode !== 'UN' && (
+              <button title="Layers" onClick={() => { setIsLayersOpen(!isLayersOpen); setIsBasemapOpen(false); setIsWeatherOpen(false); }} className={`map-icon-btn ${isLayersOpen ? 'active' : 'inactive'}`}>
+                <Icons.Layers />
+              </button>
+            )}
             <button title="Basemap Gallery" onClick={() => { setIsBasemapOpen(!isBasemapOpen); setIsLayersOpen(false); setIsWeatherOpen(false); }} className={`map-icon-btn ${isBasemapOpen ? 'active' : 'inactive'}`}>
               <Icons.Basemap />
             </button>

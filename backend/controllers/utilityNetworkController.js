@@ -202,6 +202,147 @@ exports.performIsolationTrace = async (req, res) => {
     }
 };
 
+exports.performConnectedTrace = async (req, res) => {
+    try {
+        const { startPipeId } = req.body;
+
+        if (!startPipeId) {
+            return res.status(400).json({ error: 'startPipeId is required' });
+        }
+
+        console.log(`[Connected Trace] Starting trace for pipe OBJECTID: ${startPipeId}`);
+
+        // Fetch Line features (Pipes)
+        const linesResponse = await axios.get('https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/UN_Map_WFL1/FeatureServer/17/query', {
+            params: {
+                where: '1=1',
+                outFields: 'OBJECTID,ASSETGROUP',
+                f: 'geojson'
+            }
+        });
+
+        // Fetch Point features (Devices / Valves / Meters)
+        const devicesResponse = await axios.get('https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/UN_Map_WFL1/FeatureServer/32/query', {
+            params: {
+                where: '1=1',
+                outFields: 'OBJECTID,ASSETGROUP,ASSETTYPE,Status',
+                f: 'geojson'
+            }
+        });
+
+        const lines = linesResponse.data.features || [];
+        const devices = devicesResponse.data.features || [];
+
+        // 1. Build Graph
+        const graph = {}; // nodeKey -> array of { edgeId, toNode, pipeProps }
+        let startNodes = [];
+
+        lines.forEach(line => {
+            if (line.geometry && line.geometry.type === 'LineString') {
+                const coords = line.geometry.coordinates;
+                const startKey = makeKey(coords[0]);
+                const endKey = makeKey(coords[coords.length - 1]);
+                
+                const edgeId = line.properties.OBJECTID;
+
+                if (!graph[startKey]) graph[startKey] = [];
+                if (!graph[endKey]) graph[endKey] = [];
+
+                graph[startKey].push({ edgeId, toNode: endKey });
+                graph[endKey].push({ edgeId, toNode: startKey });
+
+                if (edgeId === startPipeId) {
+                    startNodes.push(startKey);
+                    startNodes.push(endKey);
+                }
+            }
+        });
+
+        if (startNodes.length === 0) {
+            return res.status(404).json({ error: 'Start pipe not found in the network.' });
+        }
+
+        // 2. Identify Barriers (Valves) and Meters/Other points
+        const devicesMap = {}; // nodeKey -> {id, status, group, type, coord}
+
+        devices.forEach(device => {
+            if (device.geometry && device.geometry.type === 'Point') {
+                const nodeKey = makeKey(device.geometry.coordinates);
+                const props = device.properties;
+                devicesMap[nodeKey] = {
+                    id: props.OBJECTID,
+                    status: props.Status,
+                    group: props.ASSETGROUP,
+                    type: props.ASSETTYPE,
+                    coord: device.geometry.coordinates
+                };
+            }
+        });
+
+        // 3. Perform BFS Traversal
+        const queue = [...startNodes];
+        const visitedNodes = new Set(startNodes);
+        
+        let connectedPipes = new Set([startPipeId]);
+        let reachedDevices = new Set();
+        let closedValves = new Set();
+
+        while (queue.length > 0) {
+            const currNode = queue.shift();
+            const device = devicesMap[currNode];
+            let isBarrier = false;
+
+            if (device) {
+                // Check if it is a valve (ASSETGROUP === 3) and it's closed (Status === 0)
+                if (device.group === 3 && device.status === 0) {
+                    isBarrier = true;
+                    closedValves.add(device);
+                } else {
+                    reachedDevices.add(device);
+                }
+            }
+
+            // If it's a barrier (closed valve), we stop traversal from this node
+            if (isBarrier) {
+                continue;
+            }
+
+            // Continue traversal
+            const neighbors = graph[currNode] || [];
+            for (const neighbor of neighbors) {
+                connectedPipes.add(neighbor.edgeId);
+                
+                if (!visitedNodes.has(neighbor.toNode)) {
+                    visitedNodes.add(neighbor.toNode);
+                    queue.push(neighbor.toNode);
+                }
+            }
+        }
+
+        // Categorize reached devices
+        const openValves = [];
+        const meters = [];
+        
+        Array.from(reachedDevices).forEach(dev => {
+            if (dev.group === 3) openValves.push({ id: dev.id, coord: dev.coord, type: dev.type });
+            else if (dev.group === 5) meters.push({ id: dev.id, coord: dev.coord });
+        });
+
+        const closedValvesArr = Array.from(closedValves).map(v => ({ id: v.id, coord: v.coord, type: v.type }));
+
+        res.json({
+            connectedPipes: Array.from(connectedPipes),
+            openValves,
+            closedValves: closedValvesArr,
+            connectedMeters: meters
+        });
+
+    } catch (error) {
+        console.error("Error performing connected trace:", error);
+        res.status(500).json({ error: 'Failed to perform connected trace' });
+    }
+};
+
 const nodemailer = require('nodemailer');
 
 exports.notifyOwners = async (req, res) => {

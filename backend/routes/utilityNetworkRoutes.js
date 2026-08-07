@@ -13,4 +13,9 @@ router.post('/trace', auth, unController.performIsolationTrace);
 // @access  Private (Engineer)
 router.post('/notify', auth, unController.notifyOwners);
 
+// @route   POST api/utility-network/connected-trace
+// @desc    Perform a Connected Trace
+// @access  Private (Engineer)
+router.post('/connected-trace', auth, unController.performConnectedTrace);
+
 module.exports = router;

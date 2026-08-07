@@ -24,7 +24,9 @@ const UtilityNetworkModal: React.FC<UtilityNetworkModalProps> = ({ complaintCoor
   const [view, setView] = useState<MapView | null>(null);
   const [snappedPipeId, setSnappedPipeId] = useState<number | null>(null);
   const [isTracing, setIsTracing] = useState(false);
+  const [traceType, setTraceType] = useState<'isolation' | 'connected'>('isolation');
   const [traceResults, setTraceResults] = useState<{ pipes: number[], valvesToClose: { id: number, coord: [number, number] }[], serviceValves: { id: number, coord: [number, number] }[], alreadyClosedValves: { id: number, coord: [number, number] }[], meters: { id: number, coord: [number, number] }[], unitsCount?: number, affectedUnits?: { id: string, name: string, status: string, ownerEmail?: string }[], ownerEmails?: string[] } | null>(null);
+  const [connectedTraceResults, setConnectedTraceResults] = useState<{ connectedPipes: number[], openValves: { id: number, coord: [number, number], type: number }[], closedValves: { id: number, coord: [number, number], type: number }[], connectedMeters: { id: number, coord: [number, number] }[] } | null>(null);
   const [showNotifyModal, setShowNotifyModal] = useState(false);
   const [notifyDate, setNotifyDate] = useState('');
   const [notifyFromTime, setNotifyFromTime] = useState('');
@@ -56,7 +58,7 @@ const UtilityNetworkModal: React.FC<UtilityNetworkModalProps> = ({ complaintCoor
     });
 
     const gLayer = new GraphicsLayer();
-    webmap.add(gLayer);
+    // We add this later inside mapView.when to ensure it renders on top of portal layers
     setGraphicsLayer(gLayer);
 
     const mapView = new MapView({
@@ -74,6 +76,8 @@ const UtilityNetworkModal: React.FC<UtilityNetworkModalProps> = ({ complaintCoor
     setView(mapView);
 
     mapView.when(() => {
+      webmap.add(gLayer, 0); // Put pipe selection at the bottom, UNDER the original features
+      
       // Add Layer List Widget
       const layerList = new LayerList({ view: mapView });
       const layerListExpand = new Expand({
@@ -114,12 +118,6 @@ const UtilityNetworkModal: React.FC<UtilityNetworkModalProps> = ({ complaintCoor
             const feature = results.features[0];
             const objectId = feature.attributes.OBJECTID;
             setSnappedPipeId(objectId);
-
-            const pipeGraphic = new Graphic({
-              geometry: feature.geometry,
-              symbol: new SimpleLineSymbol({ color: '#ff00ff', width: 4 })
-            });
-            gLayer.add(pipeGraphic);
 
             const clickGraphic = new Graphic({
               geometry: mapPoint,
@@ -223,12 +221,6 @@ const UtilityNetworkModal: React.FC<UtilityNetworkModalProps> = ({ complaintCoor
           const feature = results.features[0];
           const objectId = feature.attributes.OBJECTID;
           setSnappedPipeId(objectId);
-
-          const pipeGraphic = new Graphic({
-            geometry: feature.geometry,
-            symbol: new SimpleLineSymbol({ color: '#ff00ff', width: 4 })
-          });
-          graphicsLayer.add(pipeGraphic);
 
           const clickGraphic = new Graphic({
             geometry: pt,
@@ -336,126 +328,202 @@ const UtilityNetworkModal: React.FC<UtilityNetworkModalProps> = ({ complaintCoor
     if (!snappedPipeId) return;
     setIsTracing(true);
     setTraceResults(null);
+    setConnectedTraceResults(null);
 
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/utility-network/trace`, {
-        startPipeId: snappedPipeId,
-        includeIsolatedFeatures: includeIsolated
-      }, {
-        headers: { 'x-auth-token': token }
-      });
+      
+      if (traceType === 'isolation') {
+        const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/utility-network/trace`, {
+          startPipeId: snappedPipeId,
+          includeIsolatedFeatures: includeIsolated
+        }, {
+          headers: { 'x-auth-token': token }
+        });
 
-      const { isolatedPipes, valvesToClose, serviceValves, alreadyClosedValves, affectedMeters, affectedUnitsCount, affectedUnits, ownerEmails } = res.data;
+        const { isolatedPipes, valvesToClose, serviceValves, alreadyClosedValves, affectedMeters, affectedUnitsCount, affectedUnits, ownerEmails } = res.data;
 
-      setTraceResults({ 
-        pipes: isolatedPipes, 
-        valvesToClose, 
-        serviceValves,
-        alreadyClosedValves, 
-        meters: affectedMeters, 
-        unitsCount: affectedUnitsCount,
-        affectedUnits,
-        ownerEmails 
-      });
+        setTraceResults({ 
+          pipes: isolatedPipes, 
+          valvesToClose, 
+          serviceValves,
+          alreadyClosedValves, 
+          meters: affectedMeters, 
+          unitsCount: affectedUnitsCount,
+          affectedUnits,
+          ownerEmails 
+        });
 
-      // Render the results on the map
-      if (graphicsLayer && view) {
-        graphicsLayer.removeAll(); // Clear existing
+        // Render the results on the map
+        if (graphicsLayer && view) {
+          graphicsLayer.removeAll(); // Clear existing
 
-        // Fetch geometries for isolated pipes
-        if (includeIsolated && isolatedPipes.length > 0) {
-          const linesLayer = new FeatureLayer({ url: waterLinesUrl });
-          const linesQuery = new Query();
-          linesQuery.objectIds = isolatedPipes;
-          linesQuery.returnGeometry = true;
-          const linesRes = await linesLayer.queryFeatures(linesQuery);
-          
-          linesRes.features.forEach(f => {
-            graphicsLayer.add(new Graphic({
-              geometry: f.geometry,
-              symbol: new SimpleLineSymbol({ color: '#00ffff', width: 3 }) // Cyan for isolated pipes
-            }));
-          });
+          // Fetch geometries for isolated pipes
+          if (includeIsolated && isolatedPipes.length > 0) {
+            const linesLayer = new FeatureLayer({ url: waterLinesUrl });
+            const linesQuery = new Query();
+            linesQuery.objectIds = isolatedPipes;
+            linesQuery.returnGeometry = true;
+            const linesRes = await linesLayer.queryFeatures(linesQuery);
+            
+            linesRes.features.forEach(f => {
+              graphicsLayer.add(new Graphic({
+                geometry: f.geometry,
+                symbol: new SimpleLineSymbol({ color: [0, 255, 255, 0.6], width: 4 }) // Cyan for isolated pipes
+              }));
+            });
+          }
+
+          // Draw affected meters and service valves if includeIsolated is true
+          if (includeIsolated) {
+              if (affectedMeters.length > 0) {
+                affectedMeters.forEach((m: any) => {
+                  view.graphics.add(new Graphic({ geometry: new Point({ x: m.coord[0], y: m.coord[1], spatialReference: { wkid: 4326 } }),
+                    symbol: new SimpleMarkerSymbol({
+                      style: "circle",
+                      color: [148, 0, 211, 0.4], // Semi-transparent Purple fill
+                      size: '26px',
+                      outline: { color: [148, 0, 211, 1], width: 3 } // Thick Purple outline
+                    })
+                  }));
+                });
+              }
+
+              if (serviceValves && serviceValves.length > 0) {
+                serviceValves.forEach((sv: any) => {
+                  view.graphics.add(new Graphic({ geometry: new Point({ x: sv.coord[0], y: sv.coord[1], spatialReference: { wkid: 4326 } }),
+                    symbol: new SimpleMarkerSymbol({
+                      style: "square",
+                      color: [255, 165, 0, 0.4], // Semi-transparent Orange fill
+                      size: '26px',
+                      outline: { color: [255, 165, 0, 1], width: 3 } // Thick Orange outline
+                    })
+                  }));
+                });
+              }
+          }
+
+          // Draw bounding valves to close
+          if (valvesToClose.length > 0) {
+            valvesToClose.forEach((v: any) => {
+              view.graphics.add(new Graphic({ geometry: new Point({ x: v.coord[0], y: v.coord[1], spatialReference: { wkid: 4326 } }),
+                symbol: new SimpleMarkerSymbol({
+                  style: "circle",
+                  color: [255, 0, 0, 0.4], // Transparent red glow
+                  size: '34px',
+                  outline: { color: [255, 0, 0, 1], width: 3 }
+                })
+              }));
+              view.graphics.add(new Graphic({ geometry: new Point({ x: v.coord[0], y: v.coord[1], spatialReference: { wkid: 4326 } }),
+                symbol: new SimpleMarkerSymbol({
+                  style: "x",
+                  color: [255, 0, 0, 1], // Solid Red X
+                  size: '20px',
+                  outline: { color: [255, 255, 255, 1], width: 3 }
+                })
+              }));
+            });
+          }
+
+          // Draw already closed valves
+          if (alreadyClosedValves.length > 0) {
+            alreadyClosedValves.forEach((v: any) => {
+              view.graphics.add(new Graphic({ geometry: new Point({ x: v.coord[0], y: v.coord[1], spatialReference: { wkid: 4326 } }),
+                symbol: new SimpleMarkerSymbol({
+                  style: "circle",
+                  color: [100, 100, 100, 0.4], // Gray glow
+                  size: '30px',
+                  outline: { color: [100, 100, 100, 1], width: 3 }
+                })
+              }));
+            });
+          }
+
+          // Zoom to extent of graphics
+          view.goTo(graphicsLayer.graphics.toArray());
         }
+      } else if (traceType === 'connected') {
+        const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/utility-network/connected-trace`, {
+          startPipeId: snappedPipeId
+        }, {
+          headers: { 'x-auth-token': token }
+        });
 
-        // Draw affected meters and service valves if includeIsolated is true
-        if (includeIsolated) {
-            if (affectedMeters.length > 0) {
-              affectedMeters.forEach((m: any) => {
-                graphicsLayer.add(new Graphic({
-                  geometry: new Point({ x: m.coord[0], y: m.coord[1], spatialReference: { wkid: 4326 } }),
-                  symbol: new SimpleMarkerSymbol({
-                    style: "circle",
-                    color: [148, 0, 211, 0.4], // Semi-transparent Purple fill
-                    size: '26px',
-                    outline: { color: [148, 0, 211, 1], width: 3 } // Thick Purple outline
-                  })
-                }));
-              });
-            }
+        const { connectedPipes, openValves, closedValves, connectedMeters } = res.data;
+        setConnectedTraceResults({ connectedPipes, openValves, closedValves, connectedMeters });
 
-            if (serviceValves && serviceValves.length > 0) {
-              serviceValves.forEach((sv: any) => {
-                graphicsLayer.add(new Graphic({
-                  geometry: new Point({ x: sv.coord[0], y: sv.coord[1], spatialReference: { wkid: 4326 } }),
-                  symbol: new SimpleMarkerSymbol({
-                    style: "square",
-                    color: [255, 165, 0, 0.4], // Semi-transparent Orange fill
-                    size: '26px',
-                    outline: { color: [255, 165, 0, 1], width: 3 } // Thick Orange outline
-                  })
-                }));
-              });
-            }
+        if (graphicsLayer && view) {
+          graphicsLayer.removeAll();
+
+          if (connectedPipes.length > 0) {
+            const linesLayer = new FeatureLayer({ url: waterLinesUrl });
+            const linesQuery = new Query();
+            linesQuery.objectIds = connectedPipes;
+            linesQuery.returnGeometry = true;
+            const linesRes = await linesLayer.queryFeatures(linesQuery);
+            
+            linesRes.features.forEach(f => {
+              graphicsLayer.add(new Graphic({
+                geometry: f.geometry,
+                symbol: new SimpleLineSymbol({ color: '#00ffff', width: 4 }) // Solid Cyan for selection
+              }));
+            });
+          }
+
+          if (openValves.length > 0) {
+            openValves.forEach((v: any) => {
+              view.graphics.add(new Graphic({ geometry: new Point({ x: v.coord[0], y: v.coord[1], spatialReference: { wkid: 4326 } }),
+                symbol: new SimpleMarkerSymbol({
+                  style: "circle",
+                  color: [0, 255, 255, 0.5], // Semi-transparent Cyan fill
+                  size: '26px',
+                  outline: { color: [0, 255, 255, 0.5], width: 1 }
+                })
+              }));
+            });
+          }
+
+          if (closedValves.length > 0) {
+            closedValves.forEach((v: any) => {
+              view.graphics.add(new Graphic({ geometry: new Point({ x: v.coord[0], y: v.coord[1], spatialReference: { wkid: 4326 } }),
+                symbol: new SimpleMarkerSymbol({
+                  style: "circle",
+                  color: [0, 255, 255, 0.5], // Semi-transparent Cyan fill
+                  size: '30px',
+                  outline: { color: [0, 255, 255, 0.5], width: 1 }
+                })
+              }));
+              view.graphics.add(new Graphic({ geometry: new Point({ x: v.coord[0], y: v.coord[1], spatialReference: { wkid: 4326 } }),
+                symbol: new SimpleMarkerSymbol({
+                  style: "x",
+                  color: [0, 255, 255, 1],
+                  size: '20px',
+                  outline: { color: [255, 255, 255, 1], width: 3 }
+                })
+              }));
+            });
+          }
+
+          if (connectedMeters.length > 0) {
+            connectedMeters.forEach((m: any) => {
+              view.graphics.add(new Graphic({ geometry: new Point({ x: m.coord[0], y: m.coord[1], spatialReference: { wkid: 4326 } }),
+                symbol: new SimpleMarkerSymbol({
+                  style: "circle",
+                  color: [0, 255, 255, 0.5], // Semi-transparent Cyan fill
+                  size: '26px',
+                  outline: { color: [0, 255, 255, 0.5], width: 1 }
+                })
+              }));
+            });
+          }
+
+          view.goTo(graphicsLayer.graphics.toArray());
         }
-
-        // Draw bounding valves to close
-        if (valvesToClose.length > 0) {
-          valvesToClose.forEach((v: any) => {
-            graphicsLayer.add(new Graphic({
-              geometry: new Point({ x: v.coord[0], y: v.coord[1], spatialReference: { wkid: 4326 } }),
-              symbol: new SimpleMarkerSymbol({
-                style: "circle",
-                color: [255, 0, 0, 0.4], // Transparent red glow
-                size: '34px',
-                outline: { color: [255, 0, 0, 1], width: 3 }
-              })
-            }));
-            graphicsLayer.add(new Graphic({
-              geometry: new Point({ x: v.coord[0], y: v.coord[1], spatialReference: { wkid: 4326 } }),
-              symbol: new SimpleMarkerSymbol({
-                style: "x",
-                color: [255, 0, 0, 1], // Solid Red X
-                size: '20px',
-                outline: { color: [255, 255, 255, 1], width: 3 }
-              })
-            }));
-          });
-        }
-
-        // Draw already closed valves
-        if (alreadyClosedValves.length > 0) {
-          alreadyClosedValves.forEach((v: any) => {
-            graphicsLayer.add(new Graphic({
-              geometry: new Point({ x: v.coord[0], y: v.coord[1], spatialReference: { wkid: 4326 } }),
-              symbol: new SimpleMarkerSymbol({
-                style: "circle",
-                color: [100, 100, 100, 0.4], // Gray glow
-                size: '30px',
-                outline: { color: [100, 100, 100, 1], width: 3 }
-              })
-            }));
-          });
-        }
-
-        // Zoom to extent of graphics
-        view.goTo(graphicsLayer.graphics.toArray());
       }
 
     } catch (error) {
       console.error("Tracing error:", error);
-      alert("Failed to perform isolation trace.");
+      alert("Failed to perform trace.");
     } finally {
       setIsTracing(false);
     }
@@ -463,6 +531,7 @@ const UtilityNetworkModal: React.FC<UtilityNetworkModalProps> = ({ complaintCoor
 
   const handleReset = () => {
     setTraceResults(null);
+    setConnectedTraceResults(null);
     setShowUnitsModal(false);
     setSnappedPipeId(null);
     setIsSelectingPoint(false);
@@ -516,16 +585,18 @@ const UtilityNetworkModal: React.FC<UtilityNetworkModalProps> = ({ complaintCoor
         
         {/* Toolbar */}
         <div style={{ display: 'flex', gap: '15px', padding: '15px 20px', backgroundColor: 'var(--bg-secondary)', backdropFilter: 'blur(10px)', borderRadius: '12px', border: '1px solid var(--border-color)', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
-          <div style={{ flex: 1 }}>
-            <h4 style={{ margin: '0 0 5px 0', color: 'var(--text-primary)' }}>Instructions:</h4>
-            <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)' }}>
-              Click on the map near a pipe to snap to the breakage location. Then run the trace to find isolating valves.
-            </p>
+          <div style={{ flex: 1, display: 'flex', gap: '20px', alignItems: 'center' }}>
+            <div>
+              <h4 style={{ margin: '0 0 5px 0', color: 'var(--text-primary)' }}>Instructions:</h4>
+              <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)' }}>
+                Click on the map near a pipe. Select trace type and run trace.
+              </p>
+            </div>
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', alignItems: 'flex-end' }}>
             <div style={{ display: 'flex', gap: '10px' }}>
-              {!traceResults && (
+              {!traceResults && !connectedTraceResults && (
                 <button 
                   onClick={() => {
                     const newState = !isSelectingPoint;
@@ -539,14 +610,33 @@ const UtilityNetworkModal: React.FC<UtilityNetworkModalProps> = ({ complaintCoor
                 </button>
               )}
 
-              {!traceResults && (
-                <button 
-                  onClick={handleTrace} 
-                  disabled={!snappedPipeId || isTracing}
-                  style={{ padding: '10px 20px', height: '40px', backgroundColor: snappedPipeId ? 'var(--accent-blue-bg)' : 'var(--border-color)', color: 'var(--text-primary)', border: 'none', borderRadius: '6px', cursor: snappedPipeId ? 'pointer' : 'not-allowed', fontWeight: 'bold' }}
-                >
-                  {isTracing ? 'Tracing...' : 'Run Isolation Trace'}
-                </button>
+              {!traceResults && !connectedTraceResults && (
+                <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#444c56', borderRadius: '6px', overflow: 'hidden', height: '40px', border: '1px solid var(--border-color)' }}>
+                  <select 
+                    value={traceType}
+                    onChange={e => setTraceType(e.target.value as 'isolation' | 'connected')}
+                    style={{ padding: '0 10px 0 15px', height: '100%', backgroundColor: 'transparent', color: 'var(--text-primary)', border: 'none', fontSize: '14px', outline: 'none', cursor: 'pointer', fontWeight: 'bold', appearance: 'none' }}
+                  >
+                    <option value="isolation" style={{ backgroundColor: 'var(--bg-primary)' }}>Isolation Trace</option>
+                    <option value="connected" style={{ backgroundColor: 'var(--bg-primary)' }}>Connected Trace</option>
+                  </select>
+                  <div style={{ pointerEvents: 'none', marginLeft: '-5px', marginRight: '10px' }}>
+                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  </div>
+                  <button 
+                    onClick={handleTrace} 
+                    disabled={!snappedPipeId || isTracing}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 15px', height: '100%', backgroundColor: snappedPipeId ? 'var(--accent-blue-bg)' : 'rgba(0,0,0,0.2)', color: 'var(--text-primary)', border: 'none', borderLeft: '1px solid rgba(255,255,255,0.1)', cursor: snappedPipeId ? 'pointer' : 'not-allowed', transition: 'background-color 0.2s' }}
+                    title="Run Trace"
+                  >
+                    {isTracing ? (
+                      <span className="spinner" style={{ display: 'inline-block', width: '16px', height: '16px', border: '2px solid transparent', borderTopColor: 'currentColor', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                    ) : (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                    )}
+                  </button>
+                  <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
+                </div>
               )}
 
               {traceResults && (
@@ -560,18 +650,20 @@ const UtilityNetworkModal: React.FC<UtilityNetworkModalProps> = ({ complaintCoor
             </div>
 
             <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-              <label style={{ color: 'var(--text-primary)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: 0 }}>
-                <input 
-                  type="checkbox" 
-                  checked={includeIsolated} 
-                  onChange={e => setIncludeIsolated(e.target.checked)} 
-                  disabled={isTracing}
-                  style={{ margin: 0, width: '16px', height: '16px' }}
-                />
-                Include Isolated Features
-              </label>
+              {traceType === 'isolation' && (
+                <label style={{ color: 'var(--text-primary)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: 0 }}>
+                  <input 
+                    type="checkbox" 
+                    checked={includeIsolated} 
+                    onChange={e => setIncludeIsolated(e.target.checked)} 
+                    disabled={isTracing}
+                    style={{ margin: 0, width: '16px', height: '16px' }}
+                  />
+                  Include Isolated Features
+                </label>
+              )}
 
-              {traceResults && (
+              {(traceResults || connectedTraceResults) && (
                 <button 
                   onClick={handleReset} 
                   style={{ padding: '10px 20px', height: '40px', backgroundColor: '#444c56', color: 'var(--text-primary)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
@@ -628,6 +720,24 @@ const UtilityNetworkModal: React.FC<UtilityNetworkModalProps> = ({ complaintCoor
               >
                 <span style={{ fontSize: '18px', lineHeight: 1 }}>🏠</span>
                 Affected Units: {traceResults.unitsCount}
+              </span>
+            </div>
+        )}
+
+        {/* Connected Trace Results Bar */}
+        {connectedTraceResults && (
+            <div style={{ display: 'flex', gap: '20px', padding: '15px 20px', backgroundColor: 'var(--bg-secondary)', backdropFilter: 'blur(10px)', borderRadius: '12px', border: '1px solid var(--border-color)', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#00ffff', fontWeight: 'bold' }}>
+                Connected Pipes: {connectedTraceResults.connectedPipes.length}
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#00ffff', fontWeight: 'bold' }}>
+                Open Valves: {connectedTraceResults.openValves.length}
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#00ffff', fontWeight: 'bold' }}>
+                Closed Valves (Barriers): {connectedTraceResults.closedValves.length}
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#00ffff', fontWeight: 'bold' }}>
+                Connected Meters: {connectedTraceResults.connectedMeters.length}
               </span>
             </div>
         )}

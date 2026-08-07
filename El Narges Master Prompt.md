@@ -21,7 +21,7 @@ Act as an Expert System Architect, Full-Stack MERN Developer, and Web GIS Engine
 - **Account Settings** (users/owners can update personal info and secondary contact)
 - **Email Notifications** (booking approved/rejected/declined emails sent automatically)
 - **Onboarding Walkthrough Tour** (role-based interactive guided tour using a dark CSS spotlight mask backdrop for Visitors, Users, and Owners, trackable via `localStorage`, with a manual restart button `ðŸ“–` in the top right)
-- **Engineer Portal & Maintenance Suite** (Technician directory, Active tasks, Utility network placeholder, Engineering AI RAG Assistant with manual knowledge base)
+- **Engineer Portal & Maintenance Suite** (Technician directory, Active tasks, Utility Network Tracing (Isolation & Connected), Engineering AI RAG Assistant with manual knowledge base)
 - **ArcGIS Survey123 & ngrok Live Integration** (Real-time dual-database synchronization for technician registration via ngrok tunnel and Survey123 embedded dark form)
 - **One-Click System Launchers** (Start-Platform.bat and Stop-Platform.bat for seamless multi-service execution)
 

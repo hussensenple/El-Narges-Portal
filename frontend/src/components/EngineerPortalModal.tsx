@@ -1,7 +1,8 @@
-import { useState, useEffect, useContext, useRef } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
+import { io, Socket } from 'socket.io-client';
 import ComplaintChatModal from './ComplaintChatModal';
 import Graphic from '@arcgis/core/Graphic';
 import Point from '@arcgis/core/geometry/Point';
@@ -44,12 +45,13 @@ const SPECIALIZATIONS = [
 ];
 
 interface EngineerPortalModalProps {
+  isOpen: boolean;
   onClose: () => void;
   view?: any;
   onOpenUNModal?: (coords: {lat: number, lon: number}) => void;
 }
 
-const EngineerPortalModal = ({ onClose, view, onOpenUNModal }: EngineerPortalModalProps) => {
+const EngineerPortalModal = ({ isOpen, onClose, view, onOpenUNModal }: EngineerPortalModalProps) => {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -131,6 +133,19 @@ const EngineerPortalModal = ({ onClose, view, onOpenUNModal }: EngineerPortalMod
   useEffect(() => {
     fetchComplaints();
     fetchTechnicians();
+    
+    // Socket.io Real-time sync
+    const socket: Socket = io(`${import.meta.env.VITE_API_URL}`);
+    socket.on('newComplaint', () => {
+      fetchComplaints();
+    });
+    socket.on('updateComplaint', () => {
+      fetchComplaints();
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   const handleUpdateStatusAndName = async (complaintId: string) => {
@@ -572,6 +587,8 @@ const EngineerPortalModal = ({ onClose, view, onOpenUNModal }: EngineerPortalMod
     );
   };
 
+  if (!isOpen) return null;
+
   return createPortal(
     <div onClick={onClose} style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(13, 17, 23, 0.85)', zIndex: 9999999, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
       <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: '#0d1117', width: '95vw', maxWidth: '1600px', height: '95vh', borderRadius: '12px', border: '1px solid #30363d', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.8)' }}>
@@ -609,14 +626,26 @@ const EngineerPortalModal = ({ onClose, view, onOpenUNModal }: EngineerPortalMod
                   <>
                     <div style={{ flex: 1, borderRight: '1px solid #30363d', display: 'flex', flexDirection: 'column', padding: '20px', overflowY: 'auto' }}>
                       <h3 style={{ color: '#f85149', margin: '0 0 15px 0', borderBottom: '1px solid #30363d', paddingBottom: '10px' }}>🚨 High Priority ({internalHigh.length})</h3>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                        {internalHigh.length === 0 ? <div style={{color: '#8b949e'}}>No high priority internal complaints.</div> : internalHigh.map(renderComplaintCard)}
+                      <div style={{ flex: 1, overflowY: 'auto', padding: '15px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                        {isLoading ? (
+                          <div style={{color: '#8b949e', textAlign: 'center'}}>Loading tasks...</div>
+                        ) : internalHigh.length === 0 ? (
+                          <div style={{color: '#8b949e', textAlign: 'center'}}>No high priority internal complaints.</div>
+                        ) : (
+                          internalHigh.map(renderComplaintCard)
+                        )}
                       </div>
                     </div>
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '20px', overflowY: 'auto' }}>
                       <h3 style={{ color: '#8b949e', margin: '0 0 15px 0', borderBottom: '1px solid #30363d', paddingBottom: '10px' }}>✅ Normal Priority ({internalNormal.length})</h3>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                        {internalNormal.length === 0 ? <div style={{color: '#8b949e'}}>No normal priority internal complaints.</div> : internalNormal.map(renderComplaintCard)}
+                        {isLoading ? (
+                          <div style={{color: '#8b949e', textAlign: 'center'}}>Loading tasks...</div>
+                        ) : internalNormal.length === 0 ? (
+                          <div style={{color: '#8b949e', textAlign: 'center'}}>No normal priority internal complaints.</div>
+                        ) : (
+                          internalNormal.map(renderComplaintCard)
+                        )}
                       </div>
                     </div>
                   </>
@@ -627,13 +656,25 @@ const EngineerPortalModal = ({ onClose, view, onOpenUNModal }: EngineerPortalMod
                     <div style={{ flex: 1, borderRight: '1px solid #30363d', display: 'flex', flexDirection: 'column', padding: '20px', overflowY: 'auto' }}>
                       <h3 style={{ color: '#f85149', margin: '0 0 15px 0', borderBottom: '1px solid #30363d', paddingBottom: '10px' }}>🚨 High Priority ({externalHigh.length})</h3>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                        {externalHigh.length === 0 ? <div style={{color: '#8b949e'}}>No high priority external complaints.</div> : externalHigh.map(renderComplaintCard)}
+                        {isLoading ? (
+                          <div style={{color: '#8b949e', textAlign: 'center'}}>Loading tasks...</div>
+                        ) : externalHigh.length === 0 ? (
+                          <div style={{color: '#8b949e', textAlign: 'center'}}>No high priority external complaints.</div>
+                        ) : (
+                          externalHigh.map(renderComplaintCard)
+                        )}
                       </div>
                     </div>
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '20px', overflowY: 'auto' }}>
                       <h3 style={{ color: '#8b949e', margin: '0 0 15px 0', borderBottom: '1px solid #30363d', paddingBottom: '10px' }}>✅ Normal Priority ({externalNormal.length})</h3>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                        {externalNormal.length === 0 ? <div style={{color: '#8b949e'}}>No normal priority external complaints.</div> : externalNormal.map(renderComplaintCard)}
+                        {isLoading ? (
+                          <div style={{color: '#8b949e', textAlign: 'center'}}>Loading tasks...</div>
+                        ) : externalNormal.length === 0 ? (
+                          <div style={{color: '#8b949e', textAlign: 'center'}}>No normal priority external complaints.</div>
+                        ) : (
+                          externalNormal.map(renderComplaintCard)
+                        )}
                       </div>
                     </div>
                   </>
@@ -650,7 +691,8 @@ const EngineerPortalModal = ({ onClose, view, onOpenUNModal }: EngineerPortalMod
           <ComplaintChatModal 
             complaint={activeComplaint} 
             onClose={() => setActiveComplaint(null)} 
-            onUpdate={() => fetchComplaints()}
+            onRefresh={() => fetchComplaints()}
+            currentUser={{ id: auth?.user?.id || '', name: auth?.user?.name || '', role: auth?.user?.role || '' }}
           />
         )}
 

@@ -408,8 +408,9 @@ const CustomerInterface = () => {
         />
       )}
 
-      {isEngineerPortalOpen && auth?.user?.role === 'engineer' && (
+      {auth?.user?.role === 'engineer' && (
         <EngineerPortalModal 
+          isOpen={isEngineerPortalOpen}
           view={mapView} 
           onClose={() => setIsEngineerPortalOpen(false)} 
           onOpenUNModal={(coords: {lat: number, lon: number}) => {
@@ -419,8 +420,9 @@ const CustomerInterface = () => {
         />
       )}
 
-      {isActiveTasksOpen && auth?.user?.role === 'engineer' && (
+      {auth?.user?.role === 'engineer' && (
         <ActiveTasksModal 
+          isOpen={isActiveTasksOpen}
           view={mapView} 
           onClose={() => setIsActiveTasksOpen(false)} 
           onOpenUNModal={(coords: {lat: number, lon: number}) => {

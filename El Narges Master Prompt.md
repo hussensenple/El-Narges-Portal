@@ -576,9 +576,19 @@ Both dev servers are currently running:
  - Fixed missing price in new Booking Requests created by frontend.
 -   U p d a t e :   R e s t r i c t e d   o w n e r   d o w n g r a d e s   t o   o n l y   a l l o w   t r a n s i t i o n i n g   t o   ' u s e r '   r o l e   f o r   p r o p e r   p r o p e r t y   c l e a n u p .   C h a n g e d   ' R e v o k e '   b u t t o n   t e x t   t o   ' C h a n g e   r o l e '   i n   A d m i n s ,   B r o k e r s ,   a n d   E n g i n e e r s   t a b l e s .  
  -   U p d a t e :   E n h a n c e d   R o l e C h a n g e M o d a l   t o   d y n a m i c a l l y   o m i t   t h e   u s e r ' s   c u r r e n t   r o l e   f r o m   t h e   d r o p d o w n   o p t i o n s .   P r e v e n t e d   B r o k e r ,   E n g i n e e r ,   a n d   A d m i n   r o l e s   f r o m   b e i n g   d i r e c t l y   u p g r a d e d   t o   O w n e r .   U p d a t e d   b a c k e n d   r o l e s C o n t r o l l e r   t o   e n s u r e   t h a t   c h a n g i n g   a   B r o k e r   t o   a n y   o t h e r   r o l e   ( e . g .   E n g i n e e r ,   A d m i n ,   U s e r )   s u c c e s s f u l l y   f r e e s   u p   t h e i r   a s s i g n e d   p r o p e r t i e s   b y   s e t t i n g   b r o k e r I d   t o   n u l l .  
- 
+- **Frontend:** Vite dev server (React + ArcGIS SDK)
+
+ -   A d d e d   a u t o m a t i c   g o v e r n o r a t e   s p a t i a l   q u e r y   o n   U s e r   R e g i s t r a t i o n   t o   p o p u l a t e   E _ N a m e .  
+ - Fixed Broker Unassignment Logic (removeProperty) and UI Catalog Status Overrides to fully synchronize MongoDB as the Source of Truth.
+ - Fixed Booking Request bugs where a previous owner could not request their unit again by replacing strict db uniqueness with logical checks. Also filtered out Approved requests from the My Requests dashboard.
+ - Fixed missing price in new Booking Requests created by frontend.
+-   U p d a t e :   R e s t r i c t e d   o w n e r   d o w n g r a d e s   t o   o n l y   a l l o w   t r a n s i t i o n i n g   t o   ' u s e r '   r o l e   f o r   p r o p e r   p r o p e r t y   c l e a n u p .   C h a n g e d   ' R e v o k e '   b u t t o n   t e x t   t o   ' C h a n g e   r o l e '   i n   A d m i n s ,   B r o k e r s ,   a n d   E n g i n e e r s   t a b l e s .  
+ -   U p d a t e :   E n h a n c e d   R o l e C h a n g e M o d a l   t o   d y n a m i c a l l y   o m i t   t h e   u s e r ' s   c u r r e n t   r o l e   f r o m   t h e   d r o p d o w n   o p t i o n s .   P r e v e n t e d   B r o k e r ,   E n g i n e e r ,   a n d   A d m i n   r o l e s   f r o m   b e i n g   d i r e c t l y   u p g r a d e d   t o   O w n e r .   U p d a t e d   b a c k e n d   r o l e s C o n t r o l l e r   t o   e n s u r e   t h a t   c h a n g i n g   a   B r o k e r   t o   a n y   o t h e r   r o l e   ( e . g .   E n g i n e e r ,   A d m i n ,   U s e r )   s u c c e s s f u l l y   f r e e s   u p   t h e i r   a s s i g n e d   p r o p e r t i e s   b y   s e t t i n g   b r o k e r I d   t o   n u l l .  
+ 
  - Update: Rejection Analysis Portal - made the bar chart responsive to the selected rejection source (Admin/Broker) and dynamically filtered the reasons dropdown to only show the reasons related to the chosen resource.
 
  - Update: Fixed the Rejection Analysis BarChart to strictly map only to the predefined dropdown options for each role, ignoring any legacy data anomalies for perfect synchronization.
 
-| ActiveTasksModal 3D Map Fix (MongoDB fallback + Villa/Apartment support) | Done |
+ | ActiveTasksModal 3D Map Fix (MongoDB fallback + Villa/Apartment support) | Done |
+ | Real-time Socket.io Sync for Engineer Portal & Active Tasks Complaints | Done |
+ | Instant Background Loading Architecture for Engineer Modals | Done |

@@ -2,6 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
+import { io, Socket } from 'socket.io-client';
 import ComplaintChatModal from './ComplaintChatModal';
 import Graphic from '@arcgis/core/Graphic';
 import Point from '@arcgis/core/geometry/Point';
@@ -44,14 +45,16 @@ const SPECIALIZATIONS = [
 ];
 
 interface ActiveTasksModalProps {
+  isOpen: boolean;
   onClose: () => void;
   view?: any;
   onOpenUNModal?: (coords: {lat: number, lon: number}) => void;
 }
 
-const ActiveTasksModal = ({ onClose, view, onOpenUNModal }: ActiveTasksModalProps) => {
+const ActiveTasksModal = ({ isOpen, onClose, view, onOpenUNModal }: ActiveTasksModalProps) => {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [technicians, setTechnicians] = useState<Technician[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const [activeComplaint, setActiveComplaint] = useState<Complaint | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<{ [key: string]: string }>({});
@@ -79,7 +82,7 @@ const ActiveTasksModal = ({ onClose, view, onOpenUNModal }: ActiveTasksModalProp
 
   const fetchComplaints = async () => {
     try {
-
+      setIsLoading(true);
       const token = localStorage.getItem('token');
       const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/complaints/engineer`, {
         headers: { 'x-auth-token': token }
@@ -111,7 +114,7 @@ const ActiveTasksModal = ({ onClose, view, onOpenUNModal }: ActiveTasksModalProp
     } catch (error) {
       console.error("Error fetching engineer complaints:", error);
     } finally {
-
+      setIsLoading(false);
     }
   };
 
@@ -130,6 +133,19 @@ const ActiveTasksModal = ({ onClose, view, onOpenUNModal }: ActiveTasksModalProp
   useEffect(() => {
     fetchComplaints();
     fetchTechnicians();
+
+    // Socket.io Real-time sync
+    const socket: Socket = io(`${import.meta.env.VITE_API_URL}`);
+    socket.on('newComplaint', () => {
+      fetchComplaints();
+    });
+    socket.on('updateComplaint', () => {
+      fetchComplaints();
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   const handleUpdateStatusAndName = async (complaintId: string) => {
@@ -503,6 +519,8 @@ const ActiveTasksModal = ({ onClose, view, onOpenUNModal }: ActiveTasksModalProp
     );
   };
 
+  if (!isOpen) return null;
+
   return createPortal(
     <div onClick={onClose} style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(13, 17, 23, 0.85)', zIndex: 9999999, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
       <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: 'var(--bg-primary)', width: '95vw', maxWidth: '1600px', height: '95vh', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.8)' }}>
@@ -521,7 +539,13 @@ const ActiveTasksModal = ({ onClose, view, onOpenUNModal }: ActiveTasksModalProp
               ⏳ In Progress ({inProgressTasks.length})
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '15px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
-              {inProgressTasks.length === 0 ? <div style={{color: 'var(--text-muted)', textAlign: 'center'}}>No tasks currently in progress.</div> : inProgressTasks.map(renderComplaintCard)}
+              {isLoading ? (
+                <div style={{color: 'var(--text-muted)', textAlign: 'center'}}>Loading tasks...</div>
+              ) : inProgressTasks.length === 0 ? (
+                <div style={{color: 'var(--text-muted)', textAlign: 'center'}}>No tasks currently in progress.</div>
+              ) : (
+                inProgressTasks.map(renderComplaintCard)
+              )}
             </div>
           </div>
 
@@ -531,7 +555,13 @@ const ActiveTasksModal = ({ onClose, view, onOpenUNModal }: ActiveTasksModalProp
               🎉 Solved & Resolved ({solvedTasks.length})
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '15px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
-              {solvedTasks.length === 0 ? <div style={{color: 'var(--text-muted)', textAlign: 'center'}}>No solved tasks yet.</div> : solvedTasks.map(renderComplaintCard)}
+              {isLoading ? (
+                <div style={{color: 'var(--text-muted)', textAlign: 'center'}}>Loading tasks...</div>
+              ) : solvedTasks.length === 0 ? (
+                <div style={{color: 'var(--text-muted)', textAlign: 'center'}}>No solved tasks yet.</div>
+              ) : (
+                solvedTasks.map(renderComplaintCard)
+              )}
             </div>
           </div>
 

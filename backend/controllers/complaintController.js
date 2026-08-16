@@ -67,6 +67,8 @@ const resolveComplaint = async (req, res) => {
     // 📧 إرسال إيميل بالقرار للمالك
     await sendComplaintEmail(complaint.ownerId.email, complaint.ownerId.name, complaint.title, status);
 
+    req.app.get('io').emit('updateComplaint');
+
     res.status(200).json({ msg: 'تم تحديث حالة الشكوى وإرسال بريد إلكتروني للمالك بنجاح.' });
   } catch (error) {
     console.error("Resolve Complaint Error:", error);
@@ -117,6 +119,8 @@ const updateComplaintPriority = async (req, res) => {
     const complaint = await Complaint.findByIdAndUpdate(complaintId, { priority }, { new: true });
     if (!complaint) return res.status(404).json({ msg: 'Complaint not found' });
 
+    req.app.get('io').emit('updateComplaint');
+
     res.status(200).json({ msg: 'Priority updated', complaint });
   } catch (error) {
     res.status(500).json({ error: 'Failed to update priority' });
@@ -142,6 +146,8 @@ const updateComplaintStatus = async (req, res) => {
 
     const complaint = await Complaint.findByIdAndUpdate(complaintId, updateData, { new: true });
     if (!complaint) return res.status(404).json({ msg: 'Complaint not found' });
+
+    req.app.get('io').emit('updateComplaint');
 
     res.status(200).json({ msg: 'Status updated', complaint });
   } catch (error) {
@@ -171,6 +177,8 @@ const addComplaintMessage = async (req, res) => {
     });
 
     await complaint.save();
+
+    req.app.get('io').emit('updateComplaint');
 
     res.status(200).json({ msg: 'Message sent', complaint });
   } catch (error) {
@@ -211,6 +219,8 @@ const assignComplaint = async (req, res) => {
     if (!complaint) {
       return res.status(404).json({ msg: 'Complaint not found.' });
     }
+
+    req.app.get('io').emit('updateComplaint');
 
     res.status(200).json({ msg: 'Complaint assigned successfully', complaint });
   } catch (error) {

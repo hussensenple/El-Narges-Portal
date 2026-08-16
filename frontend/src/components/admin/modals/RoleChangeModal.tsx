@@ -17,7 +17,21 @@ export interface PendingRoleData {
 }
 
 const RoleChangeModal = ({ userId, userName, currentRole, onClose, onSuccess }: RoleChangeModalProps) => {
-  const [targetRole, setTargetRole] = useState(currentRole);
+  const getAvailableRoles = () => {
+    const roles = [];
+    if (currentRole !== 'user') roles.push({ value: 'user', label: 'User' });
+    if (currentRole === 'owner') return roles;
+
+    if (currentRole !== 'broker') roles.push({ value: 'broker', label: 'Broker' });
+    if (currentRole !== 'engineer') roles.push({ value: 'engineer', label: 'Engineer' });
+    if (currentRole !== 'admin') roles.push({ value: 'admin', label: 'Admin' });
+    if (currentRole === 'user') roles.push({ value: 'owner', label: 'Owner' });
+    
+    return roles;
+  };
+
+  const availableRoles = getAvailableRoles();
+  const [targetRole, setTargetRole] = useState(availableRoles.length > 0 ? availableRoles[0].value : 'user');
   const [manualId, setManualId] = useState('');
   const [age, setAge] = useState('');
   const [graduationYear, setGraduationYear] = useState('');
@@ -92,11 +106,9 @@ const RoleChangeModal = ({ userId, userName, currentRole, onClose, onSuccess }: 
               onChange={(e) => setTargetRole(e.target.value)}
               style={{ width: '100%', padding: '10px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '5px' }}
             >
-              <option value="user">User</option>
-              <option value="owner">Owner</option>
-              <option value="broker">Broker</option>
-              <option value="engineer">Engineer</option>
-              <option value="admin">Admin</option>
+              {availableRoles.map(role => (
+                <option key={role.value} value={role.value}>{role.label}</option>
+              ))}
             </select>
           </div>
 

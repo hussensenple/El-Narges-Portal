@@ -45,8 +45,8 @@ exports.changeUserRole = async (req, res) => {
 
     const oldRole = user.role;
 
-    // Cleanup old profile/units if downgrading to 'user'
-    if (newRole === 'user') {
+    // Cleanup old profile/units if changing to a different role
+    if (oldRole !== newRole) {
       if (oldRole === 'broker') {
         await BrokerProfile.findOneAndDelete({ userId });
         await Unit.updateMany({ brokerId: userId }, { brokerId: null });

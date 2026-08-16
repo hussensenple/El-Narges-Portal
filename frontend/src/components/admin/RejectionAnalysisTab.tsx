@@ -53,44 +53,61 @@ const RejectionAnalysisTab = () => {
     fetchRejections();
   }, []);
 
-  // All unique reasons for the dropdown — scoped to the selected source
-  const uniqueReasons = useMemo(() => {
-    const pool =
-      filterSource === 'admin'  ? allRejections.filter(r => r.status === 'Rejected') :
-      filterSource === 'broker' ? allRejections.filter(r => r.status === 'Declined') :
-      allRejections;
-    const reasons = new Set<string>();
-    pool.forEach(r => { if (r.rejectionReason) reasons.add(r.rejectionReason); });
-    return Array.from(reasons).sort();
+  // Filtered pool based on selected source
+  const sourceFilteredRejections = useMemo(() => {
+    return filterSource === 'admin'  ? allRejections.filter(r => r.status === 'Rejected') :
+           filterSource === 'broker' ? allRejections.filter(r => r.status === 'Declined') :
+           allRejections;
   }, [allRejections, filterSource]);
+
+  const ADMIN_REASONS = ['Served By Another Client', 'Management Decision', 'Downpayment Delay'];
+  const BROKER_REASONS = [
+    'Client Unresponsive',
+    'Changed mind',
+    'Spam or fake info',
+    'Duplicate Request',
+    'Insufficient Budget',
+    'Rejected payment plan'
+  ];
+
+  // All unique reasons for the dropdown — scoped to the selected source using static lists
+  const uniqueReasons = useMemo(() => {
+    if (filterSource === 'admin') return ADMIN_REASONS;
+    if (filterSource === 'broker') return BROKER_REASONS;
+    return [...ADMIN_REASONS, ...BROKER_REASONS];
+  }, [filterSource]);
 
   // Filtered list for the scrollable panel
   const filteredList = useMemo(() => {
-    return allRejections.filter(r => {
-      const reasonMatch = filterReason === '__all__' || r.rejectionReason === filterReason;
-      const sourceMatch =
-        filterSource === '__all__' ||
-        (filterSource === 'admin' && r.status === 'Rejected') ||
-        (filterSource === 'broker' && r.status === 'Declined');
-      return reasonMatch && sourceMatch;
+    return sourceFilteredRejections.filter(r => {
+      return filterReason === '__all__' || r.rejectionReason === filterReason;
     });
-  }, [allRejections, filterReason, filterSource]);
+  }, [sourceFilteredRejections, filterReason]);
 
-  // Chart data — always shows ALL reasons regardless of filter
+  // Chart data — responsive to the selected source and synced with fixed options
   const chartData = useMemo(() => {
     const counts: Record<string, number> = {};
-    allRejections.forEach(r => {
-      const key = r.rejectionReason || 'No Reason';
-      counts[key] = (counts[key] || 0) + 1;
+    
+    // Initialize all expected reasons with 0
+    uniqueReasons.forEach(reason => {
+      counts[reason] = 0;
     });
+
+    sourceFilteredRejections.forEach(r => {
+      const key = r.rejectionReason;
+      if (key && counts[key] !== undefined) {
+        counts[key] += 1;
+      }
+    });
+    
     return Object.entries(counts)
       .map(([reason, count]) => ({ reason, count }))
       .sort((a, b) => b.count - a.count);
-  }, [allRejections]);
+  }, [sourceFilteredRejections, uniqueReasons]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
-      const total = allRejections.length;
+      const total = sourceFilteredRejections.length;
       const count = payload[0].value;
       return (
         <div style={{ backgroundColor: 'var(--bg-secondary)', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px' }}>
@@ -140,6 +157,7 @@ const RejectionAnalysisTab = () => {
             </select>
             {/* Reason Filter */}
             <select
+              key={`reason-filter-${filterSource}`}
               value={filterReason}
               onChange={e => setFilterReason(e.target.value)}
               style={{
@@ -147,9 +165,9 @@ const RejectionAnalysisTab = () => {
                 border: '1px solid var(--border-color)', borderRadius: '8px', cursor: 'pointer', fontSize: '13px'
               }}
             >
-              <option value="__all__">All Reasons ({allRejections.length})</option>
+              <option value="__all__">All Reasons ({sourceFilteredRejections.length})</option>
               {uniqueReasons.map(r => (
-                <option key={r} value={r}>{r} ({allRejections.filter(x => x.rejectionReason === r).length})</option>
+                <option key={r} value={r}>{r} ({sourceFilteredRejections.filter(x => x.rejectionReason === r).length})</option>
               ))}
             </select>
           </div>

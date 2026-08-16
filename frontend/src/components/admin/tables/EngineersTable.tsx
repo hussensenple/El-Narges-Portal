@@ -74,7 +74,7 @@ const EngineersTable = () => {
                     onClick={() => setSelectedUser(user)}
                     style={{ backgroundColor: 'var(--accent-red-bg)', color: 'var(--text-primary)', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}
                   >
-                    🔄 Revoke
+                    🔄 Change role
                   </button>
                 </td>
               </tr>

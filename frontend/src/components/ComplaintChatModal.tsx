@@ -38,9 +38,10 @@ const ComplaintChatModal = ({ complaint, onClose, onRefresh, currentUser }: Comp
       });
       setText('');
       onRefresh(); // Trigger a refetch of complaints in the parent component
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error sending message", error);
-      alert("Failed to send message.");
+      const serverMsg = error.response?.data?.error || error.response?.data?.msg;
+      alert(serverMsg ? `Failed: ${serverMsg}` : `Network/Unknown Error: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }

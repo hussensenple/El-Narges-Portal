@@ -154,13 +154,17 @@ const addComplaintMessage = async (req, res) => {
   try {
     const { complaintId } = req.params;
     const { text, senderName, senderRole } = req.body;
-    const senderId = req.user ? req.user.id : null;
+    const mongoose = require('mongoose');
+    let validSenderId = req.user ? req.user.id : null;
+    if (validSenderId && !mongoose.Types.ObjectId.isValid(validSenderId)) {
+      validSenderId = null;
+    }
 
     const complaint = await Complaint.findById(complaintId);
     if (!complaint) return res.status(404).json({ msg: 'Complaint not found' });
 
     complaint.messages.push({
-      senderId,
+      senderId: validSenderId,
       senderName,
       senderRole,
       text
@@ -170,7 +174,8 @@ const addComplaintMessage = async (req, res) => {
 
     res.status(200).json({ msg: 'Message sent', complaint });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to send message' });
+    console.error("Detailed Add Message Error:", error);
+    res.status(500).json({ error: 'Failed to send message: ' + error.message });
   }
 };
 

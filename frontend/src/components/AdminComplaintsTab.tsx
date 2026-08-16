@@ -65,6 +65,16 @@ const AdminComplaintsTab = ({ onCountUpdate }: AdminComplaintsTabProps) => {
     }
   }, [complaints, onCountUpdate]);
 
+  // 🚀 Update activeComplaint when complaints array changes so new messages appear
+  useEffect(() => {
+    if (activeComplaint) {
+      const updated = complaints.find(c => c._id === activeComplaint._id);
+      if (updated) {
+        setActiveComplaint(updated);
+      }
+    }
+  }, [complaints]);
+
   // 🚀 بناء الخريطة الـ 3D
   useEffect(() => {
     if (mapDiv.current) {

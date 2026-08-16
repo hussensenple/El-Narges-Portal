@@ -353,3 +353,4 @@ All core features from the original roadmap are **fully implemented and running*
 Both dev servers are currently running:
 - **Backend:** `http://localhost:5000` (Express + Socket.io + MongoDB)
 - **Frontend:** Vite dev server (React + ArcGIS SDK)
+| Engineer Portal Fixes (Map zoom, Red dots, Active Tasks filter) | ✅ Done |

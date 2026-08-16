@@ -318,7 +318,8 @@ const askEngineerAI = async (req, res) => {
     const responseResult = await generateWithRetry(model, prompt);
     const responseText = responseResult.response.text();
     
-    const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    const cleanJson = jsonMatch ? jsonMatch[0] : responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
     const aiData = JSON.parse(cleanJson);
 
     res.status(200).json({

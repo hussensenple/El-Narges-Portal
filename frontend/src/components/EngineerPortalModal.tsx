@@ -232,66 +232,179 @@ const EngineerPortalModal = ({ onClose, view, onOpenUNModal }: EngineerPortalMod
       onClose();
     } else if (complaint.type === 'internal') {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/roles/catalog?mode=all`);
-        const allFeatures = [...(res.data.units || []), ...(res.data.villas || [])];
-        const complaintCleanId = String(complaint.arcgisId).replace(/[{}]/g, '').trim().toLowerCase();
-        
-        const unitData = allFeatures.find(u => {
-          const uObj = String(u.OBJECTID).replace(/[{}]/g, '').trim().toLowerCase();
-          const uGlob = String(u.GlobalID || '').replace(/[{}]/g, '').trim().toLowerCase();
-          const uArc = String(u.arcgisId || '').replace(/[{}]/g, '').trim().toLowerCase();
-          return uObj === complaintCleanId || (u.GlobalID && uGlob === complaintCleanId) || (u.arcgisId && uArc === complaintCleanId);
-        });
+        // Determine if arcgisId is numeric (apartment OBJECTID) or UUID (villa GlobalID)
+        const arcgisIdRaw = String(complaint.arcgisId).trim();
+        const isNumericId = /^\d+$/.test(arcgisIdRaw);
 
-        if (unitData) {
-          const source = unitData.sourceLayer || unitData.SourceName;
-          if (source === 'Villas_Global') {
-            const villaLayer = view.map?.layers.find((l: any) => l.title === "Villas_Global" || l.title === "Villas") as any;
-            if (villaLayer) {
-              const query = villaLayer.createQuery();
-              const gID = unitData.GlobalID || unitData.globalid;
-              const oID = unitData.OBJECTID;
-              query.where = `GlobalID = '${gID}' OR OBJECTID = ${oID}`;
-              query.returnGeometry = true;
-              const extentRes = await villaLayer.queryExtent(query);
-              if (extentRes && extentRes.extent) {
-                view.goTo({ target: extentRes.extent, tilt: 45, zoom: 19 }, { animate: true, duration: 2000 });
-                const objectIds = await villaLayer.queryObjectIds(query);
-                if (objectIds && objectIds.length > 0) {
-                  const layerView = await view.whenLayerView(villaLayer) as any;
-                  (window as any).viewUnitHighlightHandle = layerView.highlight(objectIds);
+        const addRedDot = (extent: any) => {
+          if (!view || !extent) return;
+          const center = extent.center;
+          if (!center) return;
+          
+          // Remove any previous marker
+          const existingLayer = view.map?.findLayerById("complaint-marker-layer");
+          if (existingLayer) view.map?.remove(existingLayer);
+
+          // Use x/y only — let the elevation mode handle height above ground/buildings
+          const point = new Point({ 
+            x: center.x, 
+            y: center.y, 
+            spatialReference: center.spatialReference 
+          });
+          
+          const markerSymbol = {
+            type: "point-3d", 
+            symbolLayers: [{
+              type: "icon", 
+              resource: { primitive: "circle" },
+              material: { color: "#da3633" },
+              outline: { color: "#ffffff", size: 3 },
+              size: "28px"
+            }]
+          };
+          
+          const pointGraphic = new Graphic({ geometry: point, symbol: markerSymbol as any });
+          // relative-to-scene + large offset floats above any building height
+          const complaintLayer = new GraphicsLayer({ 
+            id: "complaint-marker-layer",
+            elevationInfo: { mode: "relative-to-scene", offset: 30 }
+          });
+          complaintLayer.add(pointGraphic);
+          view.map?.add(complaintLayer);
+        };
+
+        if (isNumericId) {
+          // It's an apartment unit — query Units layer for BuildingID_FK
+          const UNITS_URL = 'https://services3.arcgis.com/UDCw00RKDRKPqASe/arcgis/rest/services/Map_3D_Final_WFL1/FeatureServer/37';
+          const unitRes = await axios.get(`${UNITS_URL}/query`, {
+            params: { where: `OBJECTID = ${arcgisIdRaw}`, outFields: 'BuildingID_FK', f: 'json' }
+          });
+          
+          const features = unitRes.data.features || [];
+          if (features.length === 0) {
+            alert(`DEBUG: No unit found in ArcGIS with OBJECTID = ${arcgisIdRaw}`);
+            return;
+          }
+          
+          const foreignKey = features[0].attributes.BuildingID_FK;
+          if (!foreignKey) {
+            alert(`DEBUG: Unit ${arcgisIdRaw} has no BuildingID_FK!`);
+            return;
+          }
+          
+          const buildingLayer = view.map?.layers.find((l: any) => l.title === "Buildings_Global" || l.title === "Buildings") as any;
+          if (!buildingLayer) {
+            alert(`DEBUG: Buildings layer not found on map!`);
+            return;
+          }
+          
+          const cleanFk = String(foreignKey).replace(/[{}]/g, '').trim();
+          const bQuery = buildingLayer.createQuery();
+          bQuery.where = `GlobalID = '{${cleanFk.toUpperCase()}}' OR GlobalID = '${cleanFk.toUpperCase()}' OR GlobalID = '{${cleanFk.toLowerCase()}}' OR GlobalID = '${cleanFk.toLowerCase()}' OR GlobalID = '{${cleanFk}}' OR GlobalID = '${cleanFk}'`;
+          bQuery.returnGeometry = true;
+          
+          const extentRes = await buildingLayer.queryExtent(bQuery);
+          if (!extentRes || !extentRes.extent) {
+            alert(`DEBUG: Building extent null for FK: ${cleanFk}\nQuery: ${bQuery.where}`);
+            return;
+          }
+          
+          view.goTo({ target: extentRes.extent, tilt: 60, zoom: 20 }, { animate: true, duration: 1500 });
+          addRedDot(extentRes.extent);
+          const objIds = await buildingLayer.queryObjectIds(bQuery);
+          if (objIds && objIds.length > 0) {
+            const lv = await view.whenLayerView(buildingLayer) as any;
+            (window as any).viewUnitHighlightHandle = lv.highlight(objIds);
+          }
+          onClose();
+          return;
+
+        } else {
+          // UUID — could be a villa GlobalID, building GlobalID, or unit's globalId from MongoDB
+          const cleanId = arcgisIdRaw.replace(/[{}]/g, '').trim();
+
+          // 1. Try Villas_Global first
+          const villaLayer = view.map?.layers.find((l: any) => l.title === "Villas_Global" || l.title === "Villas") as any;
+          if (villaLayer) {
+            const vQuery = villaLayer.createQuery();
+            vQuery.where = `GlobalID = '{${cleanId.toUpperCase()}}' OR GlobalID = '${cleanId.toUpperCase()}' OR GlobalID = '{${cleanId.toLowerCase()}}' OR GlobalID = '${cleanId.toLowerCase()}' OR GlobalID = '{${cleanId}}' OR GlobalID = '${cleanId}'`;
+            vQuery.returnGeometry = true;
+            try {
+              const vExtent = await villaLayer.queryExtent(vQuery);
+              if (vExtent && vExtent.extent) {
+                view.goTo({ target: vExtent.extent, tilt: 45, zoom: 19 }, { animate: true, duration: 2000 });
+                addRedDot(vExtent.extent);
+                const objIds = await villaLayer.queryObjectIds(vQuery);
+                if (objIds && objIds.length > 0) {
+                  const lv = await view.whenLayerView(villaLayer) as any;
+                  (window as any).viewUnitHighlightHandle = lv.highlight(objIds);
                 }
                 onClose();
                 return;
               }
-            }
-          } else if (source === 'Units') {
-            const foreignKey = unitData.BuildingID_FK;
-            if (foreignKey) {
-              const buildingLayer = view.map?.layers.find((l: any) => l.title === "Buildings_Global") as any;
-              if (buildingLayer) {
-                const query = buildingLayer.createQuery();
-                query.where = `GlobalID = '${foreignKey}'`;
-                query.returnGeometry = true;
-                const extentRes = await buildingLayer.queryExtent(query);
-                if (extentRes && extentRes.extent) {
-                  view.goTo({ target: extentRes.extent, tilt: 60, zoom: 20 }, { animate: true, duration: 1500 });
-                  const objectIds = await buildingLayer.queryObjectIds(query);
-                  if (objectIds && objectIds.length > 0) {
-                    const layerView = await view.whenLayerView(buildingLayer) as any;
-                    (window as any).viewUnitHighlightHandle = layerView.highlight(objectIds);
-                  }
-                  onClose();
-                  return;
-                }
-              }
-            }
+            } catch (_) {}
           }
+
+          // 2. Try Buildings_Global (the UUID might be the building's own GlobalID)
+          const buildingLayer = view.map?.layers.find((l: any) => l.title === "Buildings_Global" || l.title === "Buildings") as any;
+          if (buildingLayer) {
+            const bQuery = buildingLayer.createQuery();
+            bQuery.where = `GlobalID = '{${cleanId.toUpperCase()}}' OR GlobalID = '${cleanId.toUpperCase()}' OR GlobalID = '{${cleanId.toLowerCase()}}' OR GlobalID = '${cleanId.toLowerCase()}' OR GlobalID = '{${cleanId}}' OR GlobalID = '${cleanId}'`;
+            bQuery.returnGeometry = true;
+            try {
+              const bExtent = await buildingLayer.queryExtent(bQuery);
+              if (bExtent && bExtent.extent) {
+                view.goTo({ target: bExtent.extent, tilt: 60, zoom: 20 }, { animate: true, duration: 1500 });
+                addRedDot(bExtent.extent);
+                const objIds = await buildingLayer.queryObjectIds(bQuery);
+                if (objIds && objIds.length > 0) {
+                  const lv = await view.whenLayerView(buildingLayer) as any;
+                  (window as any).viewUnitHighlightHandle = lv.highlight(objIds);
+                }
+                onClose();
+                return;
+              }
+            } catch (_) {}
+          }
+
+          // 3. Fallback: look up the unit in MongoDB to get its buildingIdFk
+          const token = localStorage.getItem('token');
+          const lookupRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/complaints/unit-lookup?id=${cleanId}`, {
+            headers: { 'x-auth-token': token }
+          });
+          const unitMeta = lookupRes.data;
+          
+          if (unitMeta && unitMeta.buildingIdFk && buildingLayer) {
+            const cleanFk = String(unitMeta.buildingIdFk).replace(/[{}]/g, '').trim();
+            const fbQuery = buildingLayer.createQuery();
+            fbQuery.where = `GlobalID = '{${cleanFk.toUpperCase()}}' OR GlobalID = '${cleanFk.toUpperCase()}' OR GlobalID = '{${cleanFk.toLowerCase()}}' OR GlobalID = '${cleanFk.toLowerCase()}' OR GlobalID = '{${cleanFk}}' OR GlobalID = '${cleanFk}'`;
+            fbQuery.returnGeometry = true;
+            const fbExtent = await buildingLayer.queryExtent(fbQuery);
+            
+            if (!fbExtent || !fbExtent.extent) {
+              alert(`DEBUG: Building FK extent null. FK: ${cleanFk}`);
+              return;
+            }
+            
+            view.goTo({ target: fbExtent.extent, tilt: 60, zoom: 20 }, { animate: true, duration: 1500 });
+            addRedDot(fbExtent.extent);
+            const objIds = await buildingLayer.queryObjectIds(fbQuery);
+            if (objIds && objIds.length > 0) {
+              const lv = await view.whenLayerView(buildingLayer) as any;
+              (window as any).viewUnitHighlightHandle = lv.highlight(objIds);
+            }
+            onClose();
+            return;
+          }
+
+          alert(`DEBUG: Could not find location for ID: ${cleanId}`);
+          return;
         }
-      } catch (e) {
+
+      } catch (e: any) {
+        alert(`DEBUG ERROR CAUGHT: ${e.message}`);
         console.error("Error finding unit location:", e);
       }
-      alert(`🏠 Internal issue for Unit ID: \n${complaint.arcgisId}\n\nSearch for this unit on the main map.`);
       onClose();
     } else {
       alert('Location not available for this issue.');
@@ -302,10 +415,8 @@ const EngineerPortalModal = ({ onClose, view, onOpenUNModal }: EngineerPortalMod
     return complaints.filter(c => c.assignedTechnician?._id === techId && c.status !== 'Solved' && c.status !== 'Resolved').length;
   };
 
-  // 2. Separate into "New Complaints" and "Active Tasks"
-  // A complaint is "unassigned" if it has no technician and is Pending.
+  // 2. Only show New Complaints (unassigned and Pending)
   const isTask = (c: Complaint) => c.assignedTechnician || c.status !== 'Pending';
-  
   const unassignedComplaints = complaints.filter(c => !isTask(c));
 
   // 3. Columns for "New Complaints" Tab (4-quadrants)

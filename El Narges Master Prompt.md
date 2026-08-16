@@ -580,3 +580,5 @@ Both dev servers are currently running:
  - Update: Rejection Analysis Portal - made the bar chart responsive to the selected rejection source (Admin/Broker) and dynamically filtered the reasons dropdown to only show the reasons related to the chosen resource.
 
  - Update: Fixed the Rejection Analysis BarChart to strictly map only to the predefined dropdown options for each role, ignoring any legacy data anomalies for perfect synchronization.
+
+| ActiveTasksModal 3D Map Fix (MongoDB fallback + Villa/Apartment support) | Done |

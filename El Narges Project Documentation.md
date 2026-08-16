@@ -466,3 +466,9 @@
  - Update: Rejection Analysis Portal - made the bar chart responsive to the selected rejection source (Admin/Broker) and dynamically filtered the reasons dropdown to only show the reasons related to the chosen resource.
 
  - Update: Fixed the Rejection Analysis BarChart to strictly map only to the predefined dropdown options for each role, ignoring any legacy data anomalies for perfect synchronization.
+
+
+### التحديثات النهائية المقبولة (2026-08-16)
+- تم إصلاح زر الخريطة ثلاثية الأبعاد (3D Map) في نافذة Active Tasks Modal: استبدال استدعاء API المعطوب /api/roles/catalog بمنطق البحث المباشر في طبقات ArcGIS مع Fallback لقاعدة بيانات MongoDB.
+- النظام الآن يدعم نوعين من الوحدات: الشقق (Apartments) عبر BuildingID_FK والفيلات (Villas) عبر GlobalID.
+- تم إضافة النقطة الحمراء (Red Dot) فوق المبنى مع ارتفاع 30 متر لضمان الظهور فوق الأسطح.

@@ -367,34 +367,58 @@ const EngineerPortalModal = ({ onClose, view, onOpenUNModal }: EngineerPortalMod
             } catch (_) {}
           }
 
-          // 3. Fallback: look up the unit in MongoDB to get its buildingIdFk
+          // 3. Fallback: look up the unit in MongoDB to get its buildingIdFk or globalId
           const token = localStorage.getItem('token');
           const lookupRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/complaints/unit-lookup?id=${cleanId}`, {
             headers: { 'x-auth-token': token }
           });
           const unitMeta = lookupRes.data;
           
-          if (unitMeta && unitMeta.buildingIdFk && buildingLayer) {
-            const cleanFk = String(unitMeta.buildingIdFk).replace(/[{}]/g, '').trim();
-            const fbQuery = buildingLayer.createQuery();
-            fbQuery.where = `GlobalID = '{${cleanFk.toUpperCase()}}' OR GlobalID = '${cleanFk.toUpperCase()}' OR GlobalID = '{${cleanFk.toLowerCase()}}' OR GlobalID = '${cleanFk.toLowerCase()}' OR GlobalID = '{${cleanFk}}' OR GlobalID = '${cleanFk}'`;
-            fbQuery.returnGeometry = true;
-            const fbExtent = await buildingLayer.queryExtent(fbQuery);
-            
-            if (!fbExtent || !fbExtent.extent) {
-              alert(`DEBUG: Building FK extent null. FK: ${cleanFk}`);
+          if (unitMeta) {
+            // Case A: It's an Apartment, so we have buildingIdFk. Query the Building layer.
+            if (unitMeta.buildingIdFk && buildingLayer) {
+              const cleanFk = String(unitMeta.buildingIdFk).replace(/[{}]/g, '').trim();
+              const fbQuery = buildingLayer.createQuery();
+              fbQuery.where = `GlobalID = '{${cleanFk.toUpperCase()}}' OR GlobalID = '${cleanFk.toUpperCase()}' OR GlobalID = '{${cleanFk.toLowerCase()}}' OR GlobalID = '${cleanFk.toLowerCase()}' OR GlobalID = '{${cleanFk}}' OR GlobalID = '${cleanFk}'`;
+              fbQuery.returnGeometry = true;
+              const fbExtent = await buildingLayer.queryExtent(fbQuery);
+              
+              if (!fbExtent || !fbExtent.extent) {
+                alert(`DEBUG: Building FK extent null. FK: ${cleanFk}`);
+                return;
+              }
+              
+              view.goTo({ target: fbExtent.extent, tilt: 60, zoom: 20 }, { animate: true, duration: 1500 });
+              addRedDot(fbExtent.extent);
+              const objIds = await buildingLayer.queryObjectIds(fbQuery);
+              if (objIds && objIds.length > 0) {
+                const lv = await view.whenLayerView(buildingLayer) as any;
+                (window as any).viewUnitHighlightHandle = lv.highlight(objIds);
+              }
+              onClose();
               return;
             }
             
-            view.goTo({ target: fbExtent.extent, tilt: 60, zoom: 20 }, { animate: true, duration: 1500 });
-            addRedDot(fbExtent.extent);
-            const objIds = await buildingLayer.queryObjectIds(fbQuery);
-            if (objIds && objIds.length > 0) {
-              const lv = await view.whenLayerView(buildingLayer) as any;
-              (window as any).viewUnitHighlightHandle = lv.highlight(objIds);
+            // Case B: It's a Villa, so we use globalId. Query the Villa layer.
+            if (!unitMeta.buildingIdFk && unitMeta.globalId && villaLayer) {
+              const cleanGlobal = String(unitMeta.globalId).replace(/[{}]/g, '').trim();
+              const fbQuery = villaLayer.createQuery();
+              fbQuery.where = `GlobalID = '{${cleanGlobal.toUpperCase()}}' OR GlobalID = '${cleanGlobal.toUpperCase()}' OR GlobalID = '{${cleanGlobal.toLowerCase()}}' OR GlobalID = '${cleanGlobal.toLowerCase()}' OR GlobalID = '{${cleanGlobal}}' OR GlobalID = '${cleanGlobal}'`;
+              fbQuery.returnGeometry = true;
+              const fbExtent = await villaLayer.queryExtent(fbQuery);
+              
+              if (fbExtent && fbExtent.extent) {
+                view.goTo({ target: fbExtent.extent, tilt: 60, zoom: 20 }, { animate: true, duration: 1500 });
+                addRedDot(fbExtent.extent);
+                const objIds = await villaLayer.queryObjectIds(fbQuery);
+                if (objIds && objIds.length > 0) {
+                  const lv = await view.whenLayerView(villaLayer) as any;
+                  (window as any).viewUnitHighlightHandle = lv.highlight(objIds);
+                }
+                onClose();
+                return;
+              }
             }
-            onClose();
-            return;
           }
 
           alert(`DEBUG: Could not find location for ID: ${cleanId}`);

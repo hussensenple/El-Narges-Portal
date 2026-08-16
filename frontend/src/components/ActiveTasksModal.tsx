@@ -181,6 +181,20 @@ const ActiveTasksModal = ({ onClose, view, onOpenUNModal }: ActiveTasksModalProp
     }
   };
 
+  // Helper: add a floating red dot above a location
+  const addRedDot = (extent: any) => {
+    if (!view) return;
+    const existingLayer = view.map?.findLayerById("complaint-marker-layer");
+    if (existingLayer) view.map?.remove(existingLayer);
+    const center = extent.center || extent;
+    const point = new Point({ longitude: center.longitude, latitude: center.latitude, spatialReference: extent.spatialReference });
+    const markerSymbol = { type: "point-3d", symbolLayers: [{ type: "icon", resource: { primitive: "circle" }, material: { color: [220, 50, 50, 0.9] }, outline: { color: "white", size: 2 }, size: "22px" }] };
+    const pointGraphic = new Graphic({ geometry: point, symbol: markerSymbol as any });
+    const complaintLayer = new GraphicsLayer({ id: "complaint-marker-layer", elevationInfo: { mode: "relative-to-scene", offset: 30 } });
+    complaintLayer.add(pointGraphic);
+    view.map?.add(complaintLayer);
+  };
+
   // 🚀 الطيران لمكان الشكوى
   const handleZoomToMap = async (complaint: Complaint) => {
     if (!view) return;
@@ -230,66 +244,105 @@ const ActiveTasksModal = ({ onClose, view, onOpenUNModal }: ActiveTasksModalProp
       onClose();
     } else if (complaint.type === 'internal') {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/roles/catalog?mode=all`);
-        const allFeatures = [...(res.data.units || []), ...(res.data.villas || [])];
-        const complaintCleanId = String(complaint.arcgisId).replace(/[{}]/g, '').trim().toLowerCase();
-        
-        const unitData = allFeatures.find(u => {
-          const uObj = String(u.OBJECTID).replace(/[{}]/g, '').trim().toLowerCase();
-          const uGlob = String(u.GlobalID || '').replace(/[{}]/g, '').trim().toLowerCase();
-          const uArc = String(u.arcgisId || '').replace(/[{}]/g, '').trim().toLowerCase();
-          return uObj === complaintCleanId || (u.GlobalID && uGlob === complaintCleanId) || (u.arcgisId && uArc === complaintCleanId);
-        });
+        const cleanId = String(complaint.arcgisId).replace(/[{}]/g, '').trim();
+        const buildingLayer = view.map?.layers.find((l: any) => l.title === "Buildings_Global" || l.title === "Buildings") as any;
+        const villaLayer = view.map?.layers.find((l: any) => l.title === "Villas_Global" || l.title === "Villas") as any;
 
-        if (unitData) {
-          const source = unitData.sourceLayer || unitData.SourceName;
-          if (source === 'Villas_Global') {
-            const villaLayer = view.map?.layers.find((l: any) => l.title === "Villas_Global" || l.title === "Villas") as any;
-            if (villaLayer) {
-              const query = villaLayer.createQuery();
-              const gID = unitData.GlobalID || unitData.globalid;
-              const oID = unitData.OBJECTID;
-              query.where = `GlobalID = '${gID}' OR OBJECTID = ${oID}`;
-              query.returnGeometry = true;
-              const extentRes = await villaLayer.queryExtent(query);
-              if (extentRes && extentRes.extent) {
-                view.goTo({ target: extentRes.extent, tilt: 45, zoom: 19 }, { animate: true, duration: 2000 });
-                const objectIds = await villaLayer.queryObjectIds(query);
-                if (objectIds && objectIds.length > 0) {
-                  const layerView = await view.whenLayerView(villaLayer) as any;
-                  (window as any).viewUnitHighlightHandle = layerView.highlight(objectIds);
-                }
-                onClose();
-                return;
+        // Step 1: Try the Villa layer directly using the complaint's arcgisId as a GlobalID
+        if (villaLayer) {
+          const vQuery = villaLayer.createQuery();
+          vQuery.where = `GlobalID = '{${cleanId.toUpperCase()}}' OR GlobalID = '${cleanId.toUpperCase()}' OR GlobalID = '{${cleanId.toLowerCase()}}' OR GlobalID = '${cleanId.toLowerCase()}' OR GlobalID = '{${cleanId}}' OR GlobalID = '${cleanId}'`;
+          vQuery.returnGeometry = true;
+          try {
+            const vExtent = await villaLayer.queryExtent(vQuery);
+            if (vExtent && vExtent.extent) {
+              view.goTo({ target: vExtent.extent, tilt: 60, zoom: 20 }, { animate: true, duration: 1500 });
+              addRedDot(vExtent.extent);
+              const objIds = await villaLayer.queryObjectIds(vQuery);
+              if (objIds && objIds.length > 0) {
+                const lv = await view.whenLayerView(villaLayer) as any;
+                (window as any).viewUnitHighlightHandle = lv.highlight(objIds);
               }
+              onClose();
+              return;
             }
-          } else if (source === 'Units') {
-            const foreignKey = unitData.BuildingID_FK;
-            if (foreignKey) {
-              const buildingLayer = view.map?.layers.find((l: any) => l.title === "Buildings_Global") as any;
-              if (buildingLayer) {
-                const query = buildingLayer.createQuery();
-                query.where = `GlobalID = '${foreignKey}'`;
-                query.returnGeometry = true;
-                const extentRes = await buildingLayer.queryExtent(query);
-                if (extentRes && extentRes.extent) {
-                  view.goTo({ target: extentRes.extent, tilt: 60, zoom: 20 }, { animate: true, duration: 1500 });
-                  const objectIds = await buildingLayer.queryObjectIds(query);
-                  if (objectIds && objectIds.length > 0) {
-                    const layerView = await view.whenLayerView(buildingLayer) as any;
-                    (window as any).viewUnitHighlightHandle = layerView.highlight(objectIds);
-                  }
-                  onClose();
-                  return;
-                }
+          } catch (_) {}
+        }
+
+        // Step 2: Try the Building layer directly using the arcgisId as a GlobalID
+        if (buildingLayer) {
+          const bQuery = buildingLayer.createQuery();
+          bQuery.where = `GlobalID = '{${cleanId.toUpperCase()}}' OR GlobalID = '${cleanId.toUpperCase()}' OR GlobalID = '{${cleanId.toLowerCase()}}' OR GlobalID = '${cleanId.toLowerCase()}' OR GlobalID = '{${cleanId}}' OR GlobalID = '${cleanId}'`;
+          bQuery.returnGeometry = true;
+          try {
+            const bExtent = await buildingLayer.queryExtent(bQuery);
+            if (bExtent && bExtent.extent) {
+              view.goTo({ target: bExtent.extent, tilt: 60, zoom: 20 }, { animate: true, duration: 1500 });
+              addRedDot(bExtent.extent);
+              const objIds = await buildingLayer.queryObjectIds(bQuery);
+              if (objIds && objIds.length > 0) {
+                const lv = await view.whenLayerView(buildingLayer) as any;
+                (window as any).viewUnitHighlightHandle = lv.highlight(objIds);
               }
+              onClose();
+              return;
+            }
+          } catch (_) {}
+        }
+
+        // Step 3: Fallback — look up in MongoDB to get buildingIdFk or globalId
+        const token = localStorage.getItem('token');
+        const lookupRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/complaints/unit-lookup?id=${cleanId}`, {
+          headers: { 'x-auth-token': token }
+        });
+        const unitMeta = lookupRes.data;
+
+        if (unitMeta) {
+          // Case A: Apartment — use buildingIdFk to find the building
+          if (unitMeta.buildingIdFk && buildingLayer) {
+            const cleanFk = String(unitMeta.buildingIdFk).replace(/[{}]/g, '').trim();
+            const fbQuery = buildingLayer.createQuery();
+            fbQuery.where = `GlobalID = '{${cleanFk.toUpperCase()}}' OR GlobalID = '${cleanFk.toUpperCase()}' OR GlobalID = '{${cleanFk.toLowerCase()}}' OR GlobalID = '${cleanFk.toLowerCase()}' OR GlobalID = '{${cleanFk}}' OR GlobalID = '${cleanFk}'`;
+            fbQuery.returnGeometry = true;
+            const fbExtent = await buildingLayer.queryExtent(fbQuery);
+            if (fbExtent && fbExtent.extent) {
+              view.goTo({ target: fbExtent.extent, tilt: 60, zoom: 20 }, { animate: true, duration: 1500 });
+              addRedDot(fbExtent.extent);
+              const objIds = await buildingLayer.queryObjectIds(fbQuery);
+              if (objIds && objIds.length > 0) {
+                const lv = await view.whenLayerView(buildingLayer) as any;
+                (window as any).viewUnitHighlightHandle = lv.highlight(objIds);
+              }
+              onClose();
+              return;
+            }
+          }
+
+          // Case B: Villa — use globalId to find the villa
+          if (!unitMeta.buildingIdFk && unitMeta.globalId && villaLayer) {
+            const cleanGlobal = String(unitMeta.globalId).replace(/[{}]/g, '').trim();
+            const fbQuery = villaLayer.createQuery();
+            fbQuery.where = `GlobalID = '{${cleanGlobal.toUpperCase()}}' OR GlobalID = '${cleanGlobal.toUpperCase()}' OR GlobalID = '{${cleanGlobal.toLowerCase()}}' OR GlobalID = '${cleanGlobal.toLowerCase()}' OR GlobalID = '{${cleanGlobal}}' OR GlobalID = '${cleanGlobal}'`;
+            fbQuery.returnGeometry = true;
+            const fbExtent = await villaLayer.queryExtent(fbQuery);
+            if (fbExtent && fbExtent.extent) {
+              view.goTo({ target: fbExtent.extent, tilt: 60, zoom: 20 }, { animate: true, duration: 1500 });
+              addRedDot(fbExtent.extent);
+              const objIds = await villaLayer.queryObjectIds(fbQuery);
+              if (objIds && objIds.length > 0) {
+                const lv = await view.whenLayerView(villaLayer) as any;
+                (window as any).viewUnitHighlightHandle = lv.highlight(objIds);
+              }
+              onClose();
+              return;
             }
           }
         }
-      } catch (e) {
+
+      } catch (e: any) {
         console.error("Error finding unit location:", e);
       }
-      alert(`🏠 Internal issue for Unit ID: \n${complaint.arcgisId}\n\nSearch for this unit on the main map.`);
+      alert('Location not available for this issue.');
       onClose();
     } else {
       alert('Location not available for this issue.');

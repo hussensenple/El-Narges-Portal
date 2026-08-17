@@ -18,16 +18,17 @@ function cosineSimilarity(vecA, vecB) {
   return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
-// Auto-retry wrapper for 429 quota errors with exponential backoff
+// Auto-retry wrapper for 429 (rate limit) and 503 (overload) errors with exponential backoff
 const generateWithRetry = async (model, prompt, maxRetries = 3) => {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       return await model.generateContent(prompt);
     } catch (err) {
       const is429 = err.message && err.message.includes('429');
-      if (is429 && attempt < maxRetries) {
-        const delay = attempt * 15000; // 15s, 30s, 45s
-        console.log(`[AI] 429 rate limit hit. Retrying in ${delay / 1000}s (attempt ${attempt}/${maxRetries})...`);
+      const is503 = err.message && err.message.includes('503');
+      if ((is429 || is503) && attempt < maxRetries) {
+        const delay = attempt * 10000; // 10s, 20s, 30s
+        console.log(`[AI] ${is503 ? '503 overload' : '429 rate limit'} hit. Retrying in ${delay / 1000}s (attempt ${attempt}/${maxRetries})...`);
         await new Promise(r => setTimeout(r, delay));
       } else {
         throw err;
@@ -318,17 +319,32 @@ const askEngineerAI = async (req, res) => {
 
     const responseResult = await generateWithRetry(model, prompt);
     const responseText = responseResult.response.text();
-    
-    const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
-    const aiData = JSON.parse(cleanJson);
 
-    res.status(200).json({
-        reply: aiData.reply
-    });
+    // Robust JSON extraction — same pattern as askAI to handle markdown fences or extra text
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    const cleanJson = jsonMatch ? jsonMatch[0] : responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+    let reply = '';
+    try {
+      const aiData = JSON.parse(cleanJson);
+      reply = aiData.reply || cleanJson;
+    } catch (_) {
+      // If still not parseable, return the raw text as the reply
+      reply = cleanJson;
+    }
+
+    res.status(200).json({ reply });
 
   } catch (error) {
-    console.error("Engineer AI Error:", error);
-    res.status(500).json({ error: "Sorry, an error occurred in the Engineer AI." });
+    console.error("Engineer AI Error:", error.message);
+    let friendlyMsg = 'Sorry, the AI is temporarily unavailable. Please try again in a moment. ⏳';
+    if (error.message && error.message.includes('503')) {
+      friendlyMsg = 'The AI service is currently experiencing high demand. Please wait a moment and try again. ⏳';
+    } else if (error.message && error.message.includes('429')) {
+      friendlyMsg = 'Rate limit reached. Please wait 30 seconds and try again. ⏳';
+    }
+    // Return 200 so the frontend displays it as a chat message, not a crash
+    res.status(200).json({ reply: friendlyMsg });
   }
 };
 

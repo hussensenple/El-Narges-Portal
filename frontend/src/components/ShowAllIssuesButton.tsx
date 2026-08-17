@@ -24,7 +24,11 @@ const ShowAllIssuesButton = ({ view }: ShowAllIssuesButtonProps) => {
       (window as any).viewUnitHighlightHandle = null;
     }
     if (view && view.map) {
-      const layersToRemove = view.map.layers.filter((l: any) => l.id === "complaint-marker-layer" || l.id === "all-issues-layer").toArray();
+      const layersToRemove = view.map.layers.filter((l: any) =>
+        l.id === "complaint-marker-layer" ||
+        l.id === "all-issues-layer" ||
+        String(l.id).startsWith("ext-dot-")
+      ).toArray();
       layersToRemove.forEach((l: any) => view.map.remove(l));
     }
   };
